@@ -111,7 +111,11 @@ fun generateJUnit5CompilerTests(args: Array<String>) {
                 model("debug/localVariables")
             }
 
-            testClass<AbstractIrLocalVariableTest> {
+            testClass<AbstractIrLocalVariableBytecodeInlinerTest> {
+                model("debug/localVariables")
+            }
+
+            testClass<AbstractIrLocalVariableIrInlinerTest> {
                 model("debug/localVariables")
             }
 
