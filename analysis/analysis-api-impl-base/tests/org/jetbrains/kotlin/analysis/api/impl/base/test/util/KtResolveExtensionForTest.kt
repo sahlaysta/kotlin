@@ -6,7 +6,6 @@
 package org.jetbrains.kotlin.analysis.api.impl.base.test.util
 
 import com.intellij.mock.MockProject
-import com.intellij.openapi.util.ModificationTracker
 import com.intellij.psi.PsiElement
 import com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.analysis.api.KtAnalysisSession
@@ -65,7 +64,6 @@ class KtResolveExtensionForTest(
     private val shadowedScope: GlobalSearchScope,
 ) : KtResolveExtension() {
     override fun getKtFiles(): List<KtResolveExtensionFile> = files
-    override fun getModificationTracker(): ModificationTracker = ModificationTracker.NEVER_CHANGED
     override fun getContainedPackages(): Set<FqName> = packages
     override fun getShadowedScope(): GlobalSearchScope = shadowedScope
 }
