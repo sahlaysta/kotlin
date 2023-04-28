@@ -230,13 +230,23 @@ class Fir2IrVisitor(
             }
             conversionScope.withParent(irScript) {
                 for (statement in script.statements) {
-                    if (statement is FirDeclaration) {
-                        val irDeclaration = statement.accept(this@Fir2IrVisitor, null) as IrDeclaration
-                        irScript.statements.add(irDeclaration)
+                    val irStatement = if (statement is FirDeclaration) {
+                        if (statement is FirProperty && statement.origin == FirDeclarationOrigin.ScriptCustomization.ResultProperty) {
+                            // processing possible result property
+                            if (statement.returnTypeRef.let { (it.isUnit || it.isNothing || it.isNullableNothing) } == true) {
+                                statement.initializer!!.toIrStatement()
+                            } else {
+                                (statement.accept(this@Fir2IrVisitor, null) as? IrDeclaration)?.also {
+                                    irScript.resultProperty = (it as? IrProperty)?.symbol
+                                }
+                            }
+                        } else {
+                            statement.accept(this@Fir2IrVisitor, null) as? IrDeclaration
+                        }
                     } else {
-                        val irStatement = statement.toIrStatement()!!
-                        irScript.statements.add(irStatement)
+                        statement.toIrStatement()
                     }
+                    irScript.statements.add(irStatement!!)
                 }
             }
             declarationStorage.leaveScope(irScript)
