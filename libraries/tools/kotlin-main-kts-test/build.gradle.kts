@@ -30,10 +30,15 @@ projectTest(parallel = true) {
         systemProperty("kotlin.script.test.kotlinx.serialization.plugin.classpath", localKotlinxSerializationPluginClasspath.asPath)
     }
     workingDir = rootDir
+    systemProperty("kotlin.script.base.compiler.arguments", "-Xskip-metadata-version-check")
+    systemProperty("kotlin.script.test.base.compiler.arguments", "-Xskip-metadata-version-check")
 }
 
 projectTest(taskName = "testWithK2", parallel = true) {
-    dependsOn(":dist")
+    dependsOn(":dist", ":kotlinx-serialization-compiler-plugin.embeddable:embeddable")
     workingDir = rootDir
-    systemProperty("kotlin.script.base.compiler.arguments", "-Xuse-k2")
+    val localKotlinxSerializationPluginClasspath: FileCollection = kotlinxSerializationGradlePluginClasspath
+    systemProperty("kotlin.script.test.kotlinx.serialization.plugin.classpath", localKotlinxSerializationPluginClasspath.asPath)
+    systemProperty("kotlin.script.base.compiler.arguments", "-language-version 2.0 -Xskip-metadata-version-check")
+    systemProperty("kotlin.script.test.base.compiler.arguments", "-language-version 2.0 -Xskip-metadata-version-check")
 }

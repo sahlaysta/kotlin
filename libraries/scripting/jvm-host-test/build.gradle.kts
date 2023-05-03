@@ -43,6 +43,7 @@ tasks.withType<org.jetbrains.kotlin.gradle.dsl.KotlinCompile<*>> {
 projectTest(parallel = true) {
     dependsOn(":dist")
     workingDir = rootDir
+    systemProperty("kotlin.script.base.compiler.arguments", "-Xskip-metadata-version-check")
 }
 
 // This doesn;t work now due to conflicts between embeddable compiler contents and intellij sdk modules
@@ -56,5 +57,5 @@ projectTest(parallel = true) {
 projectTest(taskName = "testWithK2", parallel = true) {
     dependsOn(":dist")
     workingDir = rootDir
-    systemProperty("kotlin.script.base.compiler.arguments", "-Xuse-k2")
+    systemProperty("kotlin.script.base.compiler.arguments", "-language-version 2.0 -Xskip-metadata-version-check")
 }

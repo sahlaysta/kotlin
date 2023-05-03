@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.scripting.compiler.test
 
 import junit.framework.TestCase
 import kotlinx.coroutines.runBlocking
+import org.jetbrains.kotlin.scripting.compiler.plugin.expectTestToFailOnK2
 import org.jetbrains.kotlin.scripting.compiler.plugin.getBaseCompilerArgumentsFromProperty
 import org.jetbrains.kotlin.scripting.compiler.plugin.impl.ScriptJvmCompilerIsolated
 import org.jetbrains.kotlin.utils.tryConstructClassFromStringArgs
@@ -85,7 +86,7 @@ class ScriptCompilerTest : TestCase() {
         assertEquals("Clazz", nestedClasses[0].simpleName)
     }
 
-    fun testDestructingDeclarations() {
+    fun testDestructingDeclarations() = expectTestToFailOnK2 {
         val res = compileToClass(
             """
                 val c = 3
