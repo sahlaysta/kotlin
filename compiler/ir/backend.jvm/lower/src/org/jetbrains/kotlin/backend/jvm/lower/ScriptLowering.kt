@@ -45,6 +45,7 @@ import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmBackendErrors
 import org.jetbrains.kotlin.util.OperatorNameConventions
 import org.jetbrains.kotlin.utils.addIfNotNull
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
+import org.jetbrains.kotlin.utils.topologicalSort
 
 internal val scriptsToClassesPhase = makeCustomPhase<JvmBackendContext, IrModuleFragment>(
     name = "ScriptsToClasses",
@@ -58,7 +59,8 @@ internal val scriptsToClassesPhase = makeCustomPhase<JvmBackendContext, IrModule
 private class ScriptsToClassesLowering(val context: JvmBackendContext, val innerClassesSupport: JvmInnerClassesSupport) {
 
     fun lower(module: IrModuleFragment) {
-        val scriptsToClasses = mutableMapOf<IrScript, IrClass>()
+        val scripts = mutableListOf<IrScript>()
+        val scriptDependencies = mutableMapOf<IrScript, List<IrScript>>()
 
         for (irFile in module.files) {
             val iterator = irFile.declarations.listIterator()
@@ -66,7 +68,10 @@ private class ScriptsToClassesLowering(val context: JvmBackendContext, val inner
                 val declaration = iterator.next()
                 if (declaration is IrScript) {
                     val scriptClass = prepareScriptClass(irFile, declaration)
-                    scriptsToClasses[declaration] = scriptClass
+                    scripts.add(declaration)
+                    declaration.importedScripts.takeUnless { it.isNullOrEmpty() }?.let {
+                        scriptDependencies[declaration] = it.map { it.owner }
+                    }
                     iterator.set(scriptClass)
                 }
             }
@@ -74,10 +79,11 @@ private class ScriptsToClassesLowering(val context: JvmBackendContext, val inner
 
         val symbolRemapper = ScriptsToClassesSymbolRemapper()
 
-        for ((irScript, irScriptClass) in scriptsToClasses) {
-            finalizeScriptClass(irScriptClass, irScript, symbolRemapper)
+        val orderedScripts = topologicalSort(scripts) { scriptDependencies[this] ?: emptyList() }.reversed()
+        for (irScript in orderedScripts) {
+            finalizeScriptClass(irScript, symbolRemapper)
             // TODO fix parents in script classes
-            irScriptClass.patchDeclarationParents(irScript.parent)
+            irScript.targetClass!!.owner.patchDeclarationParents(irScript.parent)
         }
     }
 
@@ -165,7 +171,8 @@ private class ScriptsToClassesLowering(val context: JvmBackendContext, val inner
         return capturingClasses
     }
 
-    private fun finalizeScriptClass(irScriptClass: IrClass, irScript: IrScript, symbolRemapper: ScriptsToClassesSymbolRemapper) {
+    private fun finalizeScriptClass(irScript: IrScript, symbolRemapper: ScriptsToClassesSymbolRemapper) {
+        val irScriptClass = irScript.targetClass!!.owner
         val typeRemapper = SimpleTypeRemapper(symbolRemapper)
         val capturingClasses = collectCapturingClasses(irScript, typeRemapper)
 
@@ -188,22 +195,44 @@ private class ScriptsToClassesLowering(val context: JvmBackendContext, val inner
         }
 
         val implicitReceiversFieldsWithParameters = arrayListOf<Pair<IrField, IrValueParameter>>().apply {
-            irScript.implicitReceiversParameters.forEach { param ->
+
+            fun createField(name: Name, type: IrType): IrField {
                 val field = irScriptClass.factory.createField(
                     startOffset = UNDEFINED_OFFSET,
                     endOffset = UNDEFINED_OFFSET,
                     origin = IrDeclarationOrigin.SCRIPT_IMPLICIT_RECEIVER,
-                    name = Name.identifier("\$\$implicitReceiver_${param.type.classFqName?.shortName()?.asString()!!}"),
+                    name = name,
                     visibility = DescriptorVisibilities.PRIVATE,
                     symbol = IrFieldSymbolImpl(),
-                    type = typeRemapper.remapType(param.type),
+                    type = typeRemapper.remapType(type),
                     isFinal = true,
                     isStatic = false,
                     isExternal = false
                 )
                 field.parent = irScriptClass
                 irScriptClass.declarations.add(field)
-                add(field to param)
+                return field
+            }
+
+            irScript.importedScripts?.forEach {
+                val importedScriptClass = it.owner.targetClass!!.owner
+                val type = importedScriptClass.defaultType
+                val name = Name.identifier("\$\$importedScript_${type.classFqName?.shortName()?.asString()!!}")
+                val param = irScriptClass.factory.createValueParameter(
+                    UNDEFINED_OFFSET, UNDEFINED_OFFSET, IrDeclarationOrigin.SCRIPT_IMPLICIT_RECEIVER, name, type, isAssignable = false,
+                    IrValueParameterSymbolImpl(), UNDEFINED_PARAMETER_INDEX, varargElementType = null,
+                    isCrossinline = false, isNoinline = false, isHidden = false,
+                )
+                param.parent = irScriptClass
+                add(createField(name, type) to param)
+            }
+            irScript.implicitReceiversParameters.forEach { param ->
+                add(
+                    createField(
+                        Name.identifier("\$\$implicitReceiver_${param.type.classFqName?.shortName()?.asString()!!}"),
+                        param.type
+                    ) to param
+                )
             }
         }
 
@@ -1005,4 +1034,4 @@ private inline fun IrClass.addAnonymousInitializer(builder: IrFunctionBuilder.()
 private val IrScript.needsReceiverProcessing: Boolean
     // in K2 we need to add dispatch receiver to the top-level declarations, and in all cases receivers should be replaced
     // for all kinds of implicit receivers
-    get() = origin == SCRIPT_K2_ORIGIN || earlierScripts?.isNotEmpty() == true || implicitReceiversParameters.isNotEmpty()
+    get() = origin == SCRIPT_K2_ORIGIN || importedScripts?.isNotEmpty() == true || earlierScripts?.isNotEmpty() == true || implicitReceiversParameters.isNotEmpty()
