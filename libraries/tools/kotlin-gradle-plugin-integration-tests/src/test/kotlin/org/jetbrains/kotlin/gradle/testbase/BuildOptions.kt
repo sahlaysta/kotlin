@@ -53,7 +53,7 @@ data class BuildOptions(
         val verbose: Boolean = false,
         val incrementalKapt: Boolean = false,
         val includeCompileClasspath: Boolean = false,
-        val classLoadersCacheSize: Int? = null
+        val classLoadersCacheSize: Int? = null,
     )
 
     data class JsOptions(
@@ -80,7 +80,7 @@ data class BuildOptions(
     )
 
     fun toArguments(
-        gradleVersion: GradleVersion
+        gradleVersion: GradleVersion,
     ): List<String> {
         val arguments = mutableListOf<String>()
         when (logLevel) {
@@ -236,7 +236,7 @@ data class BuildOptions(
 
 fun BuildOptions.suppressDeprecationWarningsOn(
     @Suppress("UNUSED_PARAMETER") reason: String, // just to require specifying a reason for suppressing
-    predicate: (BuildOptions) -> Boolean
+    predicate: (BuildOptions) -> Boolean,
 ) = if (predicate(this)) {
     copy(warningMode = WarningMode.Summary)
 } else {
@@ -246,7 +246,7 @@ fun BuildOptions.suppressDeprecationWarningsOn(
 fun BuildOptions.suppressDeprecationWarningsSinceGradleVersion(
     gradleVersion: String,
     currentGradleVersion: GradleVersion,
-    reason: String
+    reason: String,
 ) = suppressDeprecationWarningsOn(reason) {
     currentGradleVersion >= GradleVersion.version(gradleVersion)
 }
