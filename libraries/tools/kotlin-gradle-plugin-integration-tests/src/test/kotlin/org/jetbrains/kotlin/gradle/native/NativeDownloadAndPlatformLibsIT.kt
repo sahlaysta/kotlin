@@ -24,7 +24,6 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.condition.DisabledOnOs
 import org.junit.jupiter.api.condition.OS
 import kotlin.io.path.appendText
-import kotlin.test.assertTrue
 
 @DisabledOnOs(
     OS.WINDOWS, disabledReason =
@@ -174,18 +173,6 @@ class NativeDownloadAndPlatformLibsIT : KGPBaseTest() {
         }
     }
 
-    @DisplayName("Build K/N project with restrictedDistribution turned on")
-    @GradleTest
-    fun testDeprecatedRestrictedDistributionProperty(gradleVersion: GradleVersion) {
-        platformLibrariesProject("linuxX64", gradleVersion = gradleVersion) {
-            // We allow using this deprecated property for 1.4 too. Just download the distribution without platform libs in this case.
-            build("tasks", "-Pkotlin.native.restrictedDistribution=true") {
-                assertOutputContains("Warning: Project property 'kotlin.native.restrictedDistribution' is deprecated. Please use 'kotlin.native.distribution.type=light' instead")
-                assertOutputContains("Kotlin/Native distribution: .*kotlin-native-$platformName".toRegex())
-            }
-        }
-    }
-
     @DisplayName("Build K/N project with compiler reinstallation")
     @GradleTest
     fun testCompilerReinstallation(gradleVersion: GradleVersion) {
@@ -223,14 +210,12 @@ class NativeDownloadAndPlatformLibsIT : KGPBaseTest() {
 
         nativeProject("native-download-maven", gradleVersion = gradleVersion) {
 
-            addPropertyToGradleProperties(
-                "kotlin.native.distribution.downloadFromMaven",
-                mapOf("true" to "true")
-            )
-
             buildGradleKts.replaceFirst("// <MavenPlaceholder>", "maven(\"${maven}\")")
 
-            build("assemble") {
+            build(
+                "assemble",
+                "-Pkotlin.native.distribution.downloadFromMaven=true"
+            ) {
                 assertOutputContains("Unpack Kotlin/Native compiler to ")
                 assertOutputDoesNotContain("Generate platform libraries for ")
             }
@@ -250,12 +235,13 @@ class NativeDownloadAndPlatformLibsIT : KGPBaseTest() {
         }
 
         nativeProject("native-download-maven", gradleVersion = gradleVersion) {
-
-            addPropertyToGradleProperties("kotlin.native.distribution.downloadFromMaven", mapOf("true" to "true"))
-
             buildGradleKts.replaceFirst("// <MavenPlaceholder>", "maven(\"${maven}\")")
 
-            build("assemble", "-Pkotlin.native.distribution.type=light") {
+            build(
+                "assemble",
+                "-Pkotlin.native.distribution.type=light",
+                "-Pkotlin.native.distribution.downloadFromMaven=true"
+            ) {
                 assertOutputContains("Unpack Kotlin/Native compiler to ")
                 assertOutputContains("Generate platform libraries for ")
             }
@@ -266,17 +252,11 @@ class NativeDownloadAndPlatformLibsIT : KGPBaseTest() {
     @GradleTest
     fun shouldFailDownloadWithNoBuildInDefaultRepos(gradleVersion: GradleVersion) {
         nativeProject("native-download-maven", gradleVersion = gradleVersion) {
-
-            addPropertyToGradleProperties(
-                "kotlin.native.version",
-                mapOf("1.8.0-dev-1234" to "1.8.0-dev-1234")
-            )
-            addPropertyToGradleProperties(
-                "kotlin.native.distribution.downloadFromMaven",
-                mapOf("true" to "true")
-            )
-
-            buildAndFail("assemble") {
+            buildAndFail(
+                "assemble",
+                "-Pkotlin.native.version=1.8.0-dev-1234",
+                "-Pkotlin.native.distribution.downloadFromMaven=true",
+            ) {
                 assertOutputContains("Could not find org.jetbrains.kotlin:kotlin-native")
             }
         }
