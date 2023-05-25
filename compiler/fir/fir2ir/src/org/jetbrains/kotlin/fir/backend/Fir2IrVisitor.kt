@@ -236,6 +236,7 @@ class Fir2IrVisitor(
             }
 
             conversionScope.withParent(irScript) {
+                val destructComposites = mutableMapOf<FirVariableSymbol<*>, IrComposite>()
                 for (statement in script.statements) {
                     val irStatement = if (statement is FirDeclaration) {
                         when {
@@ -247,6 +248,36 @@ class Fir2IrVisitor(
                                     (statement.accept(this@Fir2IrVisitor, null) as? IrDeclaration)?.also {
                                         irScript.resultProperty = (it as? IrProperty)?.symbol
                                     }
+                                }
+                            }
+                            statement is FirProperty && statement.source?.kind == KtFakeSourceElementKind.DestructuringDeclarationContainerVariable -> {
+                                statement.convertWithOffsets { startOffset, endOffset ->
+                                    IrCompositeImpl(
+                                        startOffset, endOffset,
+                                        irBuiltIns.unitType, IrStatementOrigin.DESTRUCTURING_DECLARATION
+                                    ).also {
+                                        it.statements.add(
+                                            declarationStorage.createIrVariable(statement, conversionScope.parentFromStack()).also {
+                                                it.initializer = statement.initializer?.toIrStatement() as? IrExpression
+                                            }
+                                        )
+                                        destructComposites[(statement as FirVariable).symbol] = it
+                                    }
+                                }
+                            }
+                            statement is FirProperty && statement.source?.kind == KtFakeSourceElementKind.DestructuringDeclarationEntry -> {
+                                (statement.accept(this@Fir2IrVisitor, null) as IrProperty).also {
+                                    val irComponentInitializer = IrSetFieldImpl(
+                                        it.startOffset, it.endOffset,
+                                        it.backingField!!.symbol,
+                                        irBuiltIns.unitType,
+                                        origin = null, superQualifierSymbol = null
+                                    ).apply {
+                                        value = it.backingField!!.initializer!!.expression
+                                        receiver = null
+                                    }
+                                    destructComposites[statement.destructuringDeclarationContainerVariable!!]!!.statements.add(irComponentInitializer)
+                                    it.backingField!!.initializer = null
                                 }
                             }
                             statement is FirClass -> {
