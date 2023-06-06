@@ -8,6 +8,7 @@ package org.jetbrains.kotlin.library.abi.impl
 import org.jetbrains.kotlin.library.abi.*
 import java.lang.Appendable
 
+@ExperimentalLibraryAbiReader
 internal class AbiRendererImpl(
     private val topLevelDeclarations: AbiTopLevelDeclarations,
     private val settings: AbiRenderingSettings
@@ -24,7 +25,6 @@ internal class AbiRendererImpl(
             is AbiEnumEntry -> 2
             is AbiProperty -> 3
             is AbiFunction -> if (isConstructor) 4 else 5
-            else -> error("Unexpected declaration kind: ${this::class.java}, $this")
         }
 
         fun AbiDeclaration.nestedOrderByDeclarationKind(): Int = when (this) {
@@ -32,7 +32,6 @@ internal class AbiRendererImpl(
             is AbiFunction -> if (isConstructor) 2 else 3
             is AbiClass -> 4
             is AbiEnumEntry -> 5
-            else -> error("Unexpected declaration kind: ${this::class.java}, $this")
         }
 
         fun AbiDeclaration.orderByTheFirstSignature(): String =

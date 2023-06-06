@@ -32,9 +32,3 @@ projectTest(jUnitMode = JUnitMode.JUnit5) {
 }
 
 val generateTests by generator("org.jetbrains.kotlin.library.abi.GenerateLibraryAbiReaderTestsKt")
-
-tasks.withType<org.jetbrains.kotlin.gradle.dsl.KotlinCompile<*>> {
-    kotlinOptions {
-        freeCompilerArgs += "-opt-in=org.jetbrains.kotlin.library.abi.ExperimentalLibraryAbiReader"
-    }
-}

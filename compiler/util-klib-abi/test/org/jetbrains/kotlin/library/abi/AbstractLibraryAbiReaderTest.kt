@@ -42,6 +42,7 @@ import java.nio.charset.Charset
 import kotlin.jvm.optionals.getOrNull
 import org.jetbrains.kotlin.konan.file.File as KFile
 
+@OptIn(ExperimentalLibraryAbiReader::class)
 abstract class AbstractLibraryAbiReaderTest {
     private lateinit var testName: String
     private lateinit var buildDir: File

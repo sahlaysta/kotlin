@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.library.abi.impl
 
 import org.jetbrains.kotlin.library.abi.*
 
+@ExperimentalLibraryAbiReader
 internal data class AbiSignaturesImpl(private val signatureV1: String?, private val signatureV2: String?) : AbiSignatures {
     override operator fun get(signatureVersion: AbiSignatureVersion): String? = when (signatureVersion) {
         AbiSignatureVersion.V1 -> signatureV1
@@ -14,10 +15,12 @@ internal data class AbiSignaturesImpl(private val signatureV1: String?, private 
     }
 }
 
+@ExperimentalLibraryAbiReader
 internal class AbiTopLevelDeclarationsImpl(
     override val declarations: List<AbiDeclaration>
 ) : AbiTopLevelDeclarations
 
+@ExperimentalLibraryAbiReader
 internal class AbiClassImpl(
     override val name: String,
     override val signatures: AbiSignatures,
@@ -42,11 +45,13 @@ internal class AbiClassImpl(
     }
 }
 
+@ExperimentalLibraryAbiReader
 internal class AbiEnumEntryImpl(
     override val name: String,
     override val signatures: AbiSignatures
 ) : AbiEnumEntry
 
+@ExperimentalLibraryAbiReader
 internal class AbiFunctionImpl(
     override val name: String,
     override val signatures: AbiSignatures,
@@ -69,6 +74,7 @@ internal class AbiFunctionImpl(
     }
 }
 
+@ExperimentalLibraryAbiReader
 @JvmInline
 internal value class AbiValueParameterImpl private constructor(private val flags: Int) : AbiValueParameter {
     constructor(hasDefaultArg: Boolean, isNoinline: Boolean, isCrossinline: Boolean) : this(
@@ -86,6 +92,7 @@ internal value class AbiValueParameterImpl private constructor(private val flags
     }
 }
 
+@ExperimentalLibraryAbiReader
 internal class AbiPropertyImpl(
     override val name: String,
     override val signatures: AbiSignatures,
@@ -95,24 +102,32 @@ internal class AbiPropertyImpl(
     override val setter: AbiFunction?
 ) : AbiProperty
 
+@ExperimentalLibraryAbiReader
 internal object DynamicTypeImpl : AbiType.Dynamic
+
+@ExperimentalLibraryAbiReader
 internal object ErrorTypeImpl : AbiType.Error
 
+@ExperimentalLibraryAbiReader
 internal class SimpleTypeImpl(
     override val classifier: AbiClassifier,
     override val arguments: List<AbiTypeArgument>,
     override val nullability: AbiTypeNullability
 ) : AbiType.Simple
 
+@ExperimentalLibraryAbiReader
 internal object StarProjectionImpl : AbiTypeArgument.StarProjection
 
+@ExperimentalLibraryAbiReader
 internal class RegularProjectionImpl(
     override val type: AbiType,
     override val projectionKind: AbiVariance
 ) : AbiTypeArgument.RegularProjection
 
+@ExperimentalLibraryAbiReader
 internal class ClassImpl(override val className: String) : AbiClassifier.Class
 
+@ExperimentalLibraryAbiReader
 internal class TypeParameterImpl(
     override val declaringClassName: String,
     override val index: Int

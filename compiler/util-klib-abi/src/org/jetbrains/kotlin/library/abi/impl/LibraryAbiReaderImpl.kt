@@ -40,6 +40,7 @@ import org.jetbrains.kotlin.backend.common.serialization.proto.IrSimpleTypeNulla
 import org.jetbrains.kotlin.backend.common.serialization.proto.IrSimpleTypeLegacy as ProtoSimpleTypeLegacy
 import org.jetbrains.kotlin.backend.common.serialization.IrFlags as ProtoFlags
 
+@ExperimentalLibraryAbiReader
 internal class LibraryAbiReaderImpl(libraryFile: File) {
     private val library = resolveSingleFileKlib(KFile(libraryFile.absolutePath))
 
@@ -48,6 +49,7 @@ internal class LibraryAbiReaderImpl(libraryFile: File) {
 
         return LibraryAbi(
             manifest = readManifest(),
+            uniqueName = library.uniqueName,
             supportedSignatureVersions = supportedSignatureVersions,
             topLevelDeclarations = LibraryDeserializer(library, supportedSignatureVersions).deserialize()
         )
@@ -56,7 +58,6 @@ internal class LibraryAbiReaderImpl(libraryFile: File) {
     private fun readManifest(): LibraryManifest {
         val versions = library.versions
         return LibraryManifest(
-            uniqueName = library.uniqueName,
             platform = library.builtInsPlatform,
             nativeTargets = library.nativeTargets.sorted(),
             compilerVersion = versions.compilerVersion,
@@ -79,6 +80,7 @@ internal class LibraryAbiReaderImpl(libraryFile: File) {
     }
 }
 
+@ExperimentalLibraryAbiReader
 private class LibraryDeserializer(private val library: KotlinLibrary, supportedSignatureVersions: Set<AbiSignatureVersion>) {
     private val interner = IrInterningService()
     private val needV1Signatures = AbiSignatureVersion.V1 in supportedSignatureVersions

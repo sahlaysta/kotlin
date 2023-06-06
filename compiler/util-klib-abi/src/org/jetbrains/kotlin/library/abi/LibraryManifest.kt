@@ -10,7 +10,6 @@ import org.jetbrains.kotlin.library.*
 /**
  * Anything that can be retrieved from manifest and that might be helpful to know about the inspected KLIB.
  *
- * @property uniqueName [KLIB_PROPERTY_UNIQUE_NAME]
  * @property platform [KLIB_PROPERTY_BUILTINS_PLATFORM]
  * @property nativeTargets [KLIB_PROPERTY_NATIVE_TARGETS]
  * @property compilerVersion [KLIB_PROPERTY_COMPILER_VERSION]
@@ -20,7 +19,6 @@ import org.jetbrains.kotlin.library.*
  */
 @ExperimentalLibraryAbiReader
 data class LibraryManifest(
-    val uniqueName: String?,
     val platform: String?,
     val nativeTargets: List<String>,
     val compilerVersion: String?,

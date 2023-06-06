@@ -12,7 +12,14 @@ import org.jetbrains.kotlin.library.abi.impl.AbiRendererImpl
  */
 @ExperimentalLibraryAbiReader
 fun AbiTopLevelDeclarations.renderTopLevels(settings: AbiRenderingSettings): String = buildString {
-    AbiRendererImpl(this@renderTopLevels, settings).renderTo(this)
+    buildString { renderTopLevels(settings, this) }
+
+/**
+ * The default rendering implementation.
+ */
+@ExperimentalLibraryAbiReader
+fun AbiTopLevelDeclarations.renderTopLevels(settings: AbiRenderingSettings, output: Appendable) {
+    AbiRendererImpl(this, settings).renderTo(output)
 }
 
 /**

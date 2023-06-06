@@ -5,7 +5,8 @@
 
 package org.jetbrains.kotlin.library.abi.impl
 
-internal class BooleanFlag(private val index: UInt) {
+@JvmInline
+internal value class BooleanFlag(private val index: UInt) {
     operator fun invoke(state: Boolean): Int = if (state) 1 shl index.toInt() else 0
     operator fun invoke(flags: Int): Boolean = (flags ushr index.toInt()) and 1 != 0
 }

@@ -5,14 +5,18 @@
 
 package org.jetbrains.kotlin.library.abi
 
+import org.jetbrains.kotlin.library.KLIB_PROPERTY_UNIQUE_NAME
+
 /**
  * @property manifest Information from manifest that might be useful.
+ * @property uniqueName Library unique name that is a part of library ABI. Corresponds to [KLIB_PROPERTY_UNIQUE_NAME] manifest property.
  * @property supportedSignatureVersions The versions of signatures supported by the given KLIB.
  * @property topLevelDeclarations Top-level declarations.
  */
 @ExperimentalLibraryAbiReader
 class LibraryAbi(
     val manifest: LibraryManifest,
+    val uniqueName: String,
     val supportedSignatureVersions: Set<AbiSignatureVersion>,
     val topLevelDeclarations: AbiTopLevelDeclarations
 )
@@ -37,13 +41,13 @@ interface AbiSignatures {
 }
 
 @ExperimentalLibraryAbiReader
-interface AbiDeclaration {
+sealed interface AbiDeclaration {
     val name: String
     val signatures: AbiSignatures
 }
 
 @ExperimentalLibraryAbiReader
-interface AbiPossiblyTopLevelDeclaration : AbiDeclaration {
+sealed interface AbiPossiblyTopLevelDeclaration : AbiDeclaration {
     val modality: AbiModality
 }
 
@@ -54,7 +58,6 @@ enum class AbiModality {
 
 /**
  * Important: The order of [declarations] is preserved exactly as in serialized IR.
- * Would you need to use a custom order while rendering, please refer to [AbiRenderingSettings.renderingOrder].
  */
 @ExperimentalLibraryAbiReader
 interface AbiDeclarationContainer {
@@ -66,7 +69,6 @@ interface AbiTopLevelDeclarations : AbiDeclarationContainer
 
 /**
  * Important: The order of [superTypes] is preserved exactly as in serialized IR.
- * Would you need to use a custom order while rendering, please refer to [AbiRenderingSettings.renderingOrder].
  */
 @ExperimentalLibraryAbiReader
 interface AbiClass : AbiPossiblyTopLevelDeclaration, AbiDeclarationContainer {
