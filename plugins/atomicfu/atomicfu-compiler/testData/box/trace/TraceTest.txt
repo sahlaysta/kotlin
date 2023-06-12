@@ -1,0 +1,46 @@
+@kotlin.Metadata
+final enum class TraceTest$Status {
+    // source: 'TraceTest.kt'
+    private synthetic final static field $ENTRIES: kotlin.enums.EnumEntries
+    private synthetic final static field $VALUES: TraceTest$Status[]
+    public final enum static field END: TraceTest$Status
+    public final enum static field START: TraceTest$Status
+    private synthetic final static method $values(): TraceTest$Status[]
+    static method <clinit>(): void
+    private method <init>(p0: java.lang.String, p1: int): void
+    public static @org.jetbrains.annotations.NotNull method getEntries(): kotlin.enums.EnumEntries
+    public static method valueOf(p0: java.lang.String): TraceTest$Status
+    public static method values(): TraceTest$Status[]
+    private final inner class TraceTest$Status
+}
+
+@kotlin.Metadata
+public final class TraceTest {
+    // source: 'TraceTest.kt'
+    private final static @org.jetbrains.annotations.NotNull field a$volatile$FU: java.util.concurrent.atomic.AtomicIntegerFieldUpdater
+    private volatile field a$volatile: int
+    private final static @org.jetbrains.annotations.NotNull field a1$volatile$FU: java.util.concurrent.atomic.AtomicIntegerFieldUpdater
+    private volatile field a1$volatile: int
+    private final static @org.jetbrains.annotations.NotNull field a2$volatile$FU: java.util.concurrent.atomic.AtomicIntegerFieldUpdater
+    private volatile field a2$volatile: int
+    private final static @org.jetbrains.annotations.NotNull field a3$volatile$FU: java.util.concurrent.atomic.AtomicIntegerFieldUpdater
+    private volatile field a3$volatile: int
+    private final static @org.jetbrains.annotations.NotNull field s$volatile$FU: java.util.concurrent.atomic.AtomicIntegerFieldUpdater
+    private volatile field s$volatile: int
+    static method <clinit>(): void
+    public method <init>(): void
+    public final method test(): void
+    public final method testDefaultTrace(): void
+    public final method testMultipleAppend(): void
+    public final method testNamedTrace(): void
+    public final method testTraceInBlock(): void
+    public final method testTraceWithFormat(): void
+    public final method testTraceWithSize(): void
+    private final inner class TraceTest$Status
+}
+
+@kotlin.Metadata
+public final class TraceTestKt {
+    // source: 'TraceTest.kt'
+    public final static @org.jetbrains.annotations.NotNull method box(): java.lang.String
+}

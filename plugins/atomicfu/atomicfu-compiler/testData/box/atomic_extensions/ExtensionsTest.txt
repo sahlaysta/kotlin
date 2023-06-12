@@ -1,0 +1,30 @@
+@kotlin.Metadata
+public final class ExtensionsTest {
+    // source: 'ExtensionsTest.kt'
+    private final static @org.jetbrains.annotations.NotNull field a$volatile$FU: java.util.concurrent.atomic.AtomicIntegerFieldUpdater
+    private volatile field a$volatile: int
+    private final static @org.jetbrains.annotations.NotNull field b$volatile$FU: java.util.concurrent.atomic.AtomicIntegerFieldUpdater
+    private volatile field b$volatile: int
+    private final static @org.jetbrains.annotations.NotNull field l$volatile$FU: java.util.concurrent.atomic.AtomicLongFieldUpdater
+    private volatile field l$volatile: long
+    private final static @org.jetbrains.annotations.NotNull field s$volatile$FU: java.util.concurrent.atomic.AtomicReferenceFieldUpdater
+    private volatile @org.jetbrains.annotations.Nullable field s$volatile: java.lang.Object
+    static method <clinit>(): void
+    public method <init>(): void
+    private final method booleanExtensionArithmetic$atomicfu$array(p0: java.lang.Object, p1: java.util.concurrent.atomic.AtomicIntegerArray, p2: int): void
+    private final method booleanExtensionArithmetic$atomicfu(p0: java.lang.Object, p1: java.util.concurrent.atomic.AtomicIntegerFieldUpdater): void
+    private final method intExtensionArithmetic$atomicfu$array(p0: java.lang.Object, p1: java.util.concurrent.atomic.AtomicIntegerArray, p2: int): void
+    private final method intExtensionArithmetic$atomicfu(p0: java.lang.Object, p1: java.util.concurrent.atomic.AtomicIntegerFieldUpdater): void
+    private final method longExtensionArithmetic$atomicfu$array(p0: java.lang.Object, p1: java.util.concurrent.atomic.AtomicLongArray, p2: int): void
+    private final method longExtensionArithmetic$atomicfu(p0: java.lang.Object, p1: java.util.concurrent.atomic.AtomicLongFieldUpdater): void
+    private final method refExtension$atomicfu$array(p0: java.lang.Object, p1: java.util.concurrent.atomic.AtomicReferenceArray, p2: int): void
+    private final method refExtension$atomicfu(p0: java.lang.Object, p1: java.util.concurrent.atomic.AtomicReferenceFieldUpdater): void
+    public final method testExtension(): void
+    public final method testScopedFieldGetters(): void
+}
+
+@kotlin.Metadata
+public final class ExtensionsTestKt {
+    // source: 'ExtensionsTest.kt'
+    public final static @org.jetbrains.annotations.NotNull method box(): java.lang.String
+}

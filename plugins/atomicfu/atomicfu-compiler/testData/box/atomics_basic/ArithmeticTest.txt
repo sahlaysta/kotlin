@@ -1,0 +1,59 @@
+@kotlin.Metadata
+public final class ArithmeticTestKt {
+    // source: 'ArithmeticTest.kt'
+    public final static @org.jetbrains.annotations.NotNull method box(): java.lang.String
+}
+
+@kotlin.Metadata
+public final class BooleanArithmetic {
+    // source: 'ArithmeticTest.kt'
+    private final static @org.jetbrains.annotations.NotNull field _x$volatile$FU: java.util.concurrent.atomic.AtomicIntegerFieldUpdater
+    private volatile field _x$volatile: int
+    static method <clinit>(): void
+    public method <init>(): void
+    public final method getX(): boolean
+    public final method testBoolean(): void
+}
+
+@kotlin.Metadata
+public final class IntArithmetic {
+    // source: 'ArithmeticTest.kt'
+    private final static @org.jetbrains.annotations.NotNull field _x$volatile$FU: java.util.concurrent.atomic.AtomicIntegerFieldUpdater
+    private volatile field _x$volatile: int
+    private final static @org.jetbrains.annotations.NotNull field local$volatile$FU: java.util.concurrent.atomic.AtomicIntegerFieldUpdater
+    private volatile field local$volatile: int
+    static method <clinit>(): void
+    public method <init>(): void
+    public final method getX(): int
+    public final method test(): void
+    private final method testAtomicCallPlaces(): void
+    private final method testGetValue(): void
+    private final method testInt(): void
+}
+
+@kotlin.Metadata
+public final class LongArithmetic {
+    // source: 'ArithmeticTest.kt'
+    private final static @org.jetbrains.annotations.NotNull field _x$volatile$FU: java.util.concurrent.atomic.AtomicLongFieldUpdater
+    private volatile field _x$volatile: long
+    private final static @org.jetbrains.annotations.NotNull field max$volatile$FU: java.util.concurrent.atomic.AtomicLongFieldUpdater
+    private volatile field max$volatile: long
+    private final static @org.jetbrains.annotations.NotNull field y$volatile$FU: java.util.concurrent.atomic.AtomicLongFieldUpdater
+    private volatile field y$volatile: long
+    private final static @org.jetbrains.annotations.NotNull field z$volatile$FU: java.util.concurrent.atomic.AtomicLongFieldUpdater
+    private volatile field z$volatile: long
+    static method <clinit>(): void
+    public method <init>(): void
+    public final method getX(): long
+    public final method testLong(): void
+}
+
+@kotlin.Metadata
+public final class ReferenceArithmetic {
+    // source: 'ArithmeticTest.kt'
+    private final static @org.jetbrains.annotations.NotNull field _x$volatile$FU: java.util.concurrent.atomic.AtomicReferenceFieldUpdater
+    private volatile @org.jetbrains.annotations.Nullable field _x$volatile: java.lang.Object
+    static method <clinit>(): void
+    public method <init>(): void
+    public final method testReference(): void
+}

@@ -1,0 +1,69 @@
+@kotlin.Metadata
+final class ExtensionLoopTest$VolatileWrapper$atomicfu$private {
+    // source: 'ExtensionLoopTest.kt'
+    private final static @org.jetbrains.annotations.NotNull field ref$volatile$FU: java.util.concurrent.atomic.AtomicReferenceFieldUpdater
+    private volatile @org.jetbrains.annotations.Nullable field ref$volatile: java.lang.Object
+    static method <clinit>(): void
+    private method <init>(): void
+    public synthetic method <init>(p0: kotlin.jvm.internal.DefaultConstructorMarker): void
+    public synthetic final static method access$getRef$volatile$FU$p(): java.util.concurrent.atomic.AtomicReferenceFieldUpdater
+}
+
+@kotlin.Metadata
+public final class ExtensionLoopTestKt {
+    // source: 'ExtensionLoopTest.kt'
+    private final static @org.jetbrains.annotations.NotNull field extensionLoopTest$VolatileWrapper$atomicfu$private: ExtensionLoopTest$VolatileWrapper$atomicfu$private
+    static method <clinit>(): void
+    public final static @org.jetbrains.annotations.NotNull method box(): java.lang.String
+    private final static method loop$atomicfu$array(p0: java.util.concurrent.atomic.AtomicReferenceArray, p1: int, p2: kotlin.jvm.functions.Function1): void
+    private final static method loop$atomicfu(p0: java.util.concurrent.atomic.AtomicReferenceFieldUpdater, p1: kotlin.jvm.functions.Function1, p2: java.lang.Object): void
+    public final static method testTopLevelExtensionLoop(): void
+    private final static method topLevelExtensionLoop$atomicfu$array(p0: java.lang.Object, p1: java.util.concurrent.atomic.AtomicReferenceArray, p2: int, p3: java.lang.String): java.lang.String
+    private final static method topLevelExtensionLoop$atomicfu(p0: java.lang.Object, p1: java.util.concurrent.atomic.AtomicReferenceFieldUpdater, p2: java.lang.String): java.lang.String
+}
+
+@kotlin.Metadata
+public final class LoopTest$A {
+    // source: 'ExtensionLoopTest.kt'
+    private final @org.jetbrains.annotations.NotNull field s: java.lang.String
+    public method <init>(@org.jetbrains.annotations.NotNull p0: java.lang.String): void
+    public final @org.jetbrains.annotations.NotNull method getS(): java.lang.String
+    public final inner class LoopTest$A
+}
+
+@kotlin.Metadata
+public final class LoopTest {
+    // source: 'ExtensionLoopTest.kt'
+    private final static @org.jetbrains.annotations.NotNull field a$volatile$FU: java.util.concurrent.atomic.AtomicIntegerFieldUpdater
+    private volatile field a$volatile: int
+    private final static @org.jetbrains.annotations.NotNull field a1$volatile$FU: java.util.concurrent.atomic.AtomicIntegerFieldUpdater
+    private volatile field a1$volatile: int
+    private final static @org.jetbrains.annotations.NotNull field b$volatile$FU: java.util.concurrent.atomic.AtomicIntegerFieldUpdater
+    private volatile field b$volatile: int
+    private final static @org.jetbrains.annotations.NotNull field l$volatile$FU: java.util.concurrent.atomic.AtomicLongFieldUpdater
+    private volatile field l$volatile: long
+    private final static @org.jetbrains.annotations.NotNull field r$volatile$FU: java.util.concurrent.atomic.AtomicReferenceFieldUpdater
+    private volatile @org.jetbrains.annotations.Nullable field r$volatile: java.lang.Object
+    private final static @org.jetbrains.annotations.NotNull field rs$volatile$FU: java.util.concurrent.atomic.AtomicReferenceFieldUpdater
+    private volatile @org.jetbrains.annotations.Nullable field rs$volatile: java.lang.Object
+    static method <clinit>(): void
+    public method <init>(): void
+    private final method bar$atomicfu$array(p0: java.lang.Object, p1: java.util.concurrent.atomic.AtomicIntegerArray, p2: int, p3: int): int
+    private final method bar$atomicfu(p0: java.lang.Object, p1: java.util.concurrent.atomic.AtomicIntegerFieldUpdater, p2: int): int
+    private final method casLoop(p0: int): int
+    private final method casLoopExpression(p0: int): int
+    private final method extensionLoop$atomicfu$array(p0: java.lang.Object, p1: java.util.concurrent.atomic.AtomicIntegerArray, p2: int, p3: int): int
+    private final method extensionLoop$atomicfu(p0: java.lang.Object, p1: java.util.concurrent.atomic.AtomicIntegerFieldUpdater, p2: int): int
+    private final method extensionLoopExpression$atomicfu$array(p0: java.lang.Object, p1: java.util.concurrent.atomic.AtomicIntegerArray, p2: int, p3: int): int
+    private final method extensionLoopExpression$atomicfu(p0: java.lang.Object, p1: java.util.concurrent.atomic.AtomicIntegerFieldUpdater, p2: int): int
+    private final method extensionLoopMixedReceivers$atomicfu$array(p0: java.lang.Object, p1: java.util.concurrent.atomic.AtomicIntegerArray, p2: int, p3: int, p4: int): int
+    private final method extensionLoopMixedReceivers$atomicfu(p0: java.lang.Object, p1: java.util.concurrent.atomic.AtomicIntegerFieldUpdater, p2: int, p3: int): int
+    private final method extensionLoopRecursive$atomicfu$array(p0: java.lang.Object, p1: java.util.concurrent.atomic.AtomicIntegerArray, p2: int, p3: int): int
+    private final method extensionLoopRecursive$atomicfu(p0: java.lang.Object, p1: java.util.concurrent.atomic.AtomicIntegerFieldUpdater, p2: int): int
+    private final method foo$atomicfu$array(p0: java.lang.Object, p1: java.util.concurrent.atomic.AtomicIntegerArray, p2: int, p3: int): int
+    private final method foo$atomicfu(p0: java.lang.Object, p1: java.util.concurrent.atomic.AtomicIntegerFieldUpdater, p2: int): int
+    private final method loop$atomicfu$array(p0: java.util.concurrent.atomic.AtomicIntegerArray, p1: int, p2: kotlin.jvm.functions.Function1): void
+    private final method loop$atomicfu(p0: java.util.concurrent.atomic.AtomicIntegerFieldUpdater, p1: kotlin.jvm.functions.Function1, p2: java.lang.Object): void
+    public final method testIntExtensionLoops(): void
+    public final inner class LoopTest$A
+}
