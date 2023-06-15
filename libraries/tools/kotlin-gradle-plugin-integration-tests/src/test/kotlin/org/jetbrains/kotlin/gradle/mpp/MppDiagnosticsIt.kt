@@ -8,6 +8,7 @@ package org.jetbrains.kotlin.gradle.mpp
 import org.gradle.util.GradleVersion
 import org.jetbrains.kotlin.gradle.plugin.diagnostics.KotlinToolingDiagnostics
 import org.jetbrains.kotlin.gradle.testbase.*
+import java.io.File
 import kotlin.io.path.appendText
 import kotlin.io.path.writeText
 
@@ -16,9 +17,8 @@ class MppDiagnosticsIt : KGPBaseTest() {
     @GradleTest
     fun testDiagnosticsRenderingSmoke(gradleVersion: GradleVersion) {
         project("diagnosticsRenderingSmoke", gradleVersion) {
-            val expectedOutputFile = projectPath.resolve("expectedOutput.txt").toFile()
             build {
-                assertEqualsToFile(expectedOutputFile, extractProjectsAndTheirVerboseDiagnostics())
+                assertEqualsToFile(expectedOutputFile(), extractProjectsAndTheirVerboseDiagnostics())
             }
         }
     }
@@ -44,6 +44,43 @@ class MppDiagnosticsIt : KGPBaseTest() {
             this.gradleProperties.appendText("kotlin.mpp.deprecatedProperties.nowarn=true${System.lineSeparator()}")
             checkDeprecatedProperties(isDeprecationExpected = false)
         }
+    }
+
+    @GradleTest
+    fun testErrorDiagnosticBuildFails(gradleVersion: GradleVersion) {
+        project("errorDiagnosticBuildFails", gradleVersion) {
+            // 'assemble' (triggers compileKotlin-tasks indireectly): fail
+            buildAndFail("assemble") {
+                assertEqualsToFile(expectedOutputFile("assemble"), extractProjectsAndTheirVerboseDiagnostics())
+            }
+
+            // 'clean', not directly relevant to Kotlin tasks: build is OK
+            build("clean") {
+                assertEqualsToFile(expectedOutputFile("clean"), extractProjectsAndTheirVerboseDiagnostics())
+            }
+
+            // Custom task, irrelevant to Kotlin tasks: build is OK
+            build("myTask", "--rerun-tasks") {
+                assertEqualsToFile(expectedOutputFile("customTask"), extractProjectsAndTheirVerboseDiagnostics())
+            }
+        }
+    }
+
+    @GradleTest
+    fun testErrorDiagnosticBuildSucceeds(gradleVersion: GradleVersion) {
+        project("errorDiagnosticBuildSucceeds", gradleVersion) {
+            build("assemble") {
+                assertEqualsToFile(expectedOutputFile("assemble"), extractProjectsAndTheirVerboseDiagnostics())
+            }
+            build("myTask", "--rerun-tasks") {
+                assertEqualsToFile(expectedOutputFile("customTask"), extractProjectsAndTheirVerboseDiagnostics())
+            }
+        }
+    }
+
+    private fun TestProject.expectedOutputFile(suffix: String? = null): File {
+        val suffixIfAny = if (suffix != null) "-$suffix" else ""
+        return projectPath.resolve("expectedOutput$suffixIfAny.txt").toFile()
     }
 
     private fun TestProject.checkDeprecatedProperties(isDeprecationExpected: Boolean) {

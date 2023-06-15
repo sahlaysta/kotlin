@@ -62,6 +62,11 @@ internal abstract class KotlinToolingDiagnosticsCollector : BuildService<BuildSe
         isTransparent = true
     }
 
+    fun hasErrors(): Boolean =
+        rawDiagnosticsFromProject.asSequence()
+            .flatMap { (_, diagnostics) -> diagnostics }
+            .any { it.severity == ToolingDiagnostic.Severity.ERROR }
+
     private fun saveDiagnostic(project: Project, diagnostic: ToolingDiagnostic) {
         if (isTransparent) {
             renderReportedDiagnostic(diagnostic, project.logger, project.kotlinPropertiesProvider.internalVerboseDiagnostics)
