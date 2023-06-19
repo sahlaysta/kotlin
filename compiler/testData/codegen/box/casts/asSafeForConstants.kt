@@ -1,5 +1,3 @@
-// IGNORE_BACKEND_K1: JS_IR
-// IGNORE_BACKEND_K1: JS_IR_ES6
 // TODO: muted automatically, investigate should it be ran for JS or not
 // IGNORE_BACKEND: JS
 
