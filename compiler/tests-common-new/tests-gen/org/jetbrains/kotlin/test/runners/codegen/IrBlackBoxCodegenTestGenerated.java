@@ -3076,6 +3076,12 @@ public class IrBlackBoxCodegenTestGenerated extends AbstractIrBlackBoxCodegenTes
         }
 
         @Test
+        @TestMetadata("arrayOfNulls.kt")
+        public void testArrayOfNulls() throws Exception {
+            runTest("compiler/testData/codegen/box/callableReference/arrayOfNulls.kt");
+        }
+
+        @Test
         @TestMetadata("builtinFunctionReferenceOwner.kt")
         public void testBuiltinFunctionReferenceOwner() throws Exception {
             runTest("compiler/testData/codegen/box/callableReference/builtinFunctionReferenceOwner.kt");

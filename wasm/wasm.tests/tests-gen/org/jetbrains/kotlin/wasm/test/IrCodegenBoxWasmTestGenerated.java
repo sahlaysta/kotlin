@@ -1743,6 +1743,11 @@ public class IrCodegenBoxWasmTestGenerated extends AbstractIrCodegenBoxWasmTest 
             runTest("compiler/testData/codegen/box/callableReference/arrayOf.kt");
         }
 
+        @TestMetadata("arrayOfNulls.kt")
+        public void testArrayOfNulls() throws Exception {
+            runTest("compiler/testData/codegen/box/callableReference/arrayOfNulls.kt");
+        }
+
         @TestMetadata("callableReferenceOfCompanionConst.kt")
         public void testCallableReferenceOfCompanionConst() throws Exception {
             runTest("compiler/testData/codegen/box/callableReference/callableReferenceOfCompanionConst.kt");
