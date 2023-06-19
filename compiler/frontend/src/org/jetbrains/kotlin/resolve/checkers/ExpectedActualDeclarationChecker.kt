@@ -23,6 +23,8 @@ import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.diagnostics.Errors
 import org.jetbrains.kotlin.incremental.components.ExpectActualTracker
+import org.jetbrains.kotlin.mpp.MppJavaImplicitActualizatorMarker
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.psi.psiUtil.hasActualModifier
 import org.jetbrains.kotlin.resolve.*
@@ -37,6 +39,8 @@ import org.jetbrains.kotlin.resolve.source.KotlinSourceElement
 import org.jetbrains.kotlin.resolve.source.PsiSourceFile
 import org.jetbrains.kotlin.types.KotlinType
 import java.io.File
+
+private val unsafeJvmImplicitActualizationFqn = FqName("kotlin.jvm.UnsafeJvmImplicitActualization")
 
 class ExpectedActualDeclarationChecker(
     val moduleStructureOracle: ModuleStructureOracle,
@@ -62,7 +66,7 @@ class ExpectedActualDeclarationChecker(
         if (descriptor.isExpect) {
             checkExpectedDeclarationHasProperActuals(
                 declaration, descriptor, context.trace,
-                checkActualModifier, context.expectActualTracker
+                checkActualModifier, context
             )
         }
         if (descriptor.isActualOrSomeContainerIsActual()) {
@@ -90,7 +94,7 @@ class ExpectedActualDeclarationChecker(
         descriptor: MemberDescriptor,
         trace: BindingTrace,
         checkActualModifier: Boolean,
-        expectActualTracker: ExpectActualTracker
+        context: DeclarationCheckerContext
     ) {
         val allActualizationPaths = moduleStructureOracle.findAllReversedDependsOnPaths(descriptor.module)
         val allLeafModules = allActualizationPaths.map { it.nodes.last() }.toSet()
@@ -99,12 +103,39 @@ class ExpectedActualDeclarationChecker(
             val actuals = ExpectedActualResolver.findActualForExpected(descriptor, leafModule) ?: return@forEach
 
             checkExpectedDeclarationHasAtLeastOneActual(
-                reportOn, descriptor, actuals, trace, leafModule, checkActualModifier, expectActualTracker
+                reportOn, descriptor, actuals, trace, leafModule, checkActualModifier, context.expectActualTracker
             )
+
+            checkImplicitJavaActualization(reportOn, descriptor, actuals, leafModule, context)
 
             checkExpectedDeclarationHasAtMostOneActual(
                 reportOn, descriptor, actuals, allActualizationPaths, trace
             )
+        }
+    }
+
+    private fun checkImplicitJavaActualization(
+        expectPsi: KtNamedDeclaration,
+        expect: MemberDescriptor,
+        actuals: ActualsMap,
+        module: ModuleDescriptor,
+        context: DeclarationCheckerContext
+    ) {
+        val settings = context.languageVersionSettings
+        val actualMembers = actuals
+            .filter { (compatibility, _) -> compatibility.isCompatibleOrWeakCompatible() }
+            .flatMap { (_, members) -> members }
+            .takeIf(List<MemberDescriptor>::isNotEmpty)
+            ?: return
+
+        if (actualMembers.any {
+                it is MppJavaImplicitActualizatorMarker &&
+                        with(OptInUsageChecker) {
+                            !expectPsi.isOptInAllowed(unsafeJvmImplicitActualizationFqn, settings, context.trace.bindingContext)
+                        }
+            }
+        ) {
+            context.trace.report(Errors.IMPLICIT_JVM_ACTUALIZATION.on(expectPsi, expect, module))
         }
     }
 
@@ -430,7 +461,7 @@ class ExpectedActualDeclarationChecker(
         fun Map<out ExpectActualCompatibility<MemberDescriptor>, Collection<MemberDescriptor>>.allStrongIncompatibilities(): Boolean =
             this.keys.all { it is Incompatible && it.kind == IncompatibilityKind.STRONG }
 
-        fun ExpectActualCompatibility<MemberDescriptor>.isCompatibleOrWeakCompatible() =
+        internal fun ExpectActualCompatibility<MemberDescriptor>.isCompatibleOrWeakCompatible() =
             this is Compatible ||
                     this is Incompatible && kind == IncompatibilityKind.WEAK
     }
