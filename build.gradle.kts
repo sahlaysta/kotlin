@@ -862,6 +862,11 @@ tasks {
             dependsOn((rootProject.extra["compilerArtifactsForIde"] as List<String>).map { "$it:install" })
         }
     }
+
+    register<Exec>("mvnInstall") {
+        workingDir = rootProject.projectDir.resolve("libraries")
+        commandLine = getMvnwCmd() + listOf("clean", "install", "-DskipTests")
+    }
 }
 
 val zipCompiler by tasks.registering(Zip::class) {
