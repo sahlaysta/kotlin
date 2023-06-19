@@ -235,8 +235,9 @@ private fun unfoldBody(body: IrBody, callStack: CallStack) {
 
 private fun unfoldBlock(block: IrBlock, callStack: CallStack) {
     if (block is IrReturnableBlock) {
-        val inlinedBlock = block.statements.singleOrNull() as? IrInlinedFunctionBlock
-        if (inlinedBlock != null && inlinedBlock.inlineCall.symbol.owner.hasAnnotation(intrinsicConstEvaluationAnnotation)) {
+        val inlinedDeclaration = block.inlineFunction?.originalFunction?.let { it.property ?: it }
+        if (inlinedDeclaration != null && inlinedDeclaration.hasAnnotation(intrinsicConstEvaluationAnnotation)) {
+            val inlinedBlock = block.statements.single() as IrInlinedFunctionBlock
             callStack.pushCompoundInstruction(inlinedBlock.inlineCall)
             return
         }
