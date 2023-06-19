@@ -15,6 +15,7 @@ import org.jetbrains.kotlin.ir.interpreter.isAccessToNotNullableObject
 import org.jetbrains.kotlin.ir.interpreter.preprocessor.IrInterpreterKCallableNamePreprocessor.Companion.isEnumName
 import org.jetbrains.kotlin.ir.interpreter.preprocessor.IrInterpreterKCallableNamePreprocessor.Companion.isKCallableNameCall
 import org.jetbrains.kotlin.ir.types.*
+import org.jetbrains.kotlin.ir.util.fileOrNull
 import org.jetbrains.kotlin.ir.util.parentAsClass
 import org.jetbrains.kotlin.ir.util.statements
 
@@ -69,7 +70,7 @@ class IrInterpreterCommonChecker : IrInterpreterChecker {
         }
 
         if (expression.isGetterToConstVal() && !data.interpreterConfiguration.inlineConstVal) {
-            return false
+            return data.irFile == owner.fileOrNull
         }
 
         val dispatchReceiverComputable = expression.dispatchReceiver?.accept(this, data) ?: true
