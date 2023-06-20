@@ -40,11 +40,9 @@ private class WasmSingleUnsignedGenerator(type: UnsignedType, out: PrintWriter) 
     }
 
     override fun ClassBuilder.modifyGeneratedClass() {
-        isValue = false
         annotations += listOf(
             "SinceKotlin(\"1.5\")",
             "WasExperimental(ExperimentalUnsignedTypes::class)",
-            "WasmAutoboxed"
         )
 
         generateUnsignedNumberConstructor()

@@ -13,8 +13,7 @@ import kotlin.wasm.internal.*
 
 @SinceKotlin("1.5")
 @WasExperimental(ExperimentalUnsignedTypes::class)
-@WasmAutoboxed
-public class UByte private constructor(private val value: UByte) : Comparable<UByte> {
+public value class UByte private constructor(private val value: UByte) : Comparable<UByte> {
     companion object {
         /**
          * A constant holding the minimum value an instance of UByte can have.

@@ -13,8 +13,7 @@ import kotlin.wasm.internal.*
 
 @SinceKotlin("1.5")
 @WasExperimental(ExperimentalUnsignedTypes::class)
-@WasmAutoboxed
-public class UInt private constructor(private val value: UInt) : Comparable<UInt> {
+public value class UInt private constructor(private val value: UInt) : Comparable<UInt> {
     companion object {
         /**
          * A constant holding the minimum value an instance of UInt can have.

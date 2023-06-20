@@ -13,8 +13,7 @@ import kotlin.wasm.internal.*
 
 @SinceKotlin("1.5")
 @WasExperimental(ExperimentalUnsignedTypes::class)
-@WasmAutoboxed
-public class ULong private constructor(private val value: ULong) : Comparable<ULong> {
+public value class ULong private constructor(private val value: ULong) : Comparable<ULong> {
     companion object {
         /**
          * A constant holding the minimum value an instance of ULong can have.
