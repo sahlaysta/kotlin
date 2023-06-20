@@ -21,9 +21,11 @@ class WasmPrimitivesGenerator(writer: PrintWriter) : BasePrimitivesGenerator(wri
     override fun ClassBuilder.modifyGeneratedClass(thisKind: PrimitiveType) {
         annotations += "WasmAutoboxed"
         // used here little hack with name extension just to avoid creation of specialized "ConstructorParameterDescription"
-        constructorParam {
-            name = "private val value"
-            type = thisKind.capitalized
+        constructor {
+            param {
+                name = "private val value"
+                type = thisKind.capitalized
+            }
         }
     }
 
@@ -314,17 +316,5 @@ class WasmPrimitivesGenerator(writer: PrintWriter) : BasePrimitivesGenerator(wri
             annotations += "WasmOp(WasmOp.${thisKind.prefixUppercase}_${methodName.toWasmOperator()})"
             "implementedAsIntrinsic".addAsSingleLineBody(bodyOnNewLine = true)
         }
-
-        private val PrimitiveType.prefixUppercase: String
-            get() = when (this) {
-                PrimitiveType.BYTE, PrimitiveType.SHORT, PrimitiveType.INT -> "I32"
-                PrimitiveType.LONG -> "I64"
-                PrimitiveType.FLOAT -> "F32"
-                PrimitiveType.DOUBLE -> "F64"
-                else -> ""
-            }
-
-        private val PrimitiveType.prefixLowercase: String
-            get() = prefixUppercase.lowercase()
     }
 }
