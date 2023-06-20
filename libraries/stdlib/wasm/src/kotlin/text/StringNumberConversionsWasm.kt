@@ -7,6 +7,7 @@ package kotlin.text
 
 import kotlin.math.abs
 import kotlin.wasm.internal.WasmCharArray
+import kotlin.wasm.internal.copyWasmArray
 import kotlin.wasm.internal.wasm_f32_demote_f64
 
 /**
@@ -147,9 +148,10 @@ actual fun Long.toString(radix: Int): String {
 
     if (isNegative) {
         buffer.set(currentBufferIndex, '-')
+        currentBufferIndex--
     }
 
-    return buffer.createString()
+    return buffer.createStringStartingFrom(currentBufferIndex + 1)
 }
 
 // Used by unsigned/src/kotlin/UStrings.kt to convert unsigned long to string
@@ -162,10 +164,10 @@ internal inline fun ulongToString(value: Long, radix: Int): String {
     if (radix == 10) return unsignedValue.toString()
     if (value in 0 until radix) return value.getChar().toString()
 
-    val buffer = WasmCharArray(ULong.SIZE_BITS + 1)
+    val buffer = WasmCharArray(ULong.SIZE_BITS)
 
     val ulongRadix = radix.toULong()
-    var currentBufferIndex = ULong.SIZE_BITS
+    var currentBufferIndex = ULong.SIZE_BITS - 1
 
     while (unsignedValue != 0UL) {
         buffer.set(currentBufferIndex, (unsignedValue % ulongRadix).toLong().getChar())
@@ -173,7 +175,16 @@ internal inline fun ulongToString(value: Long, radix: Int): String {
         currentBufferIndex--
     }
 
-    return buffer.createString()
+    return buffer.createStringStartingFrom(currentBufferIndex + 1)
+}
+
+private fun WasmCharArray.createStringStartingFrom(index: Int): String {
+    if (index == 0) return createString()
+    val newLength = this.len() - index
+    if (newLength == 0) return ""
+    val newChars = WasmCharArray(newLength)
+    copyWasmArray(this, newChars, index, 0, newLength)
+    return newChars.createString()
 }
 
 private fun Long.getChar() = toInt().let { if (it < 10) '0' + it else 'a' + (it - 10) }
