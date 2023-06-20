@@ -69,8 +69,8 @@ class IrInterpreterCommonChecker : IrInterpreterChecker {
             return expression.isGetterToConstVal()
         }
 
-        if (expression.isGetterToConstVal() && !data.interpreterConfiguration.inlineConstVal) {
-            return data.irFile == owner.fileOrNull
+        if (expression.isGetterToConstVal() && !data.interpreterConfiguration.inlineConstVal && data.irFile != owner.fileOrNull) {
+            return false
         }
 
         val dispatchReceiverComputable = expression.dispatchReceiver?.accept(this, data) ?: true
