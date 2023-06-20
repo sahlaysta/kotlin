@@ -46,8 +46,6 @@ private class WasmSingleUnsignedGenerator(type: UnsignedType, out: PrintWriter) 
         )
 
         generateUnsignedNumberConstructor()
-        generateHashCode()
-        generateEquals()
 
         when (type) {
             UnsignedType.ULONG -> generateReinterpret(PrimitiveType.LONG.capitalized)
@@ -69,7 +67,7 @@ private class WasmSingleUnsignedGenerator(type: UnsignedType, out: PrintWriter) 
             visibility = "private"
             param {
                 name = "private val value"
-                type = this@WasmSingleUnsignedGenerator.type.capitalized
+                type = this@WasmSingleUnsignedGenerator.type.asSigned.capitalized
             }
         }
     }
@@ -221,46 +219,6 @@ private class WasmSingleUnsignedGenerator(type: UnsignedType, out: PrintWriter) 
             UnsignedType.UBYTE, UnsignedType.USHORT -> "toUInt().toString()".addAsSingleLineBody()
             UnsignedType.UINT -> "utoa32(this, 10)".addAsSingleLineBody()
             UnsignedType.ULONG -> "utoa64(this, 10)".addAsSingleLineBody()
-        }
-    }
-
-    private fun ClassBuilder.generateHashCode() {
-        method {
-            signature {
-                isOverride = true
-                methodName = "hashCode"
-                returnType = PrimitiveType.INT.capitalized
-            }
-
-            when (type) {
-                UnsignedType.ULONG -> "((this shr 32) xor this).toInt()"
-                UnsignedType.UINT -> "this.toInt()"
-                else -> "this.to${type.asSigned.capitalized}().toInt()"
-            }.addAsSingleLineBody()
-        }
-    }
-
-    private fun ClassBuilder.generateEquals() {
-        method {
-            asIntrinsicConstEvaluation()
-
-            signature {
-                isOverride = true
-                methodName = "equals"
-                parameter {
-                    name = "other"
-                    type = "Any?"
-                }
-                returnType = "Boolean"
-            }
-
-            val additionalCheck = when (type) {
-                UnsignedType.ULONG -> "wasm_i64_eq(this.toLong(), $parameterName.toLong())"
-                UnsignedType.UINT -> "wasm_i32_eq(this.reinterpretAsInt(), $parameterName.reinterpretAsInt())"
-                else -> "wasm_i32_eq(this.toInt(), $parameterName.toInt())"
-            }
-
-            "$parameterName is ${type.capitalized} && $additionalCheck".addAsSingleLineBody(bodyOnNewLine = true)
         }
     }
 

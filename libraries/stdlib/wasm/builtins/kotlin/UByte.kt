@@ -13,7 +13,7 @@ import kotlin.wasm.internal.*
 
 @SinceKotlin("1.5")
 @WasExperimental(ExperimentalUnsignedTypes::class)
-public value class UByte private constructor(private val value: UByte) : Comparable<UByte> {
+public value class UByte private constructor(private val value: Byte) : Comparable<UByte> {
     companion object {
         /**
          * A constant holding the minimum value an instance of UByte can have.
@@ -428,12 +428,6 @@ public value class UByte private constructor(private val value: UByte) : Compara
     public fun toDouble(): Double = wasm_f64_convert_i32_u(this.toInt())
 
     public override fun toString(): String = toUInt().toString()
-
-    public override fun hashCode(): Int = this.toByte().toInt()
-
-    @kotlin.internal.IntrinsicConstEvaluation
-    public override fun equals(other: Any?): Boolean =
-        other is UByte && wasm_i32_eq(this.toInt(), other.toInt())
 
     @PublishedApi
     @WasmNoOpCast

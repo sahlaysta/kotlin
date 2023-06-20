@@ -13,7 +13,7 @@ import kotlin.wasm.internal.*
 
 @SinceKotlin("1.5")
 @WasExperimental(ExperimentalUnsignedTypes::class)
-public value class ULong private constructor(private val value: ULong) : Comparable<ULong> {
+public value class ULong private constructor(private val value: Long) : Comparable<ULong> {
     companion object {
         /**
          * A constant holding the minimum value an instance of ULong can have.
@@ -453,12 +453,6 @@ public value class ULong private constructor(private val value: ULong) : Compara
     public fun toDouble(): Double = wasm_f64_convert_i64_u(this.toLong())
 
     public override fun toString(): String = utoa64(this, 10)
-
-    public override fun hashCode(): Int = ((this shr 32) xor this).toInt()
-
-    @kotlin.internal.IntrinsicConstEvaluation
-    public override fun equals(other: Any?): Boolean =
-        other is ULong && wasm_i64_eq(this.toLong(), other.toLong())
 
     @PublishedApi
     @WasmNoOpCast

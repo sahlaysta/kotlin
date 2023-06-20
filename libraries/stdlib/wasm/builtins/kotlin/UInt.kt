@@ -13,7 +13,7 @@ import kotlin.wasm.internal.*
 
 @SinceKotlin("1.5")
 @WasExperimental(ExperimentalUnsignedTypes::class)
-public value class UInt private constructor(private val value: UInt) : Comparable<UInt> {
+public value class UInt private constructor(private val value: Int) : Comparable<UInt> {
     companion object {
         /**
          * A constant holding the minimum value an instance of UInt can have.
@@ -450,12 +450,6 @@ public value class UInt private constructor(private val value: UInt) : Comparabl
     public fun toDouble(): Double = wasm_f64_convert_i32_u(this.toInt())
 
     public override fun toString(): String = utoa32(this, 10)
-
-    public override fun hashCode(): Int = this.toInt()
-
-    @kotlin.internal.IntrinsicConstEvaluation
-    public override fun equals(other: Any?): Boolean =
-        other is UInt && wasm_i32_eq(this.reinterpretAsInt(), other.reinterpretAsInt())
 
     @PublishedApi
     @WasmNoOpCast
