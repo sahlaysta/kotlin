@@ -7,7 +7,7 @@
 #define CUSTOM_ALLOC_CPP_GCAPI_HPP_
 
 #include <cstdint>
-#include <inttypes.h>
+#include <cinttypes>
 #include <limits>
 #include <stdlib.h>
 
