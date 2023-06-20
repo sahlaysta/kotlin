@@ -318,7 +318,7 @@ internal external fun wasm_i32_wrap_i64(a: Long): Int
 internal external fun wasm_i64_extend_i32_s(a: Int): Long
 
 @WasmOp(WasmOp.I64_EXTEND_I32_U)
-internal external fun wasm_i64_extend_i32_u(a: Int): ULong
+internal external fun wasm_i64_extend_i32_u(a: Int): Long
 
 @WasmOp(WasmOp.F32_CONVERT_I32_S)
 internal external fun wasm_f32_convert_i32_s(a: Int): Float

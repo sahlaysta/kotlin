@@ -389,7 +389,7 @@ public value class UInt private constructor(private val value: Int) : Comparable
      * whereas the most significant 32 bits are filled with zeros.
      */
     @kotlin.internal.IntrinsicConstEvaluation
-    public fun toLong(): Long = wasm_i64_extend_i32_u(this.toInt()).toLong()
+    public fun toLong(): Long = wasm_i64_extend_i32_u(this.toInt())
 
     /**
      * Converts this [UInt] value to [UByte].
@@ -429,7 +429,7 @@ public value class UInt private constructor(private val value: Int) : Comparable
      * whereas the most significant 32 bits are filled with zeros.
      */
     @kotlin.internal.IntrinsicConstEvaluation
-    public fun toULong(): ULong = wasm_i64_extend_i32_u(this.toInt())
+    public fun toULong(): ULong = wasm_i64_extend_i32_u(this.toInt()).toULong()
 
     /**
      * Converts this [UInt] value to [Float].
