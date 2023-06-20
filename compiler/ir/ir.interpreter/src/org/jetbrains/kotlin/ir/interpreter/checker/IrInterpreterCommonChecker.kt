@@ -58,26 +58,21 @@ class IrInterpreterCommonChecker : IrInterpreterChecker {
     }
 
     override fun visitCall(expression: IrCall, data: IrInterpreterCheckerData): Boolean {
-        if (!data.mode.canEvaluateExpression(expression)) return false
-
         val owner = expression.symbol.owner
-        if (!data.mode.canEvaluateFunction(owner)) return false
-
-        if (expression.isKCallableNameCall(data.irBuiltIns) || expression.isEnumName()) return true
-
-        if (expression.dispatchReceiver.isAccessToNotNullableObject()) {
-            return expression.isGetterToConstVal()
+        return when {
+            !data.mode.canEvaluateExpression(expression) || !data.mode.canEvaluateFunction(owner) -> false
+            expression.isKCallableNameCall(data.irBuiltIns) || expression.isEnumName() -> true
+            !data.interpreterConfiguration.inlineConstVal && expression.isGetterToConstVal() && data.irFile != owner.fileOrNull -> false
+            expression.dispatchReceiver.isAccessToNotNullableObject() -> expression.isGetterToConstVal()
+            else -> {
+                val dispatchReceiverComputable = expression.dispatchReceiver?.accept(this, data) ?: true
+                val extensionReceiverComputable = expression.extensionReceiver?.accept(this, data) ?: true
+                dispatchReceiverComputable &&
+                        extensionReceiverComputable &&
+                        visitValueArguments(expression, data) &&
+                        visitBodyIfNeeded(owner, data)
+            }
         }
-
-        if (expression.isGetterToConstVal() && !data.interpreterConfiguration.inlineConstVal && data.irFile != owner.fileOrNull) {
-            return false
-        }
-
-        val dispatchReceiverComputable = expression.dispatchReceiver?.accept(this, data) ?: true
-        val extensionReceiverComputable = expression.extensionReceiver?.accept(this, data) ?: true
-        if (!visitValueArguments(expression, data)) return false
-        val bodyComputable = visitBodyIfNeeded(owner, data)
-        return dispatchReceiverComputable && extensionReceiverComputable && bodyComputable
     }
 
     override fun visitVariable(declaration: IrVariable, data: IrInterpreterCheckerData): Boolean {
@@ -173,10 +168,6 @@ class IrInterpreterCommonChecker : IrInterpreterChecker {
     }
 
     override fun visitGetField(expression: IrGetField, data: IrInterpreterCheckerData): Boolean {
-        if (!data.interpreterConfiguration.inlineConstVal) {
-            return false
-        }
-
         val owner = expression.symbol.owner
         val property = owner.correspondingPropertySymbol?.owner
         val fqName = owner.fqName
@@ -184,6 +175,7 @@ class IrInterpreterCommonChecker : IrInterpreterChecker {
             return owner.origin == IrDeclarationOrigin.IR_EXTERNAL_JAVA_DECLARATION_STUB && owner.isStatic && owner.isFinal &&
                     (owner.type.isPrimitiveType() || owner.type.isStringClassType())
         }
+
         return owner.asVisited {
             when {
                 // TODO fix later; used it here because java boolean resolves very strange,
