@@ -15,7 +15,7 @@ import org.gradle.jvm.toolchain.JavaLauncher
 import java.io.File
 
 /**
- * Marker interface indicating Kotlin task is using [Gradle JDK toolchain](https://docs.gradle.org/current/userguide/toolchains.html)
+ * Interface indicating Kotlin task is using [Gradle JDK toolchain](https://docs.gradle.org/current/userguide/toolchains.html)
  * feature. The Gradle JDK toolchain feature allows configuring and using specific JDK versions on task execution.
  */
 interface UsesKotlinJavaToolchain : Task {
