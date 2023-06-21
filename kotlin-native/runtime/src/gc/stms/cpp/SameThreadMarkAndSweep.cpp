@@ -53,10 +53,6 @@ struct ProcessWeaksTraits {
 
 } // namespace
 
-void gc::SameThreadMarkAndSweep::ThreadData::SafePointAllocation(size_t size) noexcept {
-    gcScheduler_.OnSafePointAllocation(size);
-}
-
 void gc::SameThreadMarkAndSweep::ThreadData::Schedule() noexcept {
     RuntimeLogInfo({kTagGC}, "Scheduling GC manually");
     ThreadStateGuard guard(ThreadState::kNative);
@@ -138,8 +134,6 @@ void gc::SameThreadMarkAndSweep::PerformFullGC(int64_t epoch) noexcept {
     gc::collectRootSet<internal::MarkTraits>(gcHandle, markQueue_, [](mm::ThreadData&) { return true; });
 
     gc::Mark<internal::MarkTraits>(gcHandle, markQueue_);
-    auto markStats = gcHandle.getMarked();
-    scheduler.gcData().UpdateAliveSetBytes(markStats.markedSizeBytes);
 
     gc::processWeaks<ProcessWeaksTraits>(gcHandle, mm::SpecialRefRegistry::instance());
 
@@ -153,6 +147,7 @@ void gc::SameThreadMarkAndSweep::PerformFullGC(int64_t epoch) noexcept {
     auto finalizerQueue = gc::Sweep<SweepTraits>(gcHandle, *objectFactoryIterable);
     objectFactoryIterable = std::nullopt;
     kotlin::compactObjectPoolInMainThread();
+    scheduler.gcData().UpdateAliveSetBytes(allocatedBytes());
 
     mm::ResumeThreads();
     gcHandle.threadsAreResumed();

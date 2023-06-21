@@ -21,6 +21,7 @@
 #include "FinalizerHooks.hpp"
 #include "GCStatistics.hpp"
 #include "KAssert.h"
+#include "Memory.h"
 #include "ObjectFactory.hpp"
 
 namespace {
@@ -97,7 +98,8 @@ void* SafeAlloc(uint64_t size) noexcept {
         konan::consoleErrorf("Out of memory trying to allocate %" PRIu64 "bytes: %s. Aborting.\n", size, strerror(errno));
         konan::abort();
     }
-    allocatedBytesCounter.fetch_add(static_cast<size_t>(size), std::memory_order_relaxed);
+    auto previousSize = allocatedBytesCounter.fetch_add(static_cast<size_t>(size), std::memory_order_relaxed);
+    OnMemoryAllocation(previousSize + static_cast<size_t>(size));
     return memory;
 }
 
