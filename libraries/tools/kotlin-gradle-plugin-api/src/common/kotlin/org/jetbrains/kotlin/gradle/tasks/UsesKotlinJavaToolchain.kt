@@ -70,8 +70,8 @@ interface KotlinJavaToolchain {
      */
     interface JdkSetter {
         /**
-         * Configures JDK toolchain to use JDK located under [jdkHomeLocation] path. Major JDK version from [javaVersion] is considered
-         * as compile task input to avoid Gradle remote build cache hits for different versions.
+         * Configures JDK toolchain to use JDK located under [jdkHomeLocation] absolute path. Major JDK version from [javaVersion]
+         * is considered as compile task input to avoid Gradle remote build cache hits for different versions.
          *
          * *Note*: project build will fail on providing here JRE instead of JDK!
          *
@@ -84,8 +84,8 @@ interface KotlinJavaToolchain {
         )
 
         /**
-         * Configures JDK toolchain to use JDK located under [jdkHomeLocation] path. Major JDK version from [javaVersion] is considered
-         * as compile task input to avoid Gradle remote build cache hits for different versions.
+         * Configures JDK toolchain to use JDK located under [jdkHomeLocation] absolute path. Major JDK version from [javaVersion]
+         * is considered as compile task input to avoid Gradle remote build cache hits for different versions.
          *
          * *Note*: project build will fail on providing here JRE instead of JDK!
          *
