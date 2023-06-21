@@ -91,6 +91,7 @@ interface KotlinJavaToolchain {
          *
          * @param jdkHomeLocation path to JDK location on the machine
          * @param jdkVersion JDK version located under [jdkHomeLocation] path, accepts any type accepted by [JavaVersion.toVersion]
+         * @throws IllegalArgumentException when the provided value cannot be converted.
          */
         fun use(
             jdkHomeLocation: String,
