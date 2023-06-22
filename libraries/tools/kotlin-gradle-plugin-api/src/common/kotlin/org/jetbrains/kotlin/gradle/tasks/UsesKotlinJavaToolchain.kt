@@ -16,7 +16,9 @@ import java.io.File
 
 /**
  * Interface indicating Kotlin task is using [Gradle JDK toolchain](https://docs.gradle.org/current/userguide/toolchains.html)
- * feature. The Gradle JDK toolchain feature allows configuring and using specific JDK versions on task execution.
+ * feature to run task action where parts of JDK are required (for example to compile Kotlin Java target). Different tasks could
+ * use different JDK versions which could be configured using this interface
+ * via [Gradle Tasks API](https://docs.gradle.org/current/userguide/more_about_tasks.html#sec:configuring_tasks).
  */
 interface UsesKotlinJavaToolchain : Task {
 
@@ -39,7 +41,11 @@ interface UsesKotlinJavaToolchain : Task {
 /**
  * Kotlin JDK toolchain.
  *
- * Contains configured JDK which is used in related Kotlin task and provides ways to configure it.
+ * Provides ways to configure JDK either via [JdkSetter] by providing path to JDK directly or
+ * via [JavaToolchainSetter] using configured [JavaLauncher].
+ *
+ * Configured JDK Java version is exposed as task input to distinguish stored in the
+ * [build cache](https://docs.gradle.org/current/userguide/build_cache.html) task outputs produced using different JDK versions.
  */
 interface KotlinJavaToolchain {
 
@@ -71,7 +77,8 @@ interface KotlinJavaToolchain {
     interface JdkSetter {
         /**
          * Configures JDK toolchain to use JDK located under [jdkHomeLocation] absolute path. Major JDK version from [javaVersion]
-         * is considered as task input to avoid Gradle remote build cache hits for different versions.
+         * is considered as task input to avoid Gradle [build cache](https://docs.gradle.org/current/userguide/build_cache.html)
+         * hits for different versions.
          *
          * *Note*: project build will fail on providing here JRE instead of JDK!
          *
@@ -85,7 +92,8 @@ interface KotlinJavaToolchain {
 
         /**
          * Configures JDK toolchain to use JDK located under [jdkHomeLocation] absolute path. Major JDK version from [javaVersion]
-         * is considered as task input to avoid Gradle remote build cache hits for different versions.
+         * is considered as task input to avoid Gradle remote [build cache](https://docs.gradle.org/current/userguide/build_cache.html)
+         * hits for different versions.
          *
          * *Note*: project build will fail on providing here JRE instead of JDK!
          *
