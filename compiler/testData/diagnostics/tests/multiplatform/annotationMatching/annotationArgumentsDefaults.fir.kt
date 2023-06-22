@@ -8,4 +8,4 @@ expect fun explicitDefaultArgument()
 // FILE: jvm.kt
 // No special handling for this case
 @Ann
-actual fun <!ACTUAL_ANNOTATIONS_NOT_MATCH_EXPECT!>explicitDefaultArgument<!>() {}
+actual fun <!ACTUAL_ANNOTATIONS_NOT_MATCH_EXPECT, ACTUAL_ANNOTATIONS_NOT_MATCH_EXPECT!>explicitDefaultArgument<!>() {}

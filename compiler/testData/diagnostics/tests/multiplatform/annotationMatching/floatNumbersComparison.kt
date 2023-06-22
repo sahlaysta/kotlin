@@ -1,3 +1,4 @@
+// FIR_IDENTICAL
 // MODULE: m1-common
 // FILE: common.kt
 annotation class Ann(val p: Double)

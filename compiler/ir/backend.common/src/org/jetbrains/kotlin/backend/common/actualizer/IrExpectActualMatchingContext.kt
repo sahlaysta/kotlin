@@ -10,7 +10,7 @@ import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.descriptors.Visibility
 import org.jetbrains.kotlin.ir.declarations.*
-import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
+import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.symbols.*
 import org.jetbrains.kotlin.ir.types.*
 import org.jetbrains.kotlin.ir.types.impl.IrSimpleTypeImpl
@@ -21,6 +21,7 @@ import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.mpp.*
 import org.jetbrains.kotlin.name.CallableId
 import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.resolve.calls.mpp.ExpectActualMatchingContext
 import org.jetbrains.kotlin.resolve.calls.mpp.ExpectActualMatchingContext.AnnotationDelegate
@@ -440,11 +441,32 @@ internal abstract class IrExpectActualMatchingContext(
     abstract fun onMatchedCallables(expectSymbol: IrSymbol, actualSymbol: IrSymbol)
 
     override val DeclarationSymbolMarker.annotations: Iterable<AnnotationDelegate>
-        // TODO(Roman.Efremov): implement in subsequent commits
-        get() = emptyList()
+        get() = asIr().annotations.map(::AnnotationDelegateImpl)
 
     override fun areArgumentsEqual(name: Name, annotation1: AnnotationDelegate, annotation2: AnnotationDelegate): Boolean {
-        // TODO(Roman.Efremov): implement in subsequent commits
-        return true
+        fun AnnotationDelegate.getArgumentValue(): IrExpression? {
+            val irElement = (this as AnnotationDelegateImpl).irElement
+            val argumentIndex = irElement.symbol.owner.valueParameters.indexOfFirst { it.name == name }
+            check(argumentIndex >= 0) {
+                "Value argument with name $name not found in ${irElement.symbol}"
+            }
+            return irElement.getValueArgument(argumentIndex)
+        }
+
+        val expression1 = annotation1.getArgumentValue()
+        val expression2 = annotation2.getArgumentValue()
+        return areIrExpressionConstValuesEqual(expression1, expression2)
+    }
+
+    internal fun getClassIdAfterActualization(classId: ClassId): ClassId {
+        return expectToActualClassMap[classId]?.classId ?: classId
+    }
+
+    private class AnnotationDelegateImpl(val irElement: IrConstructorCall) : AnnotationDelegate {
+        override val fqName: FqName?
+            get() = irElement.type.classFqName
+
+        override val allValueArgumentNames: Set<Name>
+            get() = irElement.symbol.owner.valueParameters.map { it.name }.toSet()
     }
 }
