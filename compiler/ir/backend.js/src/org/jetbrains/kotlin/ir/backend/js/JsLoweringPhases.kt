@@ -155,6 +155,12 @@ val createScriptFunctionsPhase = makeJsModulePhase(
     description = "Create functions for initialize and evaluate script"
 ).toModuleLowering()
 
+private val collectClassIdentifiersLowering = makeJsModulePhase(
+    ::JsCollectClassIdentifiersLowering,
+    name = "CollectClassIdentifiersLowering",
+    description = "Save classId before all the lowerings",
+).toModuleLowering()
+
 private val inventNamesForLocalClassesPhase = makeJsModulePhase(
     ::JsInventNamesForLocalClasses,
     name = "InventNamesForLocalClasses",
@@ -860,6 +866,7 @@ val loweringList = listOf<Lowering>(
     validateIrBeforeLowering,
     preventExportOfSyntheticDeclarationsLowering,
     inventNamesForLocalClassesPhase,
+    collectClassIdentifiersLowering,
     annotationInstantiationLowering,
     expectDeclarationsRemovingPhase,
     stripTypeAliasDeclarationsPhase,
