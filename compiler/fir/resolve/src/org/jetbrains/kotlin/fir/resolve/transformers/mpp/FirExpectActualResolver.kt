@@ -5,8 +5,10 @@
 
 package org.jetbrains.kotlin.fir.resolve.transformers.mpp
 
+import org.jetbrains.kotlin.fir.FirExpectActualMatchingContext
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.declarations.*
+import org.jetbrains.kotlin.fir.expectActualMatchingContextFactory
 import org.jetbrains.kotlin.fir.resolve.*
 import org.jetbrains.kotlin.fir.resolve.providers.dependenciesSymbolProvider
 import org.jetbrains.kotlin.fir.resolve.providers.symbolProvider
@@ -15,16 +17,16 @@ import org.jetbrains.kotlin.fir.scopes.impl.FirPackageMemberScope
 import org.jetbrains.kotlin.fir.symbols.FirBasedSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.*
 import org.jetbrains.kotlin.fir.types.*
-import org.jetbrains.kotlin.resolve.calls.mpp.AbstractExpectActualCompatibilityChecker
 import org.jetbrains.kotlin.mpp.CallableSymbolMarker
+import org.jetbrains.kotlin.resolve.calls.mpp.AbstractExpectActualCompatibilityChecker
 
 object FirExpectActualResolver {
     fun findExpectForActual(
         actualSymbol: FirBasedSymbol<*>,
         useSiteSession: FirSession,
-        scopeSession: ScopeSession
+        scopeSession: ScopeSession,
+        context: FirExpectActualMatchingContext,
     ): ExpectForActualData? {
-        val context = FirExpectActualMatchingContext(useSiteSession, scopeSession)
         with(context) {
             val result = when (actualSymbol) {
                 is FirCallableSymbol<*> -> {
