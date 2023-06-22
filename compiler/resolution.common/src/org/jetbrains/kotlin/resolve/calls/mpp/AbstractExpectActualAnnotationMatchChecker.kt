@@ -5,6 +5,7 @@
 
 package org.jetbrains.kotlin.resolve.calls.mpp
 
+import org.jetbrains.kotlin.builtins.StandardNames
 import org.jetbrains.kotlin.mpp.DeclarationSymbolMarker
 import org.jetbrains.kotlin.mpp.TypeAliasSymbolMarker
 import org.jetbrains.kotlin.name.Name
@@ -29,6 +30,9 @@ object AbstractExpectActualAnnotationMatchChecker {
 
         val actualAnnotations = actual.annotations
         for (expectAnnotation in expected.annotations) {
+            if (expectAnnotation.fqName == StandardNames.FqNames.optionalExpectation) {
+                continue
+            }
             if (actualAnnotations.none { areAnnotationsMatch(expectAnnotation, it) }) {
                 return false
             }

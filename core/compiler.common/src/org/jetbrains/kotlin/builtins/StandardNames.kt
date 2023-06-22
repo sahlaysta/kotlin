@@ -145,6 +145,7 @@ object StandardNames {
         @JvmField val unsafeVariance: FqName = fqName("UnsafeVariance")
         @JvmField val publishedApi: FqName = fqName("PublishedApi")
         @JvmField val accessibleLateinitPropertyLiteral: FqName = internalName("AccessibleLateinitPropertyLiteral")
+        @JvmField val optionalExpectation: FqName = fqName("OptionalExpectation")
 
         @JvmField val iterator: FqName = collectionsFqName("Iterator")
         @JvmField val iterable: FqName = collectionsFqName("Iterable")
