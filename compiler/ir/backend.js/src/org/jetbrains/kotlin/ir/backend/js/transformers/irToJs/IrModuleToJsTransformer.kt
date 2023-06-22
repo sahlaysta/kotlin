@@ -311,7 +311,7 @@ class IrModuleToJsTransformer(
         val definitionSet = fileExports.file.declarations.toSet()
 
         fun computeTag(declaration: IrDeclaration): String? {
-            val tag = (backendContext.irFactory as IdSignatureRetriever).declarationSignature(declaration)?.toString()
+            val tag = (backendContext.irFactory as IdSignatureRetriever).declarationSignature(declaration)?.render()
 
             if (tag == null && declaration !in definitionSet) {
                 error("signature for ${declaration.render()} not found")
