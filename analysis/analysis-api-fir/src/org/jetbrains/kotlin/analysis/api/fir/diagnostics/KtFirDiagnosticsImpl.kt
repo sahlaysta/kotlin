@@ -1464,6 +1464,7 @@ internal class ArgumentTypeMismatchImpl(
 ) : KtAbstractFirDiagnostic<PsiElement>(firDiagnostic, token), KtFirDiagnostic.ArgumentTypeMismatch
 
 internal class NullForNonnullTypeImpl(
+    override val expectedType: KtType,
     firDiagnostic: KtPsiDiagnostic,
     token: KtLifetimeToken,
 ) : KtAbstractFirDiagnostic<PsiElement>(firDiagnostic, token), KtFirDiagnostic.NullForNonnullType

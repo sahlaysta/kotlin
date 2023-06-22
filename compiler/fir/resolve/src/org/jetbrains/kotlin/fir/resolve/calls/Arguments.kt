@@ -349,7 +349,7 @@ private fun checkApplicabilityForArgumentType(
 
     fun subtypeError(actualExpectedType: ConeKotlinType): ResolutionDiagnostic {
         if (argument.isNullLiteral && actualExpectedType.nullability == ConeNullability.NOT_NULL) {
-            return NullForNotNullType(argument)
+            return NullForNotNullType(argument, actualExpectedType)
         }
 
         fun tryGetConeTypeThatCompatibleWithKtType(type: ConeKotlinType): ConeKotlinType {
