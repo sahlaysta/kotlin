@@ -15,6 +15,9 @@ import org.jetbrains.kotlin.fir.declarations.FirDeclarationOrigin
 import org.jetbrains.kotlin.fir.declarations.FirResolvePhase
 import org.jetbrains.kotlin.fir.declarations.collectEnumEntries
 import org.jetbrains.kotlin.fir.declarations.isAnnotationConstructor
+import org.jetbrains.kotlin.fir.expressions.FirAnnotation
+import org.jetbrains.kotlin.fir.expressions.FirConstExpression
+import org.jetbrains.kotlin.fir.expressions.FirExpression
 import org.jetbrains.kotlin.fir.isSubstitutionOrIntersectionOverride
 import org.jetbrains.kotlin.fir.resolve.*
 import org.jetbrains.kotlin.fir.resolve.substitution.ConeSubstitutor
@@ -25,7 +28,9 @@ import org.jetbrains.kotlin.fir.types.*
 import org.jetbrains.kotlin.mpp.*
 import org.jetbrains.kotlin.name.CallableId
 import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.resolve.calls.mpp.ExpectActualMatchingContext.AnnotationDelegate
 import org.jetbrains.kotlin.types.AbstractTypeChecker
 import org.jetbrains.kotlin.types.TypeCheckerState
 import org.jetbrains.kotlin.types.Variance
@@ -312,6 +317,38 @@ class FirExpectActualMatchingContextImpl private constructor(
             FirDeclarationOrigin.DynamicScope -> false
             else -> true
         }
+
+    override val DeclarationSymbolMarker.annotations: Iterable<AnnotationDelegate>
+        get() = asSymbol().resolvedAnnotationsWithArguments.map(::AnnotationDelegateImpl)
+
+    override fun areArgumentsEqual(name: Name, annotation1: AnnotationDelegate, annotation2: AnnotationDelegate): Boolean {
+        fun AnnotationDelegate.getArgumentValue(): FirExpression? {
+            return (this as AnnotationDelegateImpl).annotation.argumentMapping.mapping[name]
+        }
+
+        val expression1 = annotation1.getArgumentValue()
+        val expression2 = annotation2.getArgumentValue()
+
+        // In K2 const expression calculated in backend.
+        // Because of that, we have "honest" checker at backend IR stage
+        // and "only simplest case" checker in frontend, so that we have at least some reporting in the IDE.
+        return when {
+            expression1 == expression2 -> true
+            (expression1 == null) != (expression2 == null) -> false
+            expression1 is FirConstExpression<*> && expression2 is FirConstExpression<*> -> {
+                expression1.value == expression2.value
+            }
+            else -> true
+        }
+    }
+
+    private inner class AnnotationDelegateImpl(val annotation: FirAnnotation) : AnnotationDelegate {
+        override val fqName: FqName?
+            get() = annotation.fqName(actualSession)
+
+        override val allValueArgumentNames: Set<Name>
+            get() = annotation.argumentMapping.mapping.keys
+    }
 
     object Factory : FirExpectActualMatchingContextFactory {
         override fun create(session: FirSession, scopeSession: ScopeSession): FirExpectActualMatchingContextImpl =

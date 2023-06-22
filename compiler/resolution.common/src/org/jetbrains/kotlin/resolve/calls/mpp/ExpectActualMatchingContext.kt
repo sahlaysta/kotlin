@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.descriptors.Visibility
 import org.jetbrains.kotlin.mpp.*
 import org.jetbrains.kotlin.name.CallableId
 import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.resolve.multiplatform.ExpectActualCompatibility
 import org.jetbrains.kotlin.types.Variance
@@ -157,4 +158,13 @@ interface ExpectActualMatchingContext<T : DeclarationSymbolMarker> : TypeSystemC
         expectSymbol: DeclarationSymbolMarker,
         actualSymbolsByIncompatibility: Map<ExpectActualCompatibility.Incompatible<*>, List<DeclarationSymbolMarker>>
     ) {}
+
+    val DeclarationSymbolMarker.annotations: Iterable<AnnotationDelegate>
+
+    fun areArgumentsEqual(name: Name, annotation1: AnnotationDelegate, annotation2: AnnotationDelegate): Boolean
+
+    interface AnnotationDelegate {
+        val fqName: FqName?
+        val allValueArgumentNames: Set<Name>
+    }
 }

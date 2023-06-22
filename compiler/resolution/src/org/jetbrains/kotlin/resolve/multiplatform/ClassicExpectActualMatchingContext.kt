@@ -6,14 +6,17 @@
 package org.jetbrains.kotlin.resolve.multiplatform
 
 import org.jetbrains.kotlin.descriptors.*
+import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.incremental.components.NoLookupLocation
 import org.jetbrains.kotlin.mpp.*
 import org.jetbrains.kotlin.name.CallableId
 import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.resolve.DescriptorUtils
 import org.jetbrains.kotlin.resolve.calls.components.ClassicTypeSystemContextForCS
 import org.jetbrains.kotlin.resolve.calls.mpp.ExpectActualMatchingContext
+import org.jetbrains.kotlin.resolve.calls.mpp.ExpectActualMatchingContext.AnnotationDelegate
 import org.jetbrains.kotlin.resolve.descriptorUtil.classId
 import org.jetbrains.kotlin.resolve.descriptorUtil.getKotlinTypeRefiner
 import org.jetbrains.kotlin.resolve.descriptorUtil.isTypeRefinementEnabled
@@ -35,6 +38,7 @@ class ClassicExpectActualMatchingContext(val platformModule: ModuleDescriptor) :
     override val shouldCheckReturnTypesOfCallables: Boolean
         get() = true
 
+    private fun DeclarationSymbolMarker.asDescriptor(): DeclarationDescriptor = this as DeclarationDescriptor
     private fun CallableSymbolMarker.asDescriptor(): CallableDescriptor = this as CallableDescriptor
     private fun FunctionSymbolMarker.asDescriptor(): FunctionDescriptor = this as FunctionDescriptor
     private fun PropertySymbolMarker.asDescriptor(): PropertyDescriptor = this as PropertyDescriptor
@@ -328,4 +332,23 @@ class ClassicExpectActualMatchingContext(val platformModule: ModuleDescriptor) :
 
     override val CallableSymbolMarker.hasStableParameterNames: Boolean
         get() = asDescriptor().hasStableParameterNames()
+
+    override val DeclarationSymbolMarker.annotations: Iterable<AnnotationDelegate>
+        get() = asDescriptor().annotations.map(::AnnotationDelegateImpl)
+
+    override fun areArgumentsEqual(name: Name, annotation1: AnnotationDelegate, annotation2: AnnotationDelegate): Boolean {
+        fun AnnotationDelegate.getDescriptor(): AnnotationDescriptor = (this as AnnotationDelegateImpl).annotationDescriptor
+
+        return areAnnotationsEqual(annotation1.getDescriptor(), annotation2.getDescriptor())
+    }
+
+    private class AnnotationDelegateImpl(
+        val annotationDescriptor: AnnotationDescriptor,
+    ) : AnnotationDelegate {
+        override val fqName: FqName?
+            get() = annotationDescriptor.fqName
+
+        override val allValueArgumentNames: Set<Name>
+            get() = annotationDescriptor.allValueArguments.keys
+    }
 }

@@ -2395,6 +2395,12 @@ sealed interface KtFirDiagnostic<PSI : PsiElement> : KtDiagnosticWithPsi<PSI> {
         override val diagnosticClass get() = ActualMissing::class
     }
 
+    interface ActualAnnotationsNotMatchExpect : KtFirDiagnostic<KtElement> {
+        override val diagnosticClass get() = ActualAnnotationsNotMatchExpect::class
+        val expect: KtSymbol
+        val actual: KtSymbol
+    }
+
     interface InitializerRequiredForDestructuringDeclaration : KtFirDiagnostic<KtDestructuringDeclaration> {
         override val diagnosticClass get() = InitializerRequiredForDestructuringDeclaration::class
     }

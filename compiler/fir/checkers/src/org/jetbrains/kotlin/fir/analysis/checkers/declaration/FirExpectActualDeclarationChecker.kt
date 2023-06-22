@@ -20,6 +20,7 @@ import org.jetbrains.kotlin.fir.declarations.utils.isActual
 import org.jetbrains.kotlin.fir.declarations.utils.isExpect
 import org.jetbrains.kotlin.fir.declarations.utils.isExternal
 import org.jetbrains.kotlin.fir.declarations.utils.isTailRec
+import org.jetbrains.kotlin.fir.expectActualMatchingContextFactory
 import org.jetbrains.kotlin.fir.languageVersionSettings
 import org.jetbrains.kotlin.fir.resolve.fullyExpandedType
 import org.jetbrains.kotlin.fir.scopes.collectAllFunctions
@@ -30,6 +31,7 @@ import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 import org.jetbrains.kotlin.fir.symbols.impl.*
 import org.jetbrains.kotlin.fir.types.coneType
 import org.jetbrains.kotlin.fir.types.toSymbol
+import org.jetbrains.kotlin.resolve.calls.mpp.AbstractExpectActualAnnotationMatchChecker
 import org.jetbrains.kotlin.resolve.multiplatform.ExpectActualCompatibility
 import org.jetbrains.kotlin.resolve.multiplatform.ExpectActualCompatibility.*
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
@@ -180,7 +182,9 @@ object FirExpectActualDeclarationChecker : FirBasicDeclarationChecker() {
                 }
             }
         }
-        val expectedSingleCandidate = symbol.getSingleExpectForActualOrNull()
+        // We want to report errors even if a candidate is incompatible, but it's single
+        val expectedSingleCandidate = symbol.getSingleExpectForActualOrNull(compatibleOnly = true)
+            ?: symbol.getSingleExpectForActualOrNull(compatibleOnly = false)
         if (expectedSingleCandidate != null) {
             checkIfExpectHasDefaultArgumentsAndActualizedWithTypealias(
                 expectedSingleCandidate,
@@ -188,6 +192,7 @@ object FirExpectActualDeclarationChecker : FirBasicDeclarationChecker() {
                 context,
                 reporter,
             )
+            checkAnnotationsMatch(expectedSingleCandidate, symbol, context, reporter)
         }
     }
 
@@ -276,6 +281,19 @@ object FirExpectActualDeclarationChecker : FirBasicDeclarationChecker() {
             membersWithDefaultValueParameters,
             context
         )
+    }
+
+    private fun checkAnnotationsMatch(
+        expectSymbol: FirBasedSymbol<*>,
+        actualSymbol: FirBasedSymbol<*>,
+        context: CheckerContext,
+        reporter: DiagnosticReporter
+    ) {
+        val matchingContext = context.session.expectActualMatchingContextFactory.create(context.session, context.scopeSession)
+        if (AbstractExpectActualAnnotationMatchChecker.areAnnotationsCompatible(expectSymbol, actualSymbol, matchingContext)) {
+            return
+        }
+        reporter.reportOn(actualSymbol.source, FirErrors.ACTUAL_ANNOTATIONS_NOT_MATCH_EXPECT, expectSymbol, actualSymbol, context)
     }
 
     fun Map<out ExpectActualCompatibility<*>, *>.allStrongIncompatibilities(): Boolean {

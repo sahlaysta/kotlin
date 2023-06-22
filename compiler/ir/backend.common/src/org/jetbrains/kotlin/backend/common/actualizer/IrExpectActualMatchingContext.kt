@@ -10,6 +10,7 @@ import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.descriptors.Visibility
 import org.jetbrains.kotlin.ir.declarations.*
+import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
 import org.jetbrains.kotlin.ir.symbols.*
 import org.jetbrains.kotlin.ir.types.*
 import org.jetbrains.kotlin.ir.types.impl.IrSimpleTypeImpl
@@ -22,10 +23,14 @@ import org.jetbrains.kotlin.name.CallableId
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.resolve.calls.mpp.ExpectActualMatchingContext
+import org.jetbrains.kotlin.resolve.calls.mpp.ExpectActualMatchingContext.AnnotationDelegate
 import org.jetbrains.kotlin.types.AbstractTypeChecker
 import org.jetbrains.kotlin.types.TypeCheckerState
 import org.jetbrains.kotlin.types.Variance
-import org.jetbrains.kotlin.types.model.*
+import org.jetbrains.kotlin.types.model.AnnotationMarker
+import org.jetbrains.kotlin.types.model.KotlinTypeMarker
+import org.jetbrains.kotlin.types.model.TypeSubstitutorMarker
+import org.jetbrains.kotlin.types.model.TypeSystemContext
 import org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction
 import org.jetbrains.kotlin.utils.addToStdlib.castAll
 import org.jetbrains.kotlin.utils.addToStdlib.shouldNotBeCalled
@@ -75,6 +80,7 @@ internal abstract class IrExpectActualMatchingContext(
     private fun TypeParameterSymbolMarker.asIr(): IrTypeParameter = (this as IrTypeParameterSymbol).owner
     private fun RegularClassSymbolMarker.asIr(): IrClass = (this as IrClassSymbol).owner
     private fun TypeAliasSymbolMarker.asIr(): IrTypeAlias = (this as IrTypeAliasSymbol).owner
+    private fun AnnotationMarker.asIr(): IrConstructorCall = this as IrConstructorCall
 
     private inline fun <reified T : IrDeclaration> DeclarationSymbolMarker.safeAsIr(): T? = (this as IrSymbol).owner as? T
 
@@ -432,4 +438,13 @@ internal abstract class IrExpectActualMatchingContext(
 
     abstract fun onMatchedClasses(expectClassSymbol: IrClassSymbol, actualClassSymbol: IrClassSymbol)
     abstract fun onMatchedCallables(expectSymbol: IrSymbol, actualSymbol: IrSymbol)
+
+    override val DeclarationSymbolMarker.annotations: Iterable<AnnotationDelegate>
+        // TODO(Roman.Efremov): implement in subsequent commits
+        get() = emptyList()
+
+    override fun areArgumentsEqual(name: Name, annotation1: AnnotationDelegate, annotation2: AnnotationDelegate): Boolean {
+        // TODO(Roman.Efremov): implement in subsequent commits
+        return true
+    }
 }

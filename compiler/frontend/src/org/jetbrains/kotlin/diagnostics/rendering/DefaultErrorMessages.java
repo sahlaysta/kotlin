@@ -391,6 +391,11 @@ public class DefaultErrorMessages {
         MAP.put(OPTIONAL_EXPECTATION_NOT_ON_EXPECTED, "'@OptionalExpectation' can only be used on an expected annotation class");
         MAP.put(OPTIONAL_DECLARATION_OUTSIDE_OF_ANNOTATION_ENTRY, "Declaration annotated with '@OptionalExpectation' can only be used inside an annotation entry");
         MAP.put(OPTIONAL_DECLARATION_USAGE_IN_NON_COMMON_SOURCE, "Declaration annotated with '@OptionalExpectation' can only be used in common module sources");
+        MAP.put(ACTUAL_ANNOTATIONS_NOT_MATCH_EXPECT,
+                "All annotations from `expect` must be presented with same arguments on `actual`, otherwise they have no effect.\n" +
+                "    Expected: {0}\n" +
+                "    Actual: {1}",
+                DESCRIPTOR_WITH_ANNOTATIONS, DESCRIPTOR_WITH_ANNOTATIONS);
 
         MAP.put(PROJECTION_ON_NON_CLASS_TYPE_ARGUMENT, "Projections are not allowed on type arguments of functions and properties");
         MAP.put(SUPERTYPE_NOT_INITIALIZED, "This type has a constructor, and thus must be initialized here");
