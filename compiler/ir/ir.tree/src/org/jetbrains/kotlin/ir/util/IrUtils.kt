@@ -5,7 +5,9 @@
 
 package org.jetbrains.kotlin.ir.util
 
+import org.jetbrains.kotlin.builtins.StandardNames
 import org.jetbrains.kotlin.descriptors.*
+import org.jetbrains.kotlin.descriptors.annotations.KotlinRetention
 import org.jetbrains.kotlin.ir.*
 import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
 import org.jetbrains.kotlin.ir.builders.declarations.addConstructor
@@ -30,6 +32,7 @@ import org.jetbrains.kotlin.ir.visitors.IrElementVisitor
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.name.SpecialNames
+import org.jetbrains.kotlin.name.StandardClassIds
 import org.jetbrains.kotlin.util.OperatorNameConventions
 import org.jetbrains.kotlin.utils.*
 import java.io.StringWriter
@@ -353,6 +356,20 @@ fun IrAnnotationContainer.hasAnnotation(symbol: IrClassSymbol) =
     annotations.any {
         it.symbol.owner.parentAsClass.symbol == symbol
     }
+
+fun IrClass.getAnnotationRetention(): KotlinRetention? {
+    val retentionArgument =
+        getAnnotation(StandardNames.FqNames.retention)?.getValueArgument(StandardClassIds.Annotations.ParameterNames.retentionValue)
+                as? IrGetEnumValue ?: return null
+    val retentionArgumentValue = retentionArgument.symbol.owner
+    return KotlinRetention.valueOf(retentionArgumentValue.name.asString())
+}
+
+// To be generalized to IrMemberAccessExpression as soon as properties get symbols.
+fun IrConstructorCall.getValueArgument(name: Name): IrExpression? {
+    val index = symbol.owner.valueParameters.find { it.name == name }?.index ?: return null
+    return getValueArgument(index)
+}
 
 
 val IrConstructor.constructedClassType get() = (parent as IrClass).thisReceiver?.type!!
