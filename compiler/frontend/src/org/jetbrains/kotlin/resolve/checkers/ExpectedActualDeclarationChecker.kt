@@ -336,7 +336,7 @@ class ExpectedActualDeclarationChecker(
                 }
             }
         }
-        val expectSingleCandidate = compatibility.values.singleOrNull()?.singleOrNull()
+        val expectSingleCandidate = compatibility.values.singleOrNull()?.firstOrNull()
         if (expectSingleCandidate != null) {
             checkIfExpectHasDefaultArgumentsAndActualizedWithTypealias(expectSingleCandidate, reportOn, trace)
         }
