@@ -14,6 +14,7 @@ import org.jetbrains.kotlin.ir.symbols.IrSymbol
 import org.jetbrains.kotlin.ir.symbols.IrTypeAliasSymbol
 import org.jetbrains.kotlin.ir.types.IrTypeSystemContext
 import org.jetbrains.kotlin.ir.util.classIdOrFail
+import org.jetbrains.kotlin.ir.util.isFakeOverride
 import org.jetbrains.kotlin.resolve.calls.mpp.AbstractExpectActualAnnotationMatchChecker
 
 internal class IrExpectActualAnnotationMatchingChecker(
@@ -34,6 +35,9 @@ internal class IrExpectActualAnnotationMatchingChecker(
 
     fun check() {
         for ((expectSymbol, actualSymbol) in matchedExpectToActual.entries) {
+            if (expectSymbol.isFakeOverride || actualSymbol.isFakeOverride) {
+                continue
+            }
             if (!AbstractExpectActualAnnotationMatchChecker.areAnnotationsCompatible(expectSymbol, actualSymbol, context)) {
                 val reportOn = getTypealiasSymbolIfActualizedViaTypealias(expectSymbol) ?: actualSymbol
                 diagnosticsReporter.reportActualAnnotationsNotMatchExpect(
@@ -44,6 +48,9 @@ internal class IrExpectActualAnnotationMatchingChecker(
             }
         }
     }
+
+    private val IrSymbol.isFakeOverride: Boolean
+        get() = (owner as IrDeclaration).isFakeOverride
 
     private fun getTypealiasSymbolIfActualizedViaTypealias(expectSymbol: IrSymbol): IrTypeAliasSymbol? {
         val expectDeclaration = expectSymbol.owner as IrDeclaration
