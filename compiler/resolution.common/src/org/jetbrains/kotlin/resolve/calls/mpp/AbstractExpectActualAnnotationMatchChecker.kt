@@ -27,6 +27,9 @@ object AbstractExpectActualAnnotationMatchChecker {
         } else {
             originalActual
         }
+        // TODO(Roman.Efremov, KT-58551): properly handle repeatable annotations
+        // TODO(Roman.Efremov, KT-58551): check other annotation targets (constructors, types, value parameters, etc)
+        // TODO(Roman.Efremov, KT-58551): fix actual typealias class members not checked in FE checkers
 
         val skipSourceAnnotations = !actual.hasSource
         val actualAnnotations = actual.annotations
