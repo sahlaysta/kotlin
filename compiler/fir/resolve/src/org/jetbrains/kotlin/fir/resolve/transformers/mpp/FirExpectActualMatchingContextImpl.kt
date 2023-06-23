@@ -11,6 +11,7 @@ import org.jetbrains.kotlin.descriptors.Visibility
 import org.jetbrains.kotlin.fir.FirExpectActualMatchingContext
 import org.jetbrains.kotlin.fir.FirExpectActualMatchingContextFactory
 import org.jetbrains.kotlin.fir.FirSession
+import org.jetbrains.kotlin.fir.analysis.getRetention
 import org.jetbrains.kotlin.fir.declarations.FirDeclarationOrigin
 import org.jetbrains.kotlin.fir.declarations.FirResolvePhase
 import org.jetbrains.kotlin.fir.declarations.collectEnumEntries
@@ -348,7 +349,16 @@ class FirExpectActualMatchingContextImpl private constructor(
 
         override val allValueArgumentNames: Set<Name>
             get() = annotation.argumentMapping.mapping.keys
+
+        override val isRetentionSource: Boolean
+            get() {
+                val symbol = annotation.annotationTypeRef.coneTypeOrNull?.toSymbol(actualSession) as? FirRegularClassSymbol ?: return false
+                return symbol.fir.getRetention(actualSession) == AnnotationRetention.SOURCE
+            }
     }
+
+    override val DeclarationSymbolMarker.hasSource: Boolean
+        get() = asSymbol().source != null
 
     object Factory : FirExpectActualMatchingContextFactory {
         override fun create(session: FirSession, scopeSession: ScopeSession): FirExpectActualMatchingContextImpl =

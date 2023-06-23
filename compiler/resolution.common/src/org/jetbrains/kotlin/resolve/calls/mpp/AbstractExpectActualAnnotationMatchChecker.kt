@@ -28,9 +28,13 @@ object AbstractExpectActualAnnotationMatchChecker {
             originalActual
         }
 
+        val skipSourceAnnotations = !actual.hasSource
         val actualAnnotations = actual.annotations
         for (expectAnnotation in expected.annotations) {
             if (expectAnnotation.fqName == StandardNames.FqNames.optionalExpectation) {
+                continue
+            }
+            if (expectAnnotation.isRetentionSource && skipSourceAnnotations) {
                 continue
             }
             if (actualAnnotations.none { areAnnotationsMatch(expectAnnotation, it) }) {

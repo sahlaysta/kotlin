@@ -163,8 +163,11 @@ interface ExpectActualMatchingContext<T : DeclarationSymbolMarker> : TypeSystemC
 
     fun areArgumentsEqual(name: Name, annotation1: AnnotationDelegate, annotation2: AnnotationDelegate): Boolean
 
+    val DeclarationSymbolMarker.hasSource: Boolean
+
     interface AnnotationDelegate {
         val fqName: FqName?
         val allValueArgumentNames: Set<Name>
+        val isRetentionSource: Boolean
     }
 }
