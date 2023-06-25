@@ -39504,6 +39504,12 @@ public class NativeCodegenBoxTestGenerated extends AbstractNativeCodegenBoxTest 
             }
 
             @Test
+            @TestMetadata("intrinsicWithInlineFunction.kt")
+            public void testIntrinsicWithInlineFunction() throws Exception {
+                runTest("compiler/testData/codegen/box/volatile/intrinsicWithInlineFunction.kt");
+            }
+
+            @Test
             @TestMetadata("intrinsics.kt")
             public void testIntrinsics() throws Exception {
                 runTest("compiler/testData/codegen/box/volatile/intrinsics.kt");
