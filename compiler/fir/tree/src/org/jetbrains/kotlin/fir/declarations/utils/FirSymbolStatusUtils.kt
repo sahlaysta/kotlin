@@ -24,9 +24,6 @@ inline val FirCallableSymbol<*>.isFinal: Boolean
 inline val FirCallableSymbol<*>.visibility: Visibility get() = resolvedStatus.visibility
 inline val FirCallableSymbol<*>.effectiveVisibility: EffectiveVisibility get() = resolvedStatus.effectiveVisibility
 
-inline val FirCallableSymbol<*>.allowsToHaveFakeOverride: Boolean
-    get() = !Visibilities.isPrivate(visibility) && visibility != Visibilities.InvisibleFake
-
 inline val FirCallableSymbol<*>.isActual: Boolean get() = rawStatus.isActual
 inline val FirCallableSymbol<*>.isExpect: Boolean get() = rawStatus.isExpect
 inline val FirCallableSymbol<*>.isInner: Boolean get() = rawStatus.isInner

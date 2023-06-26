@@ -10,8 +10,11 @@ import org.jetbrains.kotlin.fir.declarations.FirDeclarationOrigin
 import org.jetbrains.kotlin.fir.dispatchReceiverClassLookupTagOrNull
 import org.jetbrains.kotlin.fir.java.scopes.ClassicBuiltinSpecialProperties.getBuiltinSpecialPropertyGetterName
 import org.jetbrains.kotlin.fir.resolve.toSymbol
-import org.jetbrains.kotlin.fir.scopes.*
+import org.jetbrains.kotlin.fir.scopes.FirTypeScope
+import org.jetbrains.kotlin.fir.scopes.MemberWithBaseScope
+import org.jetbrains.kotlin.fir.scopes.ProcessorAction
 import org.jetbrains.kotlin.fir.scopes.jvm.computeJvmSignature
+import org.jetbrains.kotlin.fir.scopes.processOverriddenFunctionsAndSelf
 import org.jetbrains.kotlin.fir.symbols.impl.FirCallableSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirNamedFunctionSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirPropertySymbol
@@ -19,7 +22,6 @@ import org.jetbrains.kotlin.load.java.BuiltinSpecialProperties
 import org.jetbrains.kotlin.load.java.SpecialGenericSignatures
 import org.jetbrains.kotlin.load.java.SpecialGenericSignatures.Companion.ERASED_VALUE_PARAMETERS_SHORT_NAMES
 import org.jetbrains.kotlin.load.java.SpecialGenericSignatures.Companion.ERASED_VALUE_PARAMETERS_SIGNATURES
-import org.jetbrains.kotlin.load.java.SpecialGenericSignatures.Companion.REMOVE_AT_NAME_AND_SIGNATURE
 import org.jetbrains.kotlin.load.java.SpecialGenericSignatures.Companion.SIGNATURE_TO_JVM_REPRESENTATION_NAME
 import org.jetbrains.kotlin.name.Name
 
@@ -76,14 +78,9 @@ object BuiltinMethodsWithSpecialGenericSignature {
         return functionSymbol.firstOverriddenFunction(containingScope) { it.hasErasedValueParametersInJava }
     }
 
-    val Name.sameAsBuiltinMethodWithErasedValueParameters: Boolean
+    private val Name.sameAsBuiltinMethodWithErasedValueParameters: Boolean
         get() = this in ERASED_VALUE_PARAMETERS_SHORT_NAMES
 
-    fun FirNamedFunctionSymbol.isBuiltinWithSpecialDescriptorInJvm(containingScope: FirTypeScope, session: FirSession): Boolean {
-        if (!isFromBuiltinClass(session)) return false
-        return getSpecialSignatureInfo(containingScope)?.isObjectReplacedWithTypeParameter ?: false ||
-                doesOverrideBuiltinWithDifferentJvmName(containingScope, session)
-    }
 
     @JvmStatic
     fun FirNamedFunctionSymbol.getSpecialSignatureInfo(containingScope: FirTypeScope): SpecialGenericSignatures.SpecialSignatureInfo? {
@@ -105,9 +102,6 @@ object BuiltinMethodsWithDifferentJvmName {
     fun isBuiltinFunctionWithDifferentNameInJvm(functionSymbol: FirNamedFunctionSymbol, session: FirSession): Boolean {
         return functionSymbol.isFromBuiltinClass(session) && SIGNATURE_TO_JVM_REPRESENTATION_NAME.containsKey(functionSymbol.fir.computeJvmSignature())
     }
-
-    val FirNamedFunctionSymbol.isRemoveAtByIndex: Boolean
-        get() = name.asString() == "removeAt" && fir.computeJvmSignature() == REMOVE_AT_NAME_AND_SIGNATURE.signature
 }
 
 object ClassicBuiltinSpecialProperties {

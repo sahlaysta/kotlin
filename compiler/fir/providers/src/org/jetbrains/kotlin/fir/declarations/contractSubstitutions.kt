@@ -17,12 +17,6 @@ import org.jetbrains.kotlin.fir.resolve.substitution.ConeSubstitutor
 val FirContractDescription?.isNullOrEmpty: Boolean
     get() = (this == null) || (this is FirEmptyContractDescription)
 
-fun FirContractDescription.createContractDescriptionForSubstitutionOverride(substitutor: ConeSubstitutor?): FirContractDescription {
-    if (this !is FirResolvedContractDescription) return this
-    if (substitutor == null || substitutor == ConeSubstitutor.Empty) return this
-    return createContractDescriptionForSubstitutionOverride(substitutor)
-}
-
 private fun FirResolvedContractDescription.createContractDescriptionForSubstitutionOverride(
     substitutor: ConeSubstitutor
 ): FirResolvedContractDescription {
