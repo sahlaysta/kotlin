@@ -17,7 +17,7 @@ fun Builder.generateCode(generationPath: File): GeneratedFile {
     val stringBuilder = StringBuilder()
     SmartPrinter(stringBuilder).apply {
         printCopyright()
-        println("@file:Suppress(\"DuplicatedCode\")")
+        println("@file:Suppress(\"DuplicatedCode\", \"unused\")")
         println()
         println("package $packageName")
         println()
@@ -130,7 +130,6 @@ private fun SmartPrinter.printBuilder(builder: Builder) {
 
 internal val Field.invisibleField: Boolean get() = customInitializationCall != null
 
-private val String.nullable: String get() = if (endsWith("?")) this else "$this?"
 private fun FieldWithDefault.needBackingField(fieldIsUseless: Boolean) =
     (!nullable || notNull) && origin !is FieldList && if (fieldIsUseless) {
         defaultValueInImplementation == null

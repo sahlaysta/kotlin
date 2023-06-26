@@ -38,7 +38,7 @@ sealed class TowerGroupKind(val index: Byte) : Comparable<TowerGroupKind> {
 
     class Local(depth: Int) : WithDepth(5, depth)
 
-    class ImplicitOrNonLocal(depth: Int, val kindForDebugSake: String) : WithDepth(6, depth)
+    class ImplicitOrNonLocal(depth: Int) : WithDepth(6, depth)
 
     class ContextReceiverGroup(depth: Int) : WithDepth(7, depth)
 
@@ -62,8 +62,8 @@ sealed class TowerGroupKind(val index: Byte) : Comparable<TowerGroupKind> {
     @Suppress("FunctionName")
     companion object {
         // These two groups intentionally have the same priority
-        fun Implicit(depth: Int): TowerGroupKind = ImplicitOrNonLocal(depth, "Implicit")
-        fun NonLocal(depth: Int): TowerGroupKind = ImplicitOrNonLocal(depth, "NonLocal")
+        fun Implicit(depth: Int): TowerGroupKind = ImplicitOrNonLocal(depth)
+        fun NonLocal(depth: Int): TowerGroupKind = ImplicitOrNonLocal(depth)
     }
 }
 

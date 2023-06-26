@@ -27,8 +27,6 @@ abstract class GeneratedClassIndex : FirSessionComponent {
     abstract operator fun get(key: GeneratedDeclarationKey): List<GeneratedClass>
 }
 
-val FirSession.generatedClassIndex: GeneratedClassIndex by FirSession.sessionComponentAccessor()
-
 @ThreadSafeMutableState
 private class GeneratedClassIndexImpl : GeneratedClassIndex() {
     private val index: ArrayListMultimap<GeneratedDeclarationKey, GeneratedClass> = ArrayListMultimap.create()
