@@ -20,7 +20,6 @@ import org.jetbrains.kotlin.fir.types.impl.FirImplicitTypeRefImplWithoutSource
 import org.jetbrains.kotlin.lexer.KtToken
 import org.jetbrains.kotlin.lexer.KtTokens.*
 import org.jetbrains.kotlin.name.Name
-import kotlin.contracts.ExperimentalContracts
 
 abstract class BaseConverter(
     baseSession: FirSession,
@@ -135,16 +134,6 @@ abstract class BaseConverter(
 
     fun LighterASTNode.getParent(): LighterASTNode? {
         return tree.getParent(this)
-    }
-
-    fun LighterASTNode.getParents(): Sequence<LighterASTNode> {
-        var node = this
-        return sequence {
-            while (true) {
-                yield(node)
-                node = node.getParent() ?: break
-            }
-        }
     }
 
     fun LighterASTNode?.getChildNodesByType(type: IElementType): List<LighterASTNode> {

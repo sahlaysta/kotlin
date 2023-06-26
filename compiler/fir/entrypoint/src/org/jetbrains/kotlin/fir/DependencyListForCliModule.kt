@@ -90,14 +90,6 @@ class DependencyListForCliModule(
             filtersMap.getValue(binaryModuleData.dependsOn) += paths
         }
 
-        fun sourceFriendsDependencies(modules: Collection<FirModuleData>) {
-            allFriendsDependencies += modules
-        }
-
-        fun sourceDependsOnDependencies(modules: Collection<FirModuleData>) {
-            allDependsOnDependencies += modules
-        }
-
         fun build(): DependencyListForCliModule {
             val pathFiltersMap: MutableMap<FirModuleData, LibraryPathFilter> = filtersMap
                 .filterValues { it.isNotEmpty() }

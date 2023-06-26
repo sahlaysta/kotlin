@@ -82,10 +82,6 @@ open class RawFirBuilder(
         return Visitor().visitAnnotationEntry(annotation, null) as FirAnnotationCall
     }
 
-    fun buildTypeReference(reference: KtTypeReference): FirTypeRef {
-        return reference.accept(Visitor(), null) as FirTypeRef
-    }
-
     override fun PsiElement.toFirSourceElement(kind: KtFakeSourceElementKind?): KtPsiSourceElement {
         val actualKind = kind ?: this@RawFirBuilder.context.forcedElementSourceKind ?: KtRealSourceElementKind
         return this.toKtPsiSourceElement(actualKind)
