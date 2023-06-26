@@ -18,7 +18,6 @@ public final [ResolvedTo(BODY_RESOLVE)] class G : R|A| {
 
 FIR FILE:
 FILE: [ResolvedTo(IMPORTS)] qualifiedCallInsideSuperCall4.kt
-    [ResolvedTo(BODY_RESOLVE)] annotations container
     public open [ResolvedTo(STATUS)] class A : R|kotlin/Any| {
         public [ResolvedTo(STATUS)] [ContainingClassKey=A] constructor([ResolvedTo(STATUS)] init: R|A.() -> kotlin/Unit|): R|A| {
             LAZY_super<R|kotlin/Any|>

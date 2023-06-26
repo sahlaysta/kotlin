@@ -604,7 +604,7 @@ object ImplementationConfigurator : AbstractFirTreeImplementationConfigurator() 
 
         impl(file) {
             default("annotations") {
-                value = "annotationsContainer.annotations"
+                value = "annotationsContainer?.annotations ?: emptyList()"
                 withGetter = true
             }
         }
