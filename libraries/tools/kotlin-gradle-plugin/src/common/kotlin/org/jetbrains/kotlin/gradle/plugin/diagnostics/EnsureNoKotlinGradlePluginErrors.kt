@@ -15,7 +15,7 @@ import org.gradle.api.tasks.TaskContainer
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompileTool
 import org.jetbrains.kotlin.gradle.tasks.withType
 
-internal abstract class CheckNoErrorsPreBuild : DefaultTask() {
+internal abstract class EnsureNoKotlinGradlePluginErrors : DefaultTask() {
     @get:Internal
     abstract val diagnosticsCollector: Property<KotlinToolingDiagnosticsCollector>
 
@@ -30,12 +30,12 @@ internal abstract class CheckNoErrorsPreBuild : DefaultTask() {
         private const val TASK_NAME = "ensureNoKotlinGradlePluginErrors"
 
         internal fun register(tasks: TaskContainer, kotlinToolingDiagnosticsCollector: Provider<KotlinToolingDiagnosticsCollector>) {
-            val ensureNoErrorsTask: CheckNoErrorsPreBuild = tasks.create(TASK_NAME, CheckNoErrorsPreBuild::class.java) {
+            val ensureNoErrorsTask = tasks.create(TASK_NAME, EnsureNoKotlinGradlePluginErrors::class.java) {
                 it.usesService(kotlinToolingDiagnosticsCollector)
                 it.diagnosticsCollector.value(kotlinToolingDiagnosticsCollector)
             }
 
-            ensureNoErrorsTask.addDependsOnFromTasksThatShouldFailWithErrors(tasks)
+            ensureNoErrorsTask.addDependsOnFromTasksThatShouldFailWhenErrorsReported(tasks)
         }
 
         /**
@@ -45,13 +45,8 @@ internal abstract class CheckNoErrorsPreBuild : DefaultTask() {
          * Currently, we're doing it conservatively and instrumenting only [KotlinCompileTool]-tasks.
          * The intuition here is that if the build manages to do something useful for a user without compiling any .kt-sources,
          * then it's OK for KGP to let that build pass even if it reported ERROR-diagnostics.
-         * This can happen when the project configuration is so broken that no kotlin-tasks are even registered
-         * (specific example: projects that cause
-         * [org.jetbrains.kotlin.gradle.plugin.diagnostics.KotlinToolingDiagnostics.NoKotlinTargetsDeclared])
-         *
-         * TODO: consider 'allMetadataJar', 'generateProjectStructureMetadata'
          */
-        private fun CheckNoErrorsPreBuild.addDependsOnFromTasksThatShouldFailWithErrors(tasks: TaskContainer) {
+        private fun EnsureNoKotlinGradlePluginErrors.addDependsOnFromTasksThatShouldFailWhenErrorsReported(tasks: TaskContainer) {
             tasks.withType<KotlinCompileTool>().all { it.dependsOn(this) }
         }
     }

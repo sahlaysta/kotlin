@@ -269,7 +269,7 @@ abstract class KotlinBasePluginWrapper : DefaultKotlinBasePlugin() {
 
 private fun Project.setupDiagnosticsChecksAndReporting() {
     // Setup a task that will abort the build if errors will be reported. This task should be the first in the taskgraph
-    CheckNoErrorsPreBuild.register(tasks, kotlinToolingDiagnosticsCollectorProvider)
+    EnsureNoKotlinGradlePluginErrors.register(tasks, kotlinToolingDiagnosticsCollectorProvider)
 
     // Setup reporting from tasks
     tasks.withType(UsesKotlinToolingDiagnostics::class.java).configureEach {
