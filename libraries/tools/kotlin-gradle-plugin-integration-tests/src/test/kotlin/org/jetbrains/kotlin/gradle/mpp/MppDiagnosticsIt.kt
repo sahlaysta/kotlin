@@ -78,6 +78,34 @@ class MppDiagnosticsIt : KGPBaseTest() {
         }
     }
 
+    @GradleTest
+    fun testSuppressGradlePluginErrors(gradleVersion: GradleVersion) {
+        project("suppressGradlePluginErrors", gradleVersion) {
+            // build succeeds
+            build("assemble") {
+                assertEqualsToFile(expectedOutputFile(), extractProjectsAndTheirVerboseDiagnostics())
+            }
+        }
+    }
+
+    @GradleTest
+    fun testSuppressGradlePluginWarnings(gradleVersion: GradleVersion) {
+        project("suppressGradlePluginWarnings", gradleVersion) {
+            build("assemble") {
+                assertEqualsToFile(expectedOutputFile(), extractProjectsAndTheirVerboseDiagnostics())
+            }
+        }
+    }
+
+    @GradleTest
+    fun testSuppressGradlePluginFatals(gradleVersion: GradleVersion) {
+        project("suppressGradlePluginFatals", gradleVersion) {
+            buildAndFail("assemble") {
+                assertEqualsToFile(expectedOutputFile(), extractProjectsAndTheirVerboseDiagnostics())
+            }
+        }
+    }
+
     private fun TestProject.expectedOutputFile(suffix: String? = null): File {
         val suffixIfAny = if (suffix != null) "-$suffix" else ""
         return projectPath.resolve("expectedOutput$suffixIfAny.txt").toFile()
