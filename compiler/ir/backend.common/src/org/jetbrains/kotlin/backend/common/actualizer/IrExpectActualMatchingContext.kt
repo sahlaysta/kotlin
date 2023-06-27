@@ -27,6 +27,7 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.resolve.calls.mpp.ExpectActualMatchingContext
 import org.jetbrains.kotlin.resolve.calls.mpp.ExpectActualMatchingContext.AnnotationDelegate
+import org.jetbrains.kotlin.resolve.checkers.OptInNames
 import org.jetbrains.kotlin.types.AbstractTypeChecker
 import org.jetbrains.kotlin.types.TypeCheckerState
 import org.jetbrains.kotlin.types.Variance
@@ -472,10 +473,14 @@ internal abstract class IrExpectActualMatchingContext(
             get() = irElement.symbol.owner.valueParameters.map { it.name }.toSet()
 
         override val isRetentionSource: Boolean
-            get() {
-                val annotationClass = irElement.symbol.owner.parent as? IrClass ?: return false
-                return annotationClass.getAnnotationRetention() == KotlinRetention.SOURCE
-            }
+            get() = getAnnotationClass()?.getAnnotationRetention() == KotlinRetention.SOURCE
+
+        override val isOptIn: Boolean
+            get() = getAnnotationClass()?.hasAnnotation(OptInNames.REQUIRES_OPT_IN_FQ_NAME) ?: false
+
+        private fun getAnnotationClass(): IrClass? {
+            return irElement.symbol.owner.parent as? IrClass
+        }
     }
 
     override val DeclarationSymbolMarker.hasSource: Boolean

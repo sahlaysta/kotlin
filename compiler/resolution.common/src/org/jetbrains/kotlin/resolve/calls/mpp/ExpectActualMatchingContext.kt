@@ -169,5 +169,6 @@ interface ExpectActualMatchingContext<T : DeclarationSymbolMarker> : TypeSystemC
         val fqName: FqName?
         val allValueArgumentNames: Set<Name>
         val isRetentionSource: Boolean
+        val isOptIn: Boolean
     }
 }

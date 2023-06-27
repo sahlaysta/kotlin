@@ -12,10 +12,7 @@ import org.jetbrains.kotlin.fir.FirExpectActualMatchingContext
 import org.jetbrains.kotlin.fir.FirExpectActualMatchingContextFactory
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.getRetention
-import org.jetbrains.kotlin.fir.declarations.FirDeclarationOrigin
-import org.jetbrains.kotlin.fir.declarations.FirResolvePhase
-import org.jetbrains.kotlin.fir.declarations.collectEnumEntries
-import org.jetbrains.kotlin.fir.declarations.isAnnotationConstructor
+import org.jetbrains.kotlin.fir.declarations.*
 import org.jetbrains.kotlin.fir.expressions.FirAnnotation
 import org.jetbrains.kotlin.fir.expressions.FirConstExpression
 import org.jetbrains.kotlin.fir.expressions.FirExpression
@@ -32,6 +29,7 @@ import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.resolve.calls.mpp.ExpectActualMatchingContext.AnnotationDelegate
+import org.jetbrains.kotlin.resolve.checkers.OptInNames
 import org.jetbrains.kotlin.types.AbstractTypeChecker
 import org.jetbrains.kotlin.types.TypeCheckerState
 import org.jetbrains.kotlin.types.Variance
@@ -351,10 +349,15 @@ class FirExpectActualMatchingContextImpl private constructor(
             get() = annotation.argumentMapping.mapping.keys
 
         override val isRetentionSource: Boolean
-            get() {
-                val symbol = annotation.annotationTypeRef.coneTypeOrNull?.toSymbol(actualSession) as? FirRegularClassSymbol ?: return false
-                return symbol.fir.getRetention(actualSession) == AnnotationRetention.SOURCE
-            }
+            get() = getAnnotationClass()?.getRetention(actualSession) == AnnotationRetention.SOURCE
+
+        override val isOptIn: Boolean
+            get() = getAnnotationClass()?.hasAnnotation(OptInNames.REQUIRES_OPT_IN_CLASS_ID, actualSession) ?: false
+
+        private fun getAnnotationClass(): FirRegularClass? {
+            val classSymbol = annotation.annotationTypeRef.coneTypeOrNull?.toSymbol(actualSession) as? FirRegularClassSymbol
+            return classSymbol?.fir
+        }
     }
 
     override val DeclarationSymbolMarker.hasSource: Boolean

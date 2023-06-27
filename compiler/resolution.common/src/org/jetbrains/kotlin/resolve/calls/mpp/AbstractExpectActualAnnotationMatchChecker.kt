@@ -9,8 +9,20 @@ import org.jetbrains.kotlin.builtins.StandardNames
 import org.jetbrains.kotlin.mpp.DeclarationSymbolMarker
 import org.jetbrains.kotlin.mpp.TypeAliasSymbolMarker
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.name.StandardClassIds
+import org.jetbrains.kotlin.resolve.RequireKotlinConstants
 
 object AbstractExpectActualAnnotationMatchChecker {
+    private val SKIPPED_FQ_NAMES = setOf(
+        RequireKotlinConstants.FQ_NAME,
+        StandardClassIds.Annotations.SinceKotlin.asSingleFqName(),
+        StandardClassIds.Annotations.WasExperimental.asSingleFqName(),
+        StandardNames.FqNames.deprecated,
+        StandardNames.FqNames.deprecatedSinceKotlin,
+        StandardNames.FqNames.optionalExpectation,
+        StandardNames.FqNames.suppress,
+    )
+
     fun areAnnotationsCompatible(
         expected: DeclarationSymbolMarker,
         actual: DeclarationSymbolMarker,
@@ -34,7 +46,7 @@ object AbstractExpectActualAnnotationMatchChecker {
         val skipSourceAnnotations = !actual.hasSource
         val actualAnnotations = actual.annotations
         for (expectAnnotation in expected.annotations) {
-            if (expectAnnotation.fqName == StandardNames.FqNames.optionalExpectation) {
+            if (expectAnnotation.fqName in SKIPPED_FQ_NAMES || expectAnnotation.isOptIn) {
                 continue
             }
             if (expectAnnotation.isRetentionSource && skipSourceAnnotations) {

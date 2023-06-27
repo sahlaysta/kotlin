@@ -22688,9 +22688,9 @@ public class DiagnosticTestGenerated extends AbstractDiagnosticTest {
                 }
 
                 @Test
-                @TestMetadata("optionalExpectation.kt")
-                public void testOptionalExpectation() throws Exception {
-                    runTest("compiler/testData/diagnostics/tests/multiplatform/annotationMatching/optionalExpectation.kt");
+                @TestMetadata("skippedAnnotations.kt")
+                public void testSkippedAnnotations() throws Exception {
+                    runTest("compiler/testData/diagnostics/tests/multiplatform/annotationMatching/skippedAnnotations.kt");
                 }
 
                 @Test

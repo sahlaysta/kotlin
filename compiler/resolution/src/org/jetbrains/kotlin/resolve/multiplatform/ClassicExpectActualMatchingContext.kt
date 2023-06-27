@@ -5,22 +5,18 @@
 
 package org.jetbrains.kotlin.resolve.multiplatform
 
+import org.jetbrains.kotlin.builtins.StandardNames
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.incremental.components.NoLookupLocation
 import org.jetbrains.kotlin.mpp.*
-import org.jetbrains.kotlin.name.CallableId
-import org.jetbrains.kotlin.name.ClassId
-import org.jetbrains.kotlin.name.FqName
-import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.name.*
 import org.jetbrains.kotlin.resolve.DescriptorUtils
 import org.jetbrains.kotlin.resolve.calls.components.ClassicTypeSystemContextForCS
 import org.jetbrains.kotlin.resolve.calls.mpp.ExpectActualMatchingContext
 import org.jetbrains.kotlin.resolve.calls.mpp.ExpectActualMatchingContext.AnnotationDelegate
-import org.jetbrains.kotlin.resolve.descriptorUtil.classId
-import org.jetbrains.kotlin.resolve.descriptorUtil.getKotlinTypeRefiner
-import org.jetbrains.kotlin.resolve.descriptorUtil.isSourceAnnotation
-import org.jetbrains.kotlin.resolve.descriptorUtil.isTypeRefinementEnabled
+import org.jetbrains.kotlin.resolve.checkers.OptInNames
+import org.jetbrains.kotlin.resolve.descriptorUtil.*
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.MemberScope
 import org.jetbrains.kotlin.resolve.scopes.getDescriptorsFiltered
@@ -357,6 +353,9 @@ class ClassicExpectActualMatchingContext(val platformModule: ModuleDescriptor) :
 
         override val isRetentionSource: Boolean
             get() = annotationDescriptor.isSourceAnnotation
+
+        override val isOptIn: Boolean
+            get() = annotationDescriptor.annotationClass?.annotations?.hasAnnotation(OptInNames.REQUIRES_OPT_IN_FQ_NAME) ?: false
     }
 
     override val DeclarationSymbolMarker.hasSource: Boolean
