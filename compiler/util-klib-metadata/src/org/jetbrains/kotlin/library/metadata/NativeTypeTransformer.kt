@@ -16,6 +16,8 @@ import org.jetbrains.kotlin.types.SupposititiousSimpleType
 
 class NativeTypeTransformer : PlatformDependentTypeTransformer {
     override fun transformPlatformType(classId: ClassId, computedType: SimpleType): SimpleType {
+        return computedType
+        /*
         val originalPackageFqn = classId.packageFqName
         if (originalPackageFqn in forwardPackagesSet) {
             // This hack is about keeping original class id written into proto which is required for correct IR linkage
@@ -27,7 +29,7 @@ class NativeTypeTransformer : PlatformDependentTypeTransformer {
             }
         }
 
-        return computedType
+        return computedType*/
     }
 
     companion object {

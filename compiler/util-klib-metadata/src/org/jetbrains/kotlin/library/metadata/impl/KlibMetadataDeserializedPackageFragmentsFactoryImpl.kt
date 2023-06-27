@@ -74,23 +74,7 @@ open class KlibMetadataDeserializedPackageFragmentsFactoryImpl : KlibMetadataDes
         deserializedPackageFragments: List<KlibMetadataPackageFragment>,
         moduleDescriptor: ModuleDescriptor
     ): List<PackageFragmentDescriptor> {
-
-        if (!library.isInterop) return emptyList()
-
-        val mainPackageFqName = library.packageFqName?. let{ FqName(it) }
-            ?: error("Inconsistent manifest: interop library ${library.libraryName} should have `package` specified")
-        val exportForwardDeclarations = library.exportForwardDeclarations.map{ FqName(it) }
-
-        val aliasedPackageFragments = deserializedPackageFragments.filter { it.fqName == mainPackageFqName }
-
-        val result = mutableListOf<PackageFragmentDescriptor>()
-        ExportedForwardDeclarationChecker.values().mapTo(result) { checker ->
-            ClassifierAliasingPackageFragmentDescriptor(aliasedPackageFragments, moduleDescriptor, checker)
-        }
-
-        result.add(ExportedForwardDeclarationsPackageFragmentDescriptor(moduleDescriptor, mainPackageFqName, exportForwardDeclarations))
-
-        return result
+        return emptyList()
     }
 
 }
@@ -99,6 +83,7 @@ open class KlibMetadataDeserializedPackageFragmentsFactoryImpl : KlibMetadataDes
  * The package fragment to export forward declarations from interop package namespace, i.e.
  * redirect "$pkg.$name" to e.g. "cnames.structs.$name".
  */
+@Deprecated(level = DeprecationLevel.ERROR, message = "This class is never created now, and should not be used")
 class ExportedForwardDeclarationsPackageFragmentDescriptor(
     module: ModuleDescriptor,
     fqName: FqName,
@@ -134,6 +119,7 @@ class ExportedForwardDeclarationsPackageFragmentDescriptor(
 /**
  * The package fragment that redirects all requests for classifier lookup to its targets.
  */
+@Deprecated(level = DeprecationLevel.ERROR, message = "This class is never created now, and should not be used")
 class ClassifierAliasingPackageFragmentDescriptor(
     targets: List<KlibMetadataPackageFragment>,
     module: ModuleDescriptor,
