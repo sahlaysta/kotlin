@@ -54,10 +54,11 @@ inline const KChar* CharArrayAddressOfElementAt(const ArrayHeader* obj, KInt ind
   return AddressOfElementAt<KChar>(obj, index);
 }
 
+// call this but extern "C" -> ContextUtils (import to compiler by lazyRtFunction)
 inline KInt* IntArrayAddressOfElementAt(ArrayHeader* obj, KInt index) {
   return AddressOfElementAt<KInt>(obj, index);
 }
-
+// 4. smth like this but should be extern "C" to be imported to compiler via lazyRtFunction
 inline const KInt* IntArrayAddressOfElementAt(const ArrayHeader* obj, KInt index) {
   return AddressOfElementAt<KInt>(obj, index);
 }

@@ -39,7 +39,6 @@ ALWAYS_INLINE void mm::SetHeapRefAtomicSeqCst(ObjHeader** location, ObjHeader* v
     __atomic_store_n(location, value, __ATOMIC_SEQ_CST);
 }
 
-
 ALWAYS_INLINE OBJ_GETTER(mm::ReadHeapRefAtomic, ObjHeader** location) noexcept {
     AssertThreadState(ThreadState::kRunnable);
     // TODO: Make this work with GCs that can stop thread at any point.
@@ -58,7 +57,7 @@ ALWAYS_INLINE OBJ_GETTER(mm::CompareAndSwapHeapRef, ObjHeader** location, ObjHea
 ALWAYS_INLINE bool mm::CompareAndSetHeapRef(ObjHeader** location, ObjHeader* expected, ObjHeader* value) noexcept {
     AssertThreadState(ThreadState::kRunnable);
     // TODO: Make this work with GCs that can stop thread at any point.
-    ObjHeader* actual = expected;
+    ObjHeader* actual = expected; // pass pointer to the array element as location
     return __atomic_compare_exchange_n(location, &actual, value, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
 }
 

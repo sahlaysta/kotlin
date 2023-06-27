@@ -68,6 +68,7 @@ class AtomicIntegerArray {
     fun getAndAdd(index: Int, delta: Int): Int = array.getAndAddArrayElement(index, delta)
 }
 
+// 1. todo pass IntArray as first arg -> IntrinsicGenerator
 internal fun IntArray.getArrayElement(index: Int): Int = this.get(index)
 
 internal fun IntArray.setArrayElement(index: Int, value: Int) = this.set(index, value)

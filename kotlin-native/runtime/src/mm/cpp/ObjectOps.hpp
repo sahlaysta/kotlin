@@ -28,9 +28,11 @@ void SetHeapRefAtomicSeqCst(ObjHeader** location, ObjHeader* value) noexcept;
 OBJ_GETTER(ReadHeapRefAtomic, ObjHeader** location) noexcept;
 OBJ_GETTER(CompareAndSwapHeapRef, ObjHeader** location, ObjHeader* expected, ObjHeader* value) noexcept;
 bool CompareAndSetHeapRef(ObjHeader** location, ObjHeader* expected, ObjHeader* value) noexcept;
+// bool CompareAndSetHeapRef(ArrayHeader* location, KInt index, KInt expected, KInt value) noexcept; for IntArray
 OBJ_GETTER(GetAndSetHeapRef, ObjHeader** location, ObjHeader* value) noexcept;
 OBJ_GETTER(AllocateObject, ThreadData* threadData, const TypeInfo* typeInfo) noexcept;
 OBJ_GETTER(AllocateArray, ThreadData* threadData, const TypeInfo* typeInfo, uint32_t elements) noexcept;
+
 
 // This does not take into account how much storage did the underlying allocator (malloc/mimalloc) reserved.
 size_t GetAllocatedHeapSize(ObjHeader* object) noexcept;

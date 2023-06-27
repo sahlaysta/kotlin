@@ -321,6 +321,7 @@ internal class IntrinsicGenerator(private val environment: IntrinsicGeneratorEnv
         SET(1)
     }
 
+    // 2. make another function like this
     private fun FunctionGenerationContext.emitCmpExchange(callSite: IrCall, args: List<LLVMValueRef>, mode: CmpExchangeMode, resultSlot: LLVMValueRef?): LLVMValueRef {
         val field = context.mapping.functionToVolatileField[callSite.symbol.owner]!!
         val address: LLVMValueRef
@@ -329,7 +330,7 @@ internal class IntrinsicGenerator(private val environment: IntrinsicGeneratorEnv
         if (callSite.dispatchReceiver != null) {
             require(!field.isStatic)
             require(args.size == 3)
-            address = environment.getObjectFieldPointer(args[0], field)
+            address = environment.getObjectFieldPointer(args[0], field) // 3. here should be the call to smth like getArrayElementPtr,
             expected = args[1]
             new = args[2]
         } else {
