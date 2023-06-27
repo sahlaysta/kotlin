@@ -151,7 +151,7 @@ abstract class AbstractAtomicfuTransformer(val pluginContext: IrPluginContext) {
                     } else {
                         atomicProperty.checkVisibility()
                         (parentContainer as IrClass).addTransformedInClassAtomic(atomicProperty, index)
-                    }?.also {
+                    }.also {
                         declarationsToBeRemoved.add(atomicProperty)
                     }
                 }

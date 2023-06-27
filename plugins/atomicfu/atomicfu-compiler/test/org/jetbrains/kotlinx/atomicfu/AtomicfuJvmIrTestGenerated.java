@@ -123,6 +123,12 @@ public class AtomicfuJvmIrTestGenerated extends AbstractAtomicfuJvmIrTest {
         }
 
         @Test
+        @TestMetadata("InitializationOrderTest.kt")
+        public void testInitializationOrderTest() throws Exception {
+            runTest("plugins/atomicfu/atomicfu-compiler/testData/box/atomics_basic/InitializationOrderTest.kt");
+        }
+
+        @Test
         @TestMetadata("LateinitPropertiesTest.kt")
         public void testLateinitPropertiesTest() throws Exception {
             runTest("plugins/atomicfu/atomicfu-compiler/testData/box/atomics_basic/LateinitPropertiesTest.kt");
@@ -174,12 +180,6 @@ public class AtomicfuJvmIrTestGenerated extends AbstractAtomicfuJvmIrTest {
         @TestMetadata("UncheckedCastTest.kt")
         public void testUncheckedCastTest() throws Exception {
             runTest("plugins/atomicfu/atomicfu-compiler/testData/box/atomics_basic/UncheckedCastTest.kt");
-        }
-
-        @Test
-        @TestMetadata("InitializationOrderTest.kt")
-        public void testIntializationOrderTest() throws Exception {
-            runTest("plugins/atomicfu/atomicfu-compiler/testData/box/atomics_basic/InitializationOrderTest.kt");
         }
     }
 

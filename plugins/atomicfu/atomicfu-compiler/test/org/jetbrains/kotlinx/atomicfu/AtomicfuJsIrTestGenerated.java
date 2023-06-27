@@ -123,6 +123,12 @@ public class AtomicfuJsIrTestGenerated extends AbstractAtomicfuJsIrTest {
         }
 
         @Test
+        @TestMetadata("InitializationOrderTest.kt")
+        public void testInitializationOrderTest() throws Exception {
+            runTest("plugins/atomicfu/atomicfu-compiler/testData/box/atomics_basic/InitializationOrderTest.kt");
+        }
+
+        @Test
         @TestMetadata("LateinitPropertiesTest.kt")
         public void testLateinitPropertiesTest() throws Exception {
             runTest("plugins/atomicfu/atomicfu-compiler/testData/box/atomics_basic/LateinitPropertiesTest.kt");
