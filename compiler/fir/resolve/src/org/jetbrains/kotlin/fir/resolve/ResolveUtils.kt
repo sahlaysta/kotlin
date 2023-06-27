@@ -445,7 +445,6 @@ private fun <T : FirExpression> BodyResolveComponents.transformExpressionUsingSm
         }
         return buildSmartCastExpression {
             originalExpression = expression
-            source = originalExpression.source?.fakeElement(KtFakeSourceElementKind.SmartCastExpression)
             smartcastType = intersectedTypeRef
             smartcastTypeWithoutNullableNothing = reducedIntersectedTypeRef
             this.typesFromSmartCast = typesFromSmartCast
@@ -456,7 +455,6 @@ private fun <T : FirExpression> BodyResolveComponents.transformExpressionUsingSm
 
     return buildSmartCastExpression {
         originalExpression = expression
-        source = originalExpression.source?.fakeElement(KtFakeSourceElementKind.SmartCastExpression)
         smartcastType = intersectedTypeRef
         this.typesFromSmartCast = typesFromSmartCast
         this.smartcastStability = smartcastStability
