@@ -22,7 +22,7 @@ class AtomicIntegerArray {
      * Creates a new [AtomicIntegerArray] with elements copied from the given [array] of [Int] values.
      */
     constructor(array: IntArray) {
-        this.array = array.clone()
+        this.array = IntArray(array.size) { i -> array[i] }
     }
 
     /**

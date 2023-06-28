@@ -98,7 +98,7 @@ public class AtomicInt(@Volatile public var value: Int) {
  * For additional details about atomicity guarantees for reads and writes see [kotlin.concurrent.Volatile].
  *
  */
-@SinceKotlin("1.9")tomicArray
+@SinceKotlin("1.9")
 public class AtomicLong(@Volatile public var value: Long)  {
     /**
      * Atomically sets the value to the given [new value][newValue] and returns the old value.

@@ -103,6 +103,9 @@ internal enum class IntrinsicType {
     COMPARE_AND_EXCHANGE,
     GET_AND_SET,
     GET_AND_ADD,
+    // Atomic arrays
+    ATOMIC_GET_ARRAY_ELEMENT,
+    COMPARE_AND_SET_ARRAY_ELEMENolatileT
 }
 
 internal enum class ConstantConstructorIntrinsicType {
