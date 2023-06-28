@@ -47,6 +47,7 @@ val proguardLibraries by configurations.creating {
 val libraries by configurations.creating {
     exclude("org.jetbrains.kotlin", "kotlin-stdlib-common")
 }
+val librariesJs by configurations.creating // excluded from sbom generation
 
 val librariesStripVersion by configurations.creating
 
@@ -167,7 +168,8 @@ dependencies {
 
     libraries(kotlinStdlib("jdk8"))
     if (!kotlinBuildProperties.isInJpsBuildIdeaSync) {
-        libraries(kotlinStdlib("js", "distLibrary"))
+        librariesJs(kotlinStdlib(classifier = "distJsJar"))
+        librariesJs(kotlinStdlib(classifier = "distJsKlib"))
         libraries(project(":kotlin-test:kotlin-test-js", configuration = "distLibrary"))
     }
 
@@ -204,13 +206,13 @@ dependencies {
         sources("org.jetbrains.kotlin:kotlin-reflect:$bootstrapKotlinVersion:sources")
     } else {
         sources(project(":kotlin-stdlib", configuration = "distSources"))
-        sources(project(":kotlin-stdlib-js", configuration = "distSources"))
+        sources(project(":kotlin-stdlib", configuration = "distJsSourcesJar"))
         sources(project(":kotlin-reflect", configuration = "sources"))
         sources(project(":kotlin-test", "combinedJvmSourcesJar"))
 
         distStdlibMinimalForTests(project(":kotlin-stdlib-jvm-minimal-for-test"))
 
-        distJSContents(project(":kotlin-stdlib-js", configuration = "distJs"))
+        distJSContents(project(":kotlin-stdlib", configuration = "distJsContent"))
         distJSContents(project(":kotlin-test:kotlin-test-js", configuration = "distJs"))
     }
 
@@ -392,6 +394,7 @@ val distKotlinc = distTask<Sync>("distKotlinc") {
     val compilerBaseName = compilerBaseName
     val jarFiles = files(jar)
     val librariesFiles = files(libraries)
+    val librariesJsFiles = files(librariesJs)
     val librariesStripVersionFiles = files(librariesStripVersion)
     val sourcesFiles = files(sources)
     val compilerPluginsFiles = files(compilerPlugins)
@@ -399,6 +402,7 @@ val distKotlinc = distTask<Sync>("distKotlinc") {
     into("lib") {
         from(jarFiles) { rename { "$compilerBaseName.jar" } }
         from(librariesFiles)
+        from(librariesJsFiles)
         from(librariesStripVersionFiles) {
             rename {
                 it.replace(Regex("-\\d.*\\.jar\$"), ".jar")
