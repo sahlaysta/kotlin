@@ -17,7 +17,6 @@ plugins {
 
 
 // TODO: JS
-//   - ensure dist content
 //   - ensure npm publishing
 
 configureJvmToolchain(JdkMajorVersion.JDK_1_8)
@@ -679,6 +678,23 @@ tasks {
             Files.copy(jsSourcesJarFile.get().asFile.toPath(), archiveFile.get().asFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
         }
     }
+
+    artifacts {
+        val distJsJar = configurations.create("distJsJar")
+        val distJsSourcesJar = configurations.create("distJsSourcesJar")
+        val distJsContent = configurations.create("distJsContent")
+        val distJsKlib = configurations.create("distJsKlib")
+
+        add(distJsJar.name, jsResultingJar)
+        add(distJsSourcesJar.name, jsSourcesJar)
+        add(distJsKlib.name, jsJar)
+        mergeJsV1.get().outputs.files.forEach { artifact ->
+            add(distJsContent.name, artifact) {
+                builtBy(mergeJsV1)
+            }
+        }
+    }
+
 
 
     listOf(JdkMajorVersion.JDK_9_0, JdkMajorVersion.JDK_10_0, JdkMajorVersion.JDK_11_0).forEach { jvmVersion ->
