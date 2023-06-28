@@ -17,12 +17,28 @@ namespace kotlin::gcScheduler::internal {
 
 class HeapGrowthController {
 public:
+    enum class MemoryBoundary {
+        kNone,
+        kSoft,
+        kHard,
+    };
+
     explicit HeapGrowthController(GCSchedulerConfig& config) noexcept :
-        config_(config), targetHeapBytes_(config.targetHeapBytes.load(std::memory_order_relaxed)) {}
+        config_(config), targetHeapBytes_(config.targetHeapBytes.load(std::memory_order_relaxed)) {
+        softTargetHeapBytes_ = targetHeapBytes_ * config_.targetHeapSoftCoefficient.load(std::memory_order_relaxed);
+    }
 
     // Called by the mutators.
     // Returns true if needs GC.
-    bool SetAllocatedBytes(size_t totalAllocatedBytes) noexcept { return totalAllocatedBytes >= targetHeapBytes_; }
+    MemoryBoundary SetAllocatedBytes(size_t totalAllocatedBytes) noexcept {
+        if (totalAllocatedBytes >= targetHeapBytes_) {
+            return MemoryBoundary::kHard;
+        } else if (totalAllocatedBytes >= softTargetHeapBytes_) {
+            return MemoryBoundary::kSoft;
+        } else {
+            return MemoryBoundary::kNone;
+        }
+    }
 
     // Called by the GC thread.
     void UpdateAliveSetBytes(size_t bytes) noexcept {
@@ -35,6 +51,7 @@ public:
             double minHeapBytes = static_cast<double>(config_.minHeapBytes.load(std::memory_order_relaxed));
             double maxHeapBytes = static_cast<double>(config_.maxHeapBytes.load(std::memory_order_relaxed));
             targetHeapBytes = std::min(std::max(targetHeapBytes, minHeapBytes), maxHeapBytes);
+            softTargetHeapBytes_ = static_cast<size_t>(targetHeapBytes * config_.targetHeapSoftCoefficient.load(std::memory_order_relaxed));
             config_.targetHeapBytes.store(static_cast<int64_t>(targetHeapBytes), std::memory_order_relaxed);
             targetHeapBytes_ = static_cast<size_t>(targetHeapBytes);
         } else {
@@ -42,14 +59,10 @@ public:
         }
     }
 
-    void OnPerformFullGC() noexcept {
-        // TODO: Need to protect against mutators that can overrun the GC thread.
-        targetHeapBytes_ = std::numeric_limits<size_t>::max();
-    }
-
 private:
     GCSchedulerConfig& config_;
     size_t targetHeapBytes_ = 0;
+    size_t softTargetHeapBytes_ = 0;
 };
 
 } // namespace kotlin::gcScheduler::internal

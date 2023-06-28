@@ -14,6 +14,7 @@
 #include "Logging.hpp"
 #include "RegularIntervalPacer.hpp"
 #include "RepeatedTimer.hpp"
+#include "SafePoint.hpp"
 
 namespace kotlin::gcScheduler::internal {
 
@@ -39,27 +40,60 @@ public:
     }
 
     void OnPerformFullGC() noexcept override {
-        heapGrowthController_.OnPerformFullGC();
         regularIntervalPacer_.OnPerformFullGC();
         timer_.restart(config_.regularGcInterval());
     }
 
-    void UpdateAliveSetBytes(size_t bytes) noexcept override { heapGrowthController_.UpdateAliveSetBytes(bytes); }
+    void UpdateAliveSetBytes(size_t bytes) noexcept override {
+        heapGrowthController_.UpdateAliveSetBytes(bytes);
+        scheduled_ = false;
+        resumeMutators();
+    }
 
     void SetAllocatedBytes(size_t bytes) noexcept override {
-        if (heapGrowthController_.SetAllocatedBytes(bytes)) {
-            RuntimeLogDebug({kTagGC}, "Scheduling GC by allocation");
-            scheduleGC_();
+        auto boundary = heapGrowthController_.SetAllocatedBytes(bytes);
+        switch (boundary) {
+            case HeapGrowthController::MemoryBoundary::kNone:
+                return;
+            case HeapGrowthController::MemoryBoundary::kSoft:
+                if (scheduled_) return;
+                scheduled_ = true;
+                RuntimeLogDebug({kTagGC}, "Scheduling GC by allocation");
+                scheduleGC_();
+            case HeapGrowthController::MemoryBoundary::kHard:
+                if (!scheduled_) {
+                    scheduled_ = true;
+                    scheduleGC_();
+                }
+                pauseMutators();
+                RuntimeLogWarning({kTagGC}, "Scheduling GC by allocation");
+        }
+    }
+
+    void safePoint() noexcept {
+        kotlin::NativeOrUnregisteredThreadGuard guard(/* reentrant= */ true);
+        while (stop_.load(std::memory_order_relaxed)) {
         }
     }
 
 private:
+    void pauseMutators() noexcept {
+        kotlin::NativeOrUnregisteredThreadGuard guard(/* reentrant= */ true);
+        mm::SafePointActivator activator;
+        stop_.store(true, std::memory_order_relaxed);
+        safePoint();
+    }
+
+    void resumeMutators() noexcept { stop_.store(false, std::memory_order_relaxed); }
+
     GCSchedulerConfig& config_;
     std::function<void()> scheduleGC_;
     mm::AppStateTracking& appStateTracking_;
     HeapGrowthController heapGrowthController_;
     RegularIntervalPacer<Clock> regularIntervalPacer_;
     RepeatedTimer<Clock> timer_;
+    std::atomic<bool> scheduled_ = false;
+    std::atomic<bool> stop_ = false;
 };
 
 } // namespace kotlin::gcScheduler::internal

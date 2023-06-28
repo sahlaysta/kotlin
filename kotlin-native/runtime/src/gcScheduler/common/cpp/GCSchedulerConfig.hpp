@@ -27,6 +27,7 @@ struct GCSchedulerConfig {
     std::atomic<int64_t> minHeapBytes = 1024 * 1024;
     // The maximum value of targetHeapBytes for autoTune = true
     std::atomic<int64_t> maxHeapBytes = std::numeric_limits<int64_t>::max();
+    std::atomic<double> targetHeapSoftCoefficient = 0.9;
 
     std::chrono::microseconds regularGcInterval() const { return std::chrono::microseconds(regularGcIntervalMicroseconds.load()); }
 };

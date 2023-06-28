@@ -21,4 +21,6 @@ gcScheduler::GCScheduler::GCScheduler() noexcept :
         mm::GlobalData::Instance().gc().Schedule();
     })) {}
 
-ALWAYS_INLINE void gcScheduler::GCScheduler::safePoint() noexcept {}
+ALWAYS_INLINE void gcScheduler::GCScheduler::safePoint() noexcept {
+    static_cast<internal::GCSchedulerDataAdaptive<steady_clock>&>(gcData()).safePoint();
+}
