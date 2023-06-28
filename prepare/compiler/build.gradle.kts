@@ -209,8 +209,8 @@ dependencies {
 
         distStdlibMinimalForTests(project(":kotlin-stdlib-jvm-minimal-for-test"))
 
-        distJSContents(project(":kotlin-stdlib-js", configuration = "distJs"))
-        distJSContents(project(":kotlin-test:kotlin-test-js", configuration = "distJs"))
+//        distJSContents(project(":kotlin-stdlib-js", configuration = "distJs"))
+//        distJSContents(project(":kotlin-test:kotlin-test-js", configuration = "distJs"))
     }
 
     distCommonContents(kotlinStdlib(suffix = "common"))
