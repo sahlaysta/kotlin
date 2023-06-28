@@ -105,7 +105,7 @@ internal enum class IntrinsicType {
     GET_AND_ADD,
     // Atomic arrays
     ATOMIC_GET_ARRAY_ELEMENT,
-    COMPARE_AND_SET_ARRAY_ELEMENolatileT
+    COMPARE_AND_SET_ARRAY_ELEMENT
 }
 
 internal enum class ConstantConstructorIntrinsicType {
@@ -286,6 +286,7 @@ internal class IntrinsicGenerator(private val environment: IntrinsicGeneratorEnv
                 IntrinsicType.OBJC_GET_SELECTOR,
                 IntrinsicType.IMMUTABLE_BLOB ->
                     reportSpecialIntrinsic(intrinsicType)
+                IntrinsicType.ATOMIC_GET_ARRAY_ELEMENT, IntrinsicType.COMPARE_AND_SET_ARRAY_ELEMENT -> TODO("not implemented yet")
             }
 
     fun evaluateConstantConstructorFields(constant: IrConstantObject, args: List<ConstValue>) : List<ConstValue> {
@@ -325,6 +326,8 @@ internal class IntrinsicGenerator(private val environment: IntrinsicGeneratorEnv
     }
 
     // 2. make another function like this
+    // args: if dispatchReceiver != null -> args[0] is dispatchReceiver
+    // address
     private fun FunctionGenerationContext.emitCmpExchange(callSite: IrCall, args: List<LLVMValueRef>, mode: CmpExchangeMode, resultSlot: LLVMValueRef?): LLVMValueRef {
         val field = context.mapping.functionToVolatileField[callSite.symbol.owner]!!
         val address: LLVMValueRef
@@ -346,6 +349,7 @@ internal class IntrinsicGenerator(private val environment: IntrinsicGeneratorEnv
         return if (isObjectRef(args[1])) {
             require(context.memoryModel == MemoryModel.EXPERIMENTAL)
             when (mode) {
+                // for refs -> cpp code, for primitives -> llvm code
                 CmpExchangeMode.SET -> call(llvm.CompareAndSetVolatileHeapRef, listOf(address, expected, new))
                 CmpExchangeMode.SWAP -> call(llvm.CompareAndSwapVolatileHeapRef, listOf(address, expected, new),
                         environment.calculateLifetime(callSite), resultSlot = resultSlot)

@@ -53,6 +53,7 @@ ALWAYS_INLINE OBJ_GETTER(mm::CompareAndSwapHeapRef, ObjHeader** location, ObjHea
     __atomic_compare_exchange_n(location, &actual, value, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
     RETURN_OBJ(actual);
 }
+// CPP ATOMIC GET OF THE ELEMENT: but for primitive types, there should be ObjHeader*
 
 ALWAYS_INLINE bool mm::CompareAndSetHeapRef(ObjHeader** location, ObjHeader* expected, ObjHeader* value) noexcept {
     AssertThreadState(ThreadState::kRunnable);

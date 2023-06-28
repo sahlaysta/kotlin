@@ -73,8 +73,8 @@ internal fun IntArray.getArrayElement(index: Int): Int = this.get(index)
 
 internal fun IntArray.setArrayElement(index: Int, value: Int) = this.set(index, value)
 
-internal fun IntArray.getAndSetArrayElement(index: Int, value: Int): Int = TODO()
+internal fun IntArray.getAndSetArrayElement(index: Int, value: Int): Int = TODO("Not implemented" + index + value)
 
-internal fun IntArray.getAndAddArrayElement(index: Int, delta: Int): Int = TODO()
+internal fun IntArray.getAndAddArrayElement(index: Int, delta: Int): Int = TODO("Not implemented" + index + delta)
 
-internal fun IntArray.compareAndSetArrayElement(index: Int, expectedValue: Int, newValue: Int): Boolean = TODO()
+internal fun IntArray.compareAndSetArrayElement(index: Int, expectedValue: Int, newValue: Int): Boolean = TODO("Not implemented" + index + expectedValue + newValue)
