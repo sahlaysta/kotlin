@@ -14,8 +14,9 @@ import org.jetbrains.kotlin.gradle.idea.tcs.IdeaKotlinSourceDependency.Type.Regu
 import org.jetbrains.kotlin.gradle.idea.testFixtures.tcs.*
 import org.jetbrains.kotlin.gradle.plugin.ide.kotlinIdeMultiplatformImport
 import org.jetbrains.kotlin.gradle.targets.js.dsl.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.util.applyMultiplatformPlugin
 import org.jetbrains.kotlin.gradle.util.buildProject
-import org.jetbrains.kotlin.gradle.util.buildProjectWithMPP
+import org.jetbrains.kotlin.gradle.util.enableDependencyVerification
 import kotlin.test.Test
 
 class WasmDependencyResolutionSmokeTest {
@@ -23,14 +24,16 @@ class WasmDependencyResolutionSmokeTest {
     @Test
     fun `test - project to project ide dependency resolution`() {
         val rootProject = buildProject()
-        val consumer = buildProjectWithMPP(projectBuilder = { withName("consumer").withParent(rootProject) })
-        val producer = buildProjectWithMPP(projectBuilder = { withName("producer").withParent(rootProject) })
+        val consumer = buildProject(projectBuilder = { withName("consumer").withParent(rootProject) })
+        val producer = buildProject(projectBuilder = { withName("producer").withParent(rootProject) })
 
-        rootProject.subprojects {
-            it.repositories.mavenLocal()
-            it.repositories.mavenCentralCacheRedirector()
+        rootProject.subprojects { project ->
+            project.enableDependencyVerification(false)
+            project.applyMultiplatformPlugin()
+            project.repositories.mavenLocal()
+            project.repositories.mavenCentralCacheRedirector()
         }
-
+        
         producer.multiplatformExtension.apply {
             jvm()
             js(IR) { browser() }
