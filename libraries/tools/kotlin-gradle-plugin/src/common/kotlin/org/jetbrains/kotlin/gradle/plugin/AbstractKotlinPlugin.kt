@@ -16,6 +16,7 @@ import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPom
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.SourceSet
+import org.gradle.internal.component.external.model.TestFixturesSupport.TEST_FIXTURES_FEATURE_NAME
 import org.gradle.jvm.tasks.Jar
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import org.jetbrains.kotlin.gradle.dsl.KotlinSingleJavaTargetExtension
@@ -37,6 +38,7 @@ const val NATIVE_COMPILER_PLUGIN_CLASSPATH_CONFIGURATION_NAME = "kotlinNativeCom
 const val COMPILER_CLASSPATH_CONFIGURATION_NAME = "kotlinCompilerClasspath"
 internal const val BUILD_TOOLS_API_CLASSPATH_CONFIGURATION_NAME = "kotlinBuildToolsApiClasspath"
 internal const val KLIB_COMMONIZER_CLASSPATH_CONFIGURATION_NAME = "kotlinKlibCommonizerClasspath"
+private const val JAVA_TEST_FIXTURES_PLUGIN_ID = "java-test-fixtures"
 
 internal abstract class AbstractKotlinPlugin(
     val tasksProvider: KotlinTasksProvider,
@@ -211,6 +213,8 @@ internal abstract class AbstractKotlinPlugin(
                 getByName(KotlinCompilation.TEST_COMPILATION_NAME).associateWith(getByName(KotlinCompilation.MAIN_COMPILATION_NAME))
             }
 
+            configureJavaTestFixturesSourceSets(kotlinTarget)
+
             // Since the 'java' plugin (as opposed to 'java-library') doesn't known anything about the 'api' configurations,
             // add the API dependencies of the main compilation directly to the 'apiElements' configuration, so that the 'api' dependencies
             // are properly published with the 'compile' scope (KT-28355):
@@ -220,6 +224,25 @@ internal abstract class AbstractKotlinPlugin(
                     val mainCompilation = kotlinTarget.compilations.getByName(KotlinCompilation.MAIN_COMPILATION_NAME)
                     val compilationApiConfiguration = getByName(mainCompilation.apiConfigurationName)
                     apiElementsConfiguration.extendsFrom(compilationApiConfiguration)
+                }
+            }
+        }
+
+        private fun configureJavaTestFixturesSourceSets(kotlinTarget: KotlinTarget) {
+            val project = kotlinTarget.project
+            project.plugins.withId(JAVA_TEST_FIXTURES_PLUGIN_ID) {
+                try {
+                    kotlinTarget.compilations.run {
+                        getByName(TEST_FIXTURES_FEATURE_NAME).associateWith(getByName(KotlinCompilation.MAIN_COMPILATION_NAME))
+                        getByName(KotlinCompilation.TEST_COMPILATION_NAME).associateWith(getByName(TEST_FIXTURES_FEATURE_NAME))
+                    }
+                } catch (e: Throwable) {
+                    project.logger.warn(
+                        "The `$JAVA_TEST_FIXTURES_PLUGIN_ID` plugin has been detected, " +
+                                "however an exception has occurred during association of `$TEST_FIXTURES_FEATURE_NAME` with the default java source sets. " +
+                                "`internal` declarations can be not available in the test fixtures.",
+                        e
+                    )
                 }
             }
         }
