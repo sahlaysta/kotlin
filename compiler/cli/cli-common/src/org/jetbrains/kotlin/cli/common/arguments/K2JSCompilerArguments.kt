@@ -623,6 +623,13 @@ class K2JSCompilerArguments : CommonCompilerArguments() {
             field = value
         }
 
+    @Argument(value = "-Xwasm-wasi-mode", description = "Enable WASI mode for Wasm")
+    var wasmWasiMode = false
+        set(value) {
+            checkFrozen()
+            field = value
+        }
+
     @Argument(
         value = "-Xforce-deprecated-legacy-compiler-usage",
         description = "The flag is used only for our inner infrastructure. It will be removed soon, so it's unsafe to use it nowadays."
