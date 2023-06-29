@@ -59,6 +59,7 @@ abstract class AbstractAtomicfuIrBuilder(
             isFinal = false
             isStatic = parentContainer is IrFile
             visibility = DescriptorVisibilities.PRIVATE
+            origin = AbstractAtomicSymbols.ATOMICFU_GENERATED_FIELD
         }.apply {
             initializer = initValue?.let { IrExpressionBodyImpl(it) }
             this.annotations = annotations + atomicSymbols.volatileAnnotationConstructorCall
@@ -76,6 +77,7 @@ abstract class AbstractAtomicfuIrBuilder(
             isFinal = true
             this.isStatic = isStatic
             this.visibility = DescriptorVisibilities.PRIVATE
+            origin = AbstractAtomicSymbols.ATOMICFU_GENERATED_FIELD
         }.apply {
             initializer = IrExpressionBodyImpl(
                 IrConstructorCallImpl.fromSymbolOwner(
@@ -95,6 +97,7 @@ abstract class AbstractAtomicfuIrBuilder(
     ): IrClass = context.irFactory.buildClass {
         this.name = Name.identifier(name)
         kind = ClassKind.CLASS
+        origin = AbstractAtomicSymbols.ATOMICFU_GENERATED_CLASS
     }.apply {
         val irClass = this
         this.parent = parentContainer
@@ -140,6 +143,7 @@ abstract class AbstractAtomicfuIrBuilder(
         this.name = field.name
         this.visibility = visibility
         this.isVar = isVar
+        origin = AbstractAtomicSymbols.ATOMICFU_GENERATED_PROPERTY
     }.apply {
         backingField = field
         field.correspondingPropertySymbol = this.symbol
@@ -157,6 +161,7 @@ abstract class AbstractAtomicfuIrBuilder(
             origin = IrDeclarationOrigin.DEFAULT_PROPERTY_ACCESSOR
             visibility = property.visibility
             returnType = field.type
+            origin = AbstractAtomicSymbols.ATOMICFU_GENERATED_PROPERTY_ACCESSOR
         }.apply {
             dispatchReceiverParameter = if (isStatic) null else (parentContainer as? IrClass)?.thisReceiver?.deepCopyWithSymbols(this)
             body = factory.createBlockBody(
@@ -190,6 +195,7 @@ abstract class AbstractAtomicfuIrBuilder(
             origin = IrDeclarationOrigin.DEFAULT_PROPERTY_ACCESSOR
             visibility = property.visibility
             returnType = irBuiltIns.unitType
+            origin = AbstractAtomicSymbols.ATOMICFU_GENERATED_PROPERTY_ACCESSOR
         }.apply {
             dispatchReceiverParameter = if (isStatic) null else (parentClass as? IrClass)?.thisReceiver?.deepCopyWithSymbols(this)
             addValueParameter("value", field.type)

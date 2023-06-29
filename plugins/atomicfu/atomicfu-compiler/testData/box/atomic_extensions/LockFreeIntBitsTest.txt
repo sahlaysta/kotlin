@@ -1,16 +1,19 @@
 @kotlin.Metadata
 public final class LockFreeIntBits {
     // source: 'LockFreeIntBitsTest.kt'
-    private final static @org.jetbrains.annotations.NotNull field bits$volatile$FU: java.util.concurrent.atomic.AtomicIntegerFieldUpdater
-    private volatile field bits$volatile: int
+    private synthetic final static field bits$volatile$FU: java.util.concurrent.atomic.AtomicIntegerFieldUpdater
+    private synthetic volatile field bits$volatile: int
     static method <clinit>(): void
     public method <init>(): void
     public final method bitClear(p0: int): boolean
     public final method bitSet(p0: int): boolean
     private final method bitUpdate(p0: kotlin.jvm.functions.Function1, p1: kotlin.jvm.functions.Function1): boolean
     public final method get(p0: int): boolean
+    private synthetic final static method getBits$volatile$FU(): java.util.concurrent.atomic.AtomicIntegerFieldUpdater
+    private synthetic final method getBits$volatile(): int
     private final method mask(p0: int): int
-    private final method update$atomicfu(p0: java.util.concurrent.atomic.AtomicIntegerFieldUpdater, p1: kotlin.jvm.functions.Function1, p2: java.lang.Object): void
+    private synthetic final method setBits$volatile(p0: int): void
+    private synthetic final method update$atomicfu(p0: java.util.concurrent.atomic.AtomicIntegerFieldUpdater, p1: kotlin.jvm.functions.Function1, p2: java.lang.Object): void
 }
 
 @kotlin.Metadata

@@ -16,6 +16,7 @@ import org.jetbrains.kotlin.ir.types.*
 import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.ir.visitors.*
 import org.jetbrains.kotlin.name.*
+import org.jetbrains.kotlinx.atomicfu.compiler.backend.common.AbstractAtomicSymbols
 import org.jetbrains.kotlinx.atomicfu.compiler.backend.common.AbstractAtomicfuTransformer
 import kotlin.collections.set
 
@@ -231,6 +232,7 @@ class AtomicfuJvmIrTransformer(
                 name = Name.identifier(mangledName)
                 isInline = true
                 visibility = atomicExtension.visibility
+                origin = AbstractAtomicSymbols.ATOMICFU_GENERATED_FUNCTION
             }.apply {
                 val newDeclaration = this
                 extensionReceiverParameter = null
@@ -572,6 +574,7 @@ class AtomicfuJvmIrTransformer(
                 name = Name.identifier(mangledName)
                 isInline = true
                 visibility = DescriptorVisibilities.PRIVATE
+                origin = AbstractAtomicSymbols.ATOMICFU_GENERATED_FUNCTION
             }.apply {
                 dispatchReceiverParameter = (parent as? IrClass)?.thisReceiver?.deepCopyWithSymbols(this)
                 if (functionName == LOOP) {

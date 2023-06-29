@@ -74,6 +74,12 @@ abstract class AbstractAtomicSymbols(
             annotations = emptyList()
         )
 
+    object ATOMICFU_GENERATED_CLASS : IrDeclarationOriginImpl("ATOMICFU_GENERATED_CLASS", isSynthetic = true)
+    object ATOMICFU_GENERATED_FUNCTION : IrDeclarationOriginImpl("ATOMICFU_GENERATED_FUNCTION", isSynthetic = true)
+    object ATOMICFU_GENERATED_FIELD : IrDeclarationOriginImpl("ATOMICFU_GENERATED_FIELD", isSynthetic = true)
+    object ATOMICFU_GENERATED_PROPERTY : IrDeclarationOriginImpl("ATOMICFU_GENERATED_PROPERTY", isSynthetic = true)
+    object ATOMICFU_GENERATED_PROPERTY_ACCESSOR : IrDeclarationOriginImpl("ATOMICFU_GENERATED_PROPERTY_ACCESSOR", isSynthetic = true)
+
     protected fun createPackage(packageName: String): IrPackageFragment =
         IrExternalPackageFragmentImpl.createEmptyExternalPackageFragment(
             moduleFragment.descriptor,

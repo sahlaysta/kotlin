@@ -14,6 +14,7 @@ import org.jetbrains.kotlin.ir.expressions.impl.IrExpressionBodyImpl
 import org.jetbrains.kotlin.ir.symbols.*
 import org.jetbrains.kotlin.ir.types.*
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlinx.atomicfu.compiler.backend.common.AbstractAtomicSymbols
 import org.jetbrains.kotlinx.atomicfu.compiler.backend.common.AbstractAtomicfuIrBuilder
 
 // An IR builder with access to AtomicSymbols and convenience methods to build IR constructions for atomicfu JVM/IR transformation.
@@ -53,6 +54,7 @@ class JvmAtomicfuIrBuilder internal constructor(
             this.isFinal = true
             this.isStatic = isStatic
             visibility = DescriptorVisibilities.PRIVATE
+            origin = AbstractAtomicSymbols.ATOMICFU_GENERATED_FIELD
         }.apply {
             this.initializer = IrExpressionBodyImpl(
                 newJavaAtomicArray(arrayClass, size, dispatchReceiver)
@@ -74,6 +76,7 @@ class JvmAtomicfuIrBuilder internal constructor(
             isFinal = true
             isStatic = true
             visibility = DescriptorVisibilities.PRIVATE
+            origin = AbstractAtomicSymbols.ATOMICFU_GENERATED_FIELD
         }.apply {
             initializer = irExprBody(newJavaAtomicFieldUpdater(fuClass, parentClass, atomicSymbols.irBuiltIns.anyNType, fieldName))
             parent = parentClass
@@ -332,4 +335,6 @@ class JvmAtomicfuIrBuilder internal constructor(
                 }
             }
         }
+
+    object ATOMICFU_
 }
