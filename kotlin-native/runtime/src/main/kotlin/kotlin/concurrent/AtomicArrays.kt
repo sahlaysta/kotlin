@@ -33,24 +33,17 @@ class AtomicIntegerArray {
     /**
      * Atomically reads the current value of the element at the given [index].
      */
-    fun get(index: Int): Int = array.getArrayElement(index)
+    fun get(index: Int): Int = getArrayElement(array, index)
 
     /**
      * Atomically sets the value of the element at index[index] to the [given value][value].
      */
-    fun set(index: Int, value: Int) = array.setArrayElement(index, value)
+    fun set(index: Int, value: Int) = setArrayElement(array, index, value)
 
     /**
      * Atomically sets the value of the element at index[index] to the given [new value][newValue] and returns the old value.
      */
     fun getAndSet(index: Int, newValue: Int) = array.getAndSetArrayElement(index, newValue)
-
-    /**
-     * Atomically sets the value of the element at index[index] to the given [new value][newValue]
-     * if the current value equals the [expected value][expected],
-     * returns true if the operation was successful and false only if the current value was not equal to the expected value.
-     */
-    fun compareAndSet(index: Int, expected: Int, newValue: Int) = array.compareAndSetArrayElement(index, expected, newValue)
 
     /**
      * Atomically increments the current value of the element at index[index] and returns the old value.
@@ -69,12 +62,15 @@ class AtomicIntegerArray {
 }
 
 // 1. todo pass IntArray as first arg -> IntrinsicGenerator
-internal fun IntArray.getArrayElement(index: Int): Int = this.get(index)
+@TypedIntrinsic(IntrinsicType.ATOMIC_GET_ARRAY_ELEMENT)
+internal external fun getArrayElement(array: IntArray, index: Int): Int
 
-internal fun IntArray.setArrayElement(index: Int, value: Int) = this.set(index, value)
+@TypedIntrinsic(IntrinsicType.ATOMIC_GET_ARRAY_ELEMENT)
+internal external fun setArrayElement(array: IntArray, index: Int, value: Int)
+
+@TypedIntrinsic(IntrinsicType.ATOMIC_GET_ARRAY_ELEMENT)
+internal external fun compareAndSetArrayElement(array: IntArray, index: Int, expectedValue: Int, newValue: Int): Boolean
 
 internal fun IntArray.getAndSetArrayElement(index: Int, value: Int): Int = TODO("Not implemented" + index + value)
 
 internal fun IntArray.getAndAddArrayElement(index: Int, delta: Int): Int = TODO("Not implemented" + index + delta)
-
-internal fun IntArray.compareAndSetArrayElement(index: Int, expectedValue: Int, newValue: Int): Boolean = TODO("Not implemented" + index + expectedValue + newValue)
