@@ -1168,7 +1168,7 @@ object DIAGNOSTICS_LIST : DiagnosticList("FirErrors") {
 
         val ACTUAL_MISSING by error<KtNamedDeclaration>(PositioningStrategy.ACTUAL_DECLARATION_NAME)
 
-        val ACTUAL_ANNOTATIONS_NOT_MATCH_EXPECT by error<KtElement>(PositioningStrategy.DECLARATION_NAME_ONLY) {
+        val ACTUAL_ANNOTATIONS_NOT_MATCH_EXPECT by warning<KtElement>(PositioningStrategy.DECLARATION_NAME_ONLY) {
             parameter<Symbol>("expect")
             parameter<Symbol>("actual")
         }

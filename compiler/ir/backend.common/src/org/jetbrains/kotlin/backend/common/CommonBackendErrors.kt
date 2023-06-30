@@ -18,6 +18,7 @@ import org.jetbrains.kotlin.diagnostics.rendering.CommonRenderers.STRING
 import org.jetbrains.kotlin.diagnostics.rendering.Renderer
 import org.jetbrains.kotlin.diagnostics.rendering.Renderers.MODULE_WITH_PLATFORM
 import org.jetbrains.kotlin.diagnostics.rendering.RootDiagnosticRendererFactory
+import org.jetbrains.kotlin.diagnostics.warning2
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationWithName
 import org.jetbrains.kotlin.ir.symbols.IrSymbol
 import org.jetbrains.kotlin.ir.util.fqNameWhenAvailable
@@ -28,7 +29,7 @@ object CommonBackendErrors {
     val MANY_INTERFACES_MEMBER_NOT_IMPLEMENTED by error2<PsiElement, String, String>()
     val MANY_IMPL_MEMBER_NOT_IMPLEMENTED by error2<PsiElement, String, String>()
     val INCOMPATIBLE_MATCHING by error3<PsiElement, String, String, ExpectActualCompatibility.Incompatible<*>>()
-    val ACTUAL_ANNOTATIONS_NOT_MATCH_EXPECT by error2<PsiElement, IrSymbol, IrSymbol>(ACTUAL_DECLARATION_NAME)
+    val ACTUAL_ANNOTATIONS_NOT_MATCH_EXPECT by warning2<PsiElement, IrSymbol, IrSymbol>(ACTUAL_DECLARATION_NAME)
 
     init {
         RootDiagnosticRendererFactory.registerFactory(KtDefaultCommonBackendErrorMessages)
