@@ -17,7 +17,7 @@ val unimplementedNativeBuiltIns =
 
 val builtInsSources by task<Sync> {
     val sources = listOf(
-        "core/builtins/src/kotlin/"
+        "core/builtins/src/kotlin/",
     ) + unimplementedNativeBuiltIns
 
     val excluded = listOf(
@@ -86,6 +86,8 @@ kotlin {
     sourceSets {
         named("wasmMain") {
             kotlin.srcDirs("builtins", "internal", "runtime", "src", "stubs")
+            //kotlin.srcDirs("js/builtins/kotlin", "js/internal", "js/src/kotlin", "js/src/kotlinx", "js/src/org.w3c")
+            kotlin.srcDirs("wasi/builtins/kotlin", "wasi/internal", "wasi/src/kotlin", "wasi/src/kotlinx", "wasi/src/org.w3c")
             kotlin.srcDirs("$rootDir/libraries/stdlib/native-wasm/src")
             kotlin.srcDirs(files(builtInsSources.map { it.destinationDir }))
         }
@@ -130,6 +132,7 @@ tasks.withType<KotlinCompile<*>>().configureEach {
         "-opt-in=kotlin.ExperimentalUnsignedTypes",
         "-opt-in=kotlin.ExperimentalStdlibApi",
         "-opt-in=kotlin.io.encoding.ExperimentalEncodingApi",
+        "-opt-in=kotlin.wasm.unsafe.UnsafeWasmMemoryApi",
     )
 }
 

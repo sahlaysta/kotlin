@@ -23,6 +23,7 @@ import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.util.*
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitorVoid
 import org.jetbrains.kotlin.ir.visitors.acceptVoid
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.parentOrNull
 import org.jetbrains.kotlin.wasm.ir.*
 import org.jetbrains.kotlin.wasm.ir.source.location.SourceLocation
@@ -499,8 +500,14 @@ fun IrFunction.getEffectiveValueParameters(): List<IrValueParameter> {
     return listOfNotNull(implicitThis, dispatchReceiverParameter, extensionReceiverParameter) + valueParameters
 }
 
+
+val wasiExportFqn = FqName("kotlin.wasi.WasiExport")
+
+fun IrAnnotationContainer.isWasiExport(): Boolean =
+    hasAnnotation(wasiExportFqn)
+
 fun IrFunction.isExported(): Boolean =
-    isJsExport()
+    isJsExport() || isWasiExport()
 
 
 fun generateConstExpression(

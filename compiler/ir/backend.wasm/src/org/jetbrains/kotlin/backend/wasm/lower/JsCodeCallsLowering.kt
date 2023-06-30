@@ -13,12 +13,16 @@ import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.util.*
+import org.jetbrains.kotlin.js.config.JSConfigurationKeys
 
 /**
  * Lower calls to `js(code)` into `@JsFun(code) external` functions.
  */
 class JsCodeCallsLowering(val context: WasmBackendContext) : FileLoweringPass {
+    private val jsRelatedSymbols get() = context.wasmSymbols.jsRelatedSymbols
+
     override fun lower(irFile: IrFile) {
+        if (context.configuration.get(JSConfigurationKeys.WASM_WASI_MODE, true)) return
         irFile.transformDeclarationsFlat { declaration ->
             when (declaration) {
                 is IrSimpleFunction -> transformFunction(declaration)
@@ -81,7 +85,7 @@ class JsCodeCallsLowering(val context: WasmBackendContext) : FileLoweringPass {
         }
 
         val builder = context.createIrBuilder(function.symbol)
-        function.annotations += builder.irCallConstructor(context.wasmSymbols.jsFunConstructor, typeArguments = emptyList()).also {
+        function.annotations += builder.irCallConstructor(jsRelatedSymbols.jsFunConstructor, typeArguments = emptyList()).also {
             it.putValueArgument(0, builder.irString(jsFunCode))
         }
         function.body = null
@@ -106,7 +110,7 @@ class JsCodeCallsLowering(val context: WasmBackendContext) : FileLoweringPass {
 
     private fun IrExpression.getJsCode(): String? {
         val call = this as? IrCall ?: return null
-        if (call.symbol != context.wasmSymbols.jsCode) return null
+        if (call.symbol != jsRelatedSymbols.jsCode) return null
         @Suppress("UNCHECKED_CAST")
         return (call.getValueArgument(0) as IrConst<String>).value
     }

@@ -3,20 +3,26 @@
  * Use of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
  */
 
-@file:Suppress("UNUSED_PARAMETER") // TODO: Remove after bootstrap update
-
 package kotlin.io
 
-import kotlin.wasm.internal.*
+import kotlin.wasm.wasi.internal.*
+import kotlin.wasm.wasi.*
 
-internal fun printError(error: String?): Unit =
-    js("console.error(error)")
+@Suppress("UNUSED_PARAMETER")
+internal fun printError(error: String?): Unit = TODO("wasi")
 
-private fun printlnImpl(message: String?): Unit =
-    js("console.log(message)")
+@Suppress("UNUSED_PARAMETER")
+private fun printlnImpl(message: String?): Unit {
+    val output = message.toString() ?: ""
+    fdWrite(StandardDescriptor.STDOUT, listOf(output.encodeToByteArray()))
+}
 
-private fun printImpl(message: String?): Unit =
-    js("typeof write !== 'undefined' ? write(message) : console.log(message)")
+@Suppress("UNUSED_PARAMETER")
+private fun printImpl(message: String?): Unit {
+    if (message != null) {
+        fdWrite(StandardDescriptor.STDOUT, listOf(message.toString().encodeToByteArray()))
+    }
+}
 
 /** Prints the line separator to the standard output stream. */
 public actual fun println() {
@@ -34,9 +40,7 @@ public actual fun print(message: Any?) {
 }
 
 @SinceKotlin("1.6")
-public actual fun readln(): String = throw UnsupportedOperationException("readln is not supported in Kotlin/WASM")
+public actual fun readln(): String = TODO("wasi")
 
 @SinceKotlin("1.6")
-public actual fun readlnOrNull(): String? = throw UnsupportedOperationException("readlnOrNull is not supported in Kotlin/WASM")
-
-internal actual interface Serializable
+public actual fun readlnOrNull(): String? = TODO("wasi")

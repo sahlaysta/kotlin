@@ -5,5 +5,4 @@
 
 package kotlin.random
 
-internal actual fun doubleFromParts(hi26: Int, low27: Int): Double =
-    (hi26.toLong().shl(27) + low27) / (1L shl 53).toDouble()
+internal actual fun defaultPlatformRandom(): Random = TODO("wasi")

@@ -25,6 +25,6 @@ object C : A() {
 
 import test.*
 
-fun box(): String {
+fun box(): Int {
     return B.doTest("O") + C.doTest("K")
 }
