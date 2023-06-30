@@ -8,4 +8,4 @@ Actual: public final actual fun onMember(): Unit
 
 /jvm.kt:(209,221): warning: All annotations from `expect` must be presented with same arguments on `actual`, otherwise they have no effect.
 Expected: @Ann() public final expect class ViaTypealias : Any
-Actual: public final actual typealias ViaTypealias = ViaTypealiasImpl
+Actual: public final class ViaTypealiasImpl : Any

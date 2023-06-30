@@ -38,14 +38,15 @@ internal class IrExpectActualAnnotationMatchingChecker(
             if (expectSymbol.isFakeOverride || actualSymbol.isFakeOverride) {
                 continue
             }
-            if (!AbstractExpectActualAnnotationMatchChecker.areAnnotationsCompatible(expectSymbol, actualSymbol, context)) {
-                val reportOn = getTypealiasSymbolIfActualizedViaTypealias(expectSymbol) ?: actualSymbol
-                diagnosticsReporter.reportActualAnnotationsNotMatchExpect(
-                    expectSymbol,
-                    actualSymbol,
-                    reportOn,
-                )
-            }
+            val incompatibility =
+                AbstractExpectActualAnnotationMatchChecker.areAnnotationsCompatible(expectSymbol, actualSymbol, context) ?: continue
+
+            val reportOn = getTypealiasSymbolIfActualizedViaTypealias(expectSymbol) ?: actualSymbol
+            diagnosticsReporter.reportActualAnnotationsNotMatchExpect(
+                incompatibility.expectSymbol as IrSymbol,
+                incompatibility.actualSymbol as IrSymbol,
+                reportOn,
+            )
         }
     }
 

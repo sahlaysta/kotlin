@@ -38,6 +38,7 @@ import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.source.KotlinSourceElement
 import org.jetbrains.kotlin.resolve.source.PsiSourceFile
 import org.jetbrains.kotlin.types.KotlinType
+import org.jetbrains.kotlin.utils.addToStdlib.cast
 import java.io.File
 
 class ExpectedActualDeclarationChecker(
@@ -437,10 +438,15 @@ class ExpectedActualDeclarationChecker(
         trace: BindingTrace
     ) {
         val context = ClassicExpectActualMatchingContext(actualDescriptor.module)
-        if (AbstractExpectActualAnnotationMatchChecker.areAnnotationsCompatible(expectDescriptor, actualDescriptor, context)) {
-            return
-        }
-        trace.report(Errors.ACTUAL_ANNOTATIONS_NOT_MATCH_EXPECT.on(reportOn, expectDescriptor, actualDescriptor))
+        val incompatibility =
+            AbstractExpectActualAnnotationMatchChecker.areAnnotationsCompatible(expectDescriptor, actualDescriptor, context) ?: return
+        trace.report(
+            Errors.ACTUAL_ANNOTATIONS_NOT_MATCH_EXPECT.on(
+                reportOn,
+                incompatibility.expectSymbol as DeclarationDescriptor,
+                incompatibility.actualSymbol as DeclarationDescriptor
+            )
+        )
     }
 
     companion object {

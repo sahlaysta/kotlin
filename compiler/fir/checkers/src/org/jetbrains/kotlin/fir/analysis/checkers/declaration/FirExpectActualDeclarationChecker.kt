@@ -290,10 +290,14 @@ object FirExpectActualDeclarationChecker : FirBasicDeclarationChecker() {
         reporter: DiagnosticReporter
     ) {
         val matchingContext = context.session.expectActualMatchingContextFactory.create(context.session, context.scopeSession)
-        if (AbstractExpectActualAnnotationMatchChecker.areAnnotationsCompatible(expectSymbol, actualSymbol, matchingContext)) {
-            return
-        }
-        reporter.reportOn(actualSymbol.source, FirErrors.ACTUAL_ANNOTATIONS_NOT_MATCH_EXPECT, expectSymbol, actualSymbol, context)
+        val incompatibility =
+            AbstractExpectActualAnnotationMatchChecker.areAnnotationsCompatible(expectSymbol, actualSymbol, matchingContext) ?: return
+        reporter.reportOn(
+            actualSymbol.source, FirErrors.ACTUAL_ANNOTATIONS_NOT_MATCH_EXPECT,
+            incompatibility.expectSymbol as FirBasedSymbol<*>,
+            incompatibility.actualSymbol as FirBasedSymbol<*>,
+            context
+        )
     }
 
     fun Map<out ExpectActualCompatibility<*>, *>.allStrongIncompatibilities(): Boolean {

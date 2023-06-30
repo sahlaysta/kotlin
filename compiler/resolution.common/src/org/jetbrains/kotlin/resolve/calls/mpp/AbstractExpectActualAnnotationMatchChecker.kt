@@ -23,19 +23,21 @@ object AbstractExpectActualAnnotationMatchChecker {
         StandardNames.FqNames.suppress,
     )
 
+    class Incompatibility(val expectSymbol: DeclarationSymbolMarker, val actualSymbol: DeclarationSymbolMarker)
+
     fun areAnnotationsCompatible(
         expected: DeclarationSymbolMarker,
         actual: DeclarationSymbolMarker,
         context: ExpectActualMatchingContext<*>,
-    ): Boolean = with(context) { areAnnotationsCompatible(expected, actual) }
+    ): Incompatibility? = with(context) { areAnnotationsCompatible(expected, actual) }
 
     context (ExpectActualMatchingContext<*>)
     private fun areAnnotationsCompatible(
         expected: DeclarationSymbolMarker,
         originalActual: DeclarationSymbolMarker,
-    ): Boolean {
+    ): Incompatibility? {
         val actual = if (originalActual is TypeAliasSymbolMarker) {
-            originalActual.expandToRegularClass() ?: return true
+            originalActual.expandToRegularClass() ?: return null
         } else {
             originalActual
         }
@@ -53,10 +55,10 @@ object AbstractExpectActualAnnotationMatchChecker {
                 continue
             }
             if (actualAnnotations.none { areAnnotationsMatch(expectAnnotation, it) }) {
-                return false
+                return Incompatibility(expected, actual)
             }
         }
-        return true
+        return null
     }
 
 
