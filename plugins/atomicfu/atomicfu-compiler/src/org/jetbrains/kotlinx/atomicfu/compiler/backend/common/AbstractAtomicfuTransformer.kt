@@ -244,13 +244,11 @@ abstract class AbstractAtomicfuTransformer(val pluginContext: IrPluginContext) {
                 }
             with(atomicSymbols.createBuilder(symbol)) {
                 body = irExprBody(
-                    irReturn(
-                        if (this@transformAccessor.isGetter) {
-                            irGetField(dispatchReceiver, delegateVolatileField)
-                        } else {
-                            irSetField(dispatchReceiver, delegateVolatileField, this@transformAccessor.valueParameters[0].capture())
-                        }
-                    )
+                    if (this@transformAccessor.isGetter) {
+                        irGetField(dispatchReceiver, delegateVolatileField)
+                    } else {
+                        irSetField(dispatchReceiver, delegateVolatileField, this@transformAccessor.valueParameters[0].capture())
+                    }
                 )
             }
         }
