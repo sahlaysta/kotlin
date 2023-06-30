@@ -152,7 +152,6 @@ class AtomicfuJvmIrTransformer(
             if (initializer == null) {
                 // replace field initialization in the init block
                 val initBlock = atomicArrayField.getInitBlockForField(parentContainer)
-                    ?: error("Atomic array ${atomicProperty.render()} should be initialized" + CONSTRAINTS_MESSAGE)
                 // property initialization order in the init block matters -> transformed initializer should be placed at the same position
                 val initExprWithIndex = initBlock.getInitExprWithIndexFromInitBlock(atomicArrayField.symbol)
                     ?: error("Expected atomic array ${atomicProperty.render()} initialization in init block ${initBlock.render()}" + CONSTRAINTS_MESSAGE)

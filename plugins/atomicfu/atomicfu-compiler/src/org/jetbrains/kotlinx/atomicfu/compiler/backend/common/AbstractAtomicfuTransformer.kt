@@ -267,7 +267,6 @@ abstract class AbstractAtomicfuTransformer(val pluginContext: IrPluginContext) {
             val initializer = atomicField.initializer?.expression
             if (initializer == null) {
                 val initBlock = atomicField.getInitBlockForField(parentContainer)
-                    ?: error("Atomic property ${atomicProperty.render()} should be initialized")
                 val initExprWithIndex = initBlock.getInitExprWithIndexFromInitBlock(atomicField.symbol)
                     ?: error("Expected property ${atomicProperty.render()} initialization in init block ${initBlock.render()}")
                 val atomicFactoryCall = initExprWithIndex.value.value
@@ -333,13 +332,35 @@ abstract class AbstractAtomicfuTransformer(val pluginContext: IrPluginContext) {
             }
         }
 
-        protected fun IrField.getInitBlockForField(parentContainer: IrDeclarationContainer): IrAnonymousInitializer? {
+        protected fun IrField.getInitBlockForField(parentContainer: IrDeclarationContainer): IrAnonymousInitializer {
             for (declaration in parentContainer.declarations) {
                 if (declaration is IrAnonymousInitializer) {
-                    if (declaration.body.statements.any { it is IrSetField && it.symbol == this.symbol }) return declaration
+                    if (declaration.body.statements.any { it is IrSetField && it.symbol == this.symbol }) {
+                        return declaration
+                    }
                 }
             }
-            return null
+            error(
+                "Failed to find initialization of the property [${this.correspondingPropertySymbol?.owner?.render()}] in the init block of the class ${this.parent.render()}.\n" +
+                        "Please avoid complex data flow in property initialization, e.g. instead of this:\n" +
+                        "```\n" +
+                        "val a: AtomicInt\n" +
+                        "init {\n" +
+                        "  if (foo()) {\n" +
+                        "    a = atomic(0)\n" +
+                        "  } else { \n" +
+                        "    a = atomic(1)\n" +
+                        "  }\n" +
+                        "}\n" +
+                        "use simple direct assignment expression to initialize the property:\n" +
+                        "```\n" +
+                        "val a: AtomicInt\n" +
+                        "init {\n" +
+                        "  val initValue = if (foo()) 0 else 1\n" +
+                        "  a = atomic(initValue)\n" +
+                        "}\n" +
+                        "```\n" + CONSTRAINTS_MESSAGE
+            )
         }
 
         // atomic(value = 0) -> 0
