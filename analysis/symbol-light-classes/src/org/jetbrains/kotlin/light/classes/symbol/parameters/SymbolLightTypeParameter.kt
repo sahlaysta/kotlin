@@ -70,6 +70,14 @@ internal class SymbolLightTypeParameter private constructor(
         kotlinOrigin,
     )
 
+    internal fun copyTo(parent: SymbolLightTypeParameterList): SymbolLightTypeParameter = SymbolLightTypeParameter(
+        parent,
+        index,
+        typeParameterSymbolPointer,
+        typeParameterDeclaration,
+        kotlinOrigin,
+    )
+
     override fun accept(visitor: PsiElementVisitor) {
         if (visitor is JavaElementVisitor) {
             visitor.visitTypeParameter(this)
