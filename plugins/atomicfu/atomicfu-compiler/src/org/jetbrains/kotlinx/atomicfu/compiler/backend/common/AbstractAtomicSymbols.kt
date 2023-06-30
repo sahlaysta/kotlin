@@ -50,29 +50,12 @@ abstract class AbstractAtomicSymbols(
         endOffset: Int = UNDEFINED_OFFSET
     ): AbstractAtomicfuIrBuilder
 
-    val invoke0Symbol = irBuiltIns.functionN(0).getSimpleFunction("invoke")!!
     val invoke1Symbol = irBuiltIns.functionN(1).getSimpleFunction("invoke")!!
-
-    fun function0Type(returnType: IrType) = buildSimpleType(
-        irBuiltIns.functionN(0).symbol,
-        listOf(returnType)
-    )
 
     fun function1Type(argType: IrType, returnType: IrType) = buildSimpleType(
         irBuiltIns.functionN(1).symbol,
         listOf(argType, returnType)
     )
-
-    fun irSimpleType(
-        symbol: IrClassifierSymbol,
-        typeParameters: List<IrType>
-    ): IrSimpleType =
-        IrSimpleTypeImpl(
-            classifier = symbol,
-            hasQuestionMark = false,
-            arguments = typeParameters.map { makeTypeProjection(it, Variance.INVARIANT) },
-            annotations = emptyList()
-        )
 
     object ATOMICFU_GENERATED_CLASS : IrDeclarationOriginImpl("ATOMICFU_GENERATED_CLASS", isSynthetic = true)
     object ATOMICFU_GENERATED_FUNCTION : IrDeclarationOriginImpl("ATOMICFU_GENERATED_FUNCTION", isSynthetic = true)

@@ -335,6 +335,4 @@ class JvmAtomicfuIrBuilder internal constructor(
                 }
             }
         }
-
-    object ATOMICFU_
 }
