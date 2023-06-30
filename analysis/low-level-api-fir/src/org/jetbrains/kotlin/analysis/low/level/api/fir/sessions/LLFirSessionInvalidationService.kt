@@ -72,7 +72,12 @@ class LLFirSessionInvalidationService(private val project: Project) : Disposable
         ApplicationManager.getApplication().assertWriteAccessAllowed()
 
         val sessionCache = LLFirSessionCache.getInstance(project)
-        sessionCache.removeSession(module)
+        val didSessionExist = sessionCache.removeSession(module)
+
+        // We don't have to invalidate dependent sessions if the root session does not exist in the cache, because its dependent sessions
+        // cannot exist in such a case, either.
+        if (!didSessionExist) return
+
         KotlinModuleDependentsProvider.getInstance(project).getTransitiveDependents(module).forEach(sessionCache::removeSession)
     }
 
