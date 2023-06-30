@@ -20,7 +20,6 @@ import org.jetbrains.kotlin.konan.file.use
 import org.jetbrains.kotlin.konan.properties.KonanPropertiesLoader
 import org.jetbrains.kotlin.konan.properties.Properties
 import org.jetbrains.kotlin.konan.properties.propertyList
-import org.jetbrains.kotlin.konan.util.DependencyDirectories.KONAN_DATA_DIR_PROPERTY_NAME
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.RandomAccessFile
@@ -28,8 +27,6 @@ import java.net.InetAddress
 import java.net.URL
 import java.net.UnknownHostException
 import java.nio.file.Paths
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 
 private val Properties.dependenciesUrl: String
     get() = getProperty("dependenciesUrl")
@@ -85,17 +82,19 @@ sealed class DependencySource {
  * Inspects [dependencies] and downloads all the missing ones into [dependenciesDirectory] from [dependenciesUrl].
  * If [airplaneMode] is true will throw a RuntimeException instead of downloading.
  */
-class DependencyProcessor(dependenciesRoot: File,
-                          private val dependenciesUrl: String,
-                          dependencyToCandidates: Map<String, List<DependencySource>>,
-                          homeDependencyCache: File = DependencyDirectories.getDependencyCacheDir(),
-                          private val airplaneMode: Boolean = false,
-                          maxAttempts: Int = DependencyDownloader.DEFAULT_MAX_ATTEMPTS,
-                          attemptIntervalMs: Long = DependencyDownloader.DEFAULT_ATTEMPT_INTERVAL_MS,
-                          customProgressCallback: ProgressCallback? = null,
-                          private val keepUnstable: Boolean = true,
-                          private val deleteArchives: Boolean = true,
-                          private val archiveType: ArchiveType = ArchiveType.systemDefault) {
+class DependencyProcessor(
+    dependenciesRoot: File,
+    private val dependenciesUrl: String,
+    dependencyToCandidates: Map<String, List<DependencySource>>,
+    homeDependencyCache: File = DependencyDirectories.getDependencyCacheDir(dependenciesRoot.absolutePath),
+    private val airplaneMode: Boolean = false,
+    maxAttempts: Int = DependencyDownloader.DEFAULT_MAX_ATTEMPTS,
+    attemptIntervalMs: Long = DependencyDownloader.DEFAULT_ATTEMPT_INTERVAL_MS,
+    customProgressCallback: ProgressCallback? = null,
+    private val keepUnstable: Boolean = true,
+    private val deleteArchives: Boolean = true,
+    private val archiveType: ArchiveType = ArchiveType.systemDefault,
+) {
 
     private val dependenciesDirectory by lazy {
         dependenciesRoot.apply { mkdirs() }
@@ -138,7 +137,6 @@ class DependencyProcessor(dependenciesRoot: File,
                 customProgressCallback: ProgressCallback? = null ) : this(
             dependenciesRoot,
             dependenciesUrl,
-            homeDependencyCache = DependencyDirectories.getDependencyCacheDir(properties.getProperty(KONAN_DATA_DIR_PROPERTY_NAME)),
             dependencyToCandidates = properties.findCandidates(dependencies),
             airplaneMode = properties.airplaneMode,
             maxAttempts = properties.downloadingAttempts,

@@ -10,22 +10,23 @@ import org.jetbrains.kotlin.konan.properties.Properties
 import org.jetbrains.kotlin.konan.properties.keepOnlyDefaultProfiles
 import org.jetbrains.kotlin.konan.properties.loadProperties
 import org.jetbrains.kotlin.konan.util.DependencyDirectories
-import org.jetbrains.kotlin.konan.util.DependencyDirectories.KONAN_DATA_DIR_PROPERTY_NAME
 
 class Distribution private constructor(private val serialized: Serialized) : java.io.Serializable {
     constructor(
         konanHome: String,
         onlyDefaultProfiles: Boolean = false,
         runtimeFileOverride: String? = null,
-        propertyOverrides: Map<String, String>? = null
-    ) : this(Serialized(konanHome, onlyDefaultProfiles, runtimeFileOverride, propertyOverrides))
+        propertyOverrides: Map<String, String>? = null,
+        konanDataDir: String? = null
+    ) : this(Serialized(konanHome, onlyDefaultProfiles, runtimeFileOverride, propertyOverrides, konanDataDir))
 
     val konanHome by serialized::konanHome
     private val onlyDefaultProfiles by serialized::onlyDefaultProfiles
     private val runtimeFileOverride by serialized::runtimeFileOverride
     private val propertyOverrides by serialized::propertyOverrides
+    private val konanDataDir by serialized::konanDataDir
 
-    val localKonanDir = DependencyDirectories.getLocalKonanDir(propertyOverrides?.get(KONAN_DATA_DIR_PROPERTY_NAME))
+    val localKonanDir = DependencyDirectories.getLocalKonanDir(konanDataDir)
 
     val konanSubdir = "$konanHome/konan"
     val mainPropertyFileName = "$konanSubdir/konan.properties"
@@ -101,7 +102,7 @@ class Distribution private constructor(private val serialized: Serialized) : jav
     val launcherFiles = listOf("launcher.bc")
 
     val dependenciesDir = DependencyDirectories
-        .getDependenciesRoot(propertyOverrides?.get(KONAN_DATA_DIR_PROPERTY_NAME))
+        .getDependenciesRoot(konanDataDir)
         .absolutePath
 
     val subTargetProvider = object: SubTargetProvider {
@@ -130,6 +131,7 @@ class Distribution private constructor(private val serialized: Serialized) : jav
         val onlyDefaultProfiles: Boolean,
         val runtimeFileOverride: String?,
         val propertyOverrides: Map<String, String>?,
+        val konanDataDir: String?,
     ) : java.io.Serializable {
         companion object {
             private const val serialVersionUID: Long = 0L

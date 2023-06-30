@@ -99,9 +99,6 @@ internal val Project.konanVersion: String
         ?.toString()
         ?: project.version.toString()
 
-internal val Project.konanDataDir: String?
-    get() = project.findProperty(KonanPlugin.ProjectProperty.KONAN_DATA_DIR)?.toString()
-
 internal val Project.konanBuildRoot          get() = buildDir.resolve("konan")
 internal val Project.konanBinBaseDir         get() = konanBuildRoot.resolve("bin")
 internal val Project.konanLibsBaseDir        get() = konanBuildRoot.resolve("libs")
@@ -172,9 +169,7 @@ internal fun Project.konanCompilerName(): String =
         "kotlin-native-${project.simpleOsName}-${project.konanVersion}"
 
 internal fun Project.konanCompilerDownloadDir(): String =
-        (project.konanDataDir?.let { File(it) }
-                ?: DependencyDirectories.localKonanDir)
-                .resolve(project.konanCompilerName()).absolutePath
+        DependencyDirectories.localKonanDir.resolve(project.konanCompilerName()).absolutePath
 
 // region Useful extensions and functions ---------------------------------------
 
@@ -304,7 +299,6 @@ class KonanPlugin @Inject constructor(private val registry: ToolingModelBuilderR
         KONAN_JVM_LAUNCHER             ("konan.javaLauncher"),
         KONAN_USE_ENVIRONMENT_VARIABLES("konan.useEnvironmentVariables"),
         DOWNLOAD_COMPILER              ("download.compiler"),
-        KONAN_DATA_DIR                 ("konan.data.dir"),
 
         // Properties used instead of env vars until https://github.com/gradle/gradle/issues/3468 is fixed.
         // TODO: Remove them when an API for env vars is provided.

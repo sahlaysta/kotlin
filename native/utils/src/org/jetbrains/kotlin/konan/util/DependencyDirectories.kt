@@ -9,10 +9,10 @@ import java.io.File
 
 object DependencyDirectories {
 
-    const val KONAN_DATA_DIR_PROPERTY_NAME = "konan.data.dir"
     private const val DEPENDENCIES_FOLDER_NAME = "dependencies"
     private const val CACHE_FOLDER_NAME = "cache"
 
+    @JvmStatic
     val localKonanDir: File
         get() = getLocalKonanDir()
 
