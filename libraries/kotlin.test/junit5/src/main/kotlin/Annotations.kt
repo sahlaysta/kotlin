@@ -4,7 +4,11 @@
  */
 
 
-@file:Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
+// ACTUAL_ANNOTATIONS_NOT_MATCH_EXPECT reported because actual annotation classes have some targets
+// which don't allow.
+// Example: in @Test java target "ElementType.METHOD" is equivalent of Kotlin targets
+// FUNCTION, PROPERTY_SETTER, PROPERTY_GETTER, but we allow only FUNCTION.
+@file:Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE", "ACTUAL_ANNOTATIONS_NOT_MATCH_EXPECT")
 @file:JvmPackageName("kotlin.test.junit5.annotations")
 package kotlin.test
 

@@ -37,7 +37,7 @@ public actual annotation class JvmStatic
  * for more information.
  * @property name the name of the element.
  */
-@Target(AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY_GETTER, AnnotationTarget.PROPERTY_SETTER, AnnotationTarget.FILE)
+@Target(AnnotationTarget.FILE, AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY_GETTER, AnnotationTarget.PROPERTY_SETTER)
 @Retention(AnnotationRetention.BINARY)
 @MustBeDocumented
 public actual annotation class JvmName(actual val name: String)
