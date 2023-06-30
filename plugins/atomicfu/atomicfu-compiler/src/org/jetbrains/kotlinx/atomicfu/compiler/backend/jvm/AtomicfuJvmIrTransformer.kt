@@ -89,7 +89,7 @@ class AtomicfuJvmIrTransformer(
             val parentContainer = this
             with(atomicSymbols.createBuilder(atomicProperty.symbol)) {
                 val javaAtomicArrayField = buildJavaAtomicArrayField(atomicProperty, parentContainer)
-                return parentContainer.insertPropertyAtIndex(
+                return parentContainer.replacePropertyAtIndex(
                     javaAtomicArrayField,
                     atomicProperty.visibility,
                     isVar = false,
@@ -129,7 +129,7 @@ class AtomicfuJvmIrTransformer(
                 val volatileField = buildVolatileBackingField(from, parentClass, true)
                 val volatileProperty = if (volatileField.parent == from.parent) {
                     // The index is relevant only if the property belongs to the same class as the original atomic property (not the generated wrapper).
-                    parentClass.insertPropertyAtIndex(volatileField, DescriptorVisibilities.PRIVATE, isVar = true, isStatic = false, index)
+                    parentClass.replacePropertyAtIndex(volatileField, DescriptorVisibilities.PRIVATE, isVar = true, isStatic = false, index)
                 } else {
                     parentClass.addProperty(volatileField, DescriptorVisibilities.PRIVATE, isVar = true, isStatic = false)
                 }

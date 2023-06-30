@@ -118,7 +118,7 @@ abstract class AbstractAtomicfuIrBuilder(
         }
     }
 
-    fun IrDeclarationContainer.insertPropertyAtIndex(
+    fun IrDeclarationContainer.replacePropertyAtIndex(
         field: IrField,
         visibility: DescriptorVisibility,
         isVar: Boolean,
