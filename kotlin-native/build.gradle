@@ -54,8 +54,11 @@ apply plugin: "kotlin.native.build-tools-conventions"
 
 ext {
     distDir = UtilsKt.getKotlinNativeDist(project)
-    // TODO(Dmitrii Krasnov): is it possible to properly use getDependenciesRoot here?
-    dependenciesDir = DependencyDirectories.defaultDependenciesRoot
+    // TODO(Dmitrii Krasnov): remove else branch after KT-50463 will be in current bootstrap
+    def konanDataDir = project.findProperty('konan.data.dir')
+    dependenciesDir = konanDataDir != null ?
+            DependencyDirectories.INSTANCE.getDependenciesRoot(konanDataDir.toString())
+            : DependencyDirectories.defaultDependenciesRoot
     experimentalEnabled = project.hasProperty("org.jetbrains.kotlin.native.experimentalTargets")
     platformManager = new PlatformManager(DistributionKt.buildDistribution(projectDir.absolutePath),
             ext.experimentalEnabled)

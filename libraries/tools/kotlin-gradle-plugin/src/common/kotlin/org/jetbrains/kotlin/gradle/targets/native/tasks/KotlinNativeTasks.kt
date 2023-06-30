@@ -468,7 +468,6 @@ internal constructor(
 
             explicitApiMode.orNull?.run { args.explicitApi = toCompilerValue() }
 
-            // TODO(Dmitrii Krasnov): I'm not sure about correctness of passing gradle property to konan args here
             konanDataDir?.let { args.konanDataDir = it }
         }
 

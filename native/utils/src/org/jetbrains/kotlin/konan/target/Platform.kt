@@ -16,11 +16,7 @@
 
 package org.jetbrains.kotlin.konan.target
 
-import org.jetbrains.kotlin.konan.util.DependencyDirectories
-import org.jetbrains.kotlin.konan.util.DependencyDirectories.KONAN_DATA_DIR_PROPERTY_NAME
-
-class Platform(val configurables: Configurables)
-    : Configurables by configurables {
+class Platform(val configurables: Configurables) : Configurables by configurables {
 
     val clang: ClangArgs.Native by lazy {
         ClangArgs.Native(configurables)
@@ -36,7 +32,7 @@ class Platform(val configurables: Configurables)
 }
 
 class PlatformManager private constructor(private val serialized: Serialized) :
-        HostManager(serialized.distribution, serialized.experimental), java.io.Serializable {
+    HostManager(serialized.distribution, serialized.experimental), java.io.Serializable {
 
     constructor(konanHome: String, experimental: Boolean = false) : this(Distribution(konanHome), experimental)
     constructor(distribution: Distribution, experimental: Boolean = false) : this(Serialized(distribution, experimental))
@@ -44,11 +40,7 @@ class PlatformManager private constructor(private val serialized: Serialized) :
     private val distribution by serialized::distribution
 
     private val loaders = enabled.map {
-        val konanDataDir = distribution.properties.get(KONAN_DATA_DIR_PROPERTY_NAME)?.toString()
-        it to loadConfigurables(
-            it,
-            distribution.properties, DependencyDirectories.getDependenciesRoot(konanDataDir).absolutePath
-        )
+        it to loadConfigurables(it, distribution.properties, distribution.dependenciesDir)
     }.toMap()
 
     private val platforms = loaders.map {
@@ -63,8 +55,8 @@ class PlatformManager private constructor(private val serialized: Serialized) :
     private fun writeReplace(): Any = serialized
 
     private data class Serialized(
-            val distribution: Distribution,
-            val experimental: Boolean
+        val distribution: Distribution,
+        val experimental: Boolean,
     ) : java.io.Serializable {
         companion object {
             private const val serialVersionUID: Long = 0L
