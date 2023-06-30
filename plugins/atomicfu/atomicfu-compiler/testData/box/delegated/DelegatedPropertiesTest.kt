@@ -141,46 +141,10 @@ fun testTopLevelVolatileProperties() {
     assertEquals(110, topLevelVolatile * 2)
 }
 
-//private val _b = atomic("bbb")
-
-//class ScopedDelegatesTest {
-//    private val _c = atomic("ccc")
-//
-//    inner class InnerClass {
-//        var a by atomic("aaa")
-//        var b by _b
-//        var c by _c
-//    }
-//
-//    fun testScopedVolatileProperties() {
-//        val clazz = InnerClass()
-//        assertEquals("aaa", clazz.a)
-//        clazz.a = "aaa1"
-//        assertEquals("aaa1", clazz.a)
-//
-//        assertEquals("bbb", clazz.b)
-//        clazz.b = "bbb1"
-//        assertEquals("bbb1", clazz.b)
-//        assertEquals("bbb1", _b.value)
-//        _b.value = "bbb2"
-//        assertEquals("bbb2", clazz.b)
-//        assertEquals("bbb", clazz.b)
-//
-//        assertEquals("ccc", clazz.c)
-//        clazz.c = "ccc1"
-//        assertEquals("ccc1", clazz.c)
-//        assertEquals("ccc1", _c.value)
-//        _c.value = "ccc2"
-//        assertEquals("ccc2", clazz.c)
-//    }
-//}
-
 fun box(): String {
     val testClass = DelegatedProperties()
     testClass.test()
     testTopLevelDelegatedProperties()
     testTopLevelVolatileProperties()
-//    val scopedDelegatesTest = ScopedDelegatesTest()
-//    scopedDelegatesTest.testScopedVolatileProperties()
     return "OK"
 }

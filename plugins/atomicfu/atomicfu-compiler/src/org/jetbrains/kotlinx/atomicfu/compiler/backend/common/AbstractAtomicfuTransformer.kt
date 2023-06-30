@@ -222,6 +222,9 @@ abstract class AbstractAtomicfuTransformer(val pluginContext: IrPluginContext) {
                      *                           set(value: Int) { _a = value }
                      */
                     val delegate = getDelegate.getCorrespondingProperty()
+                    check(delegate.parent == atomicProperty.parent) {
+                        "The delegated property [${atomicProperty.render()}] declared in ${atomicProperty.parent.render()} should be declared in the same scope " +
+                                "as the corresponding atomic property [${delegate.render()}] declared in ${delegate.parent.render()}" + CONSTRAINTS_MESSAGE}
                     val volatileProperty = atomicPropertyToVolatile[delegate] ?: error("The delegate property was not transformed: ${delegate.render()}")
                     volatileProperty.backingField ?: error("Transformed atomic field should have a non-null backingField")
                 }
