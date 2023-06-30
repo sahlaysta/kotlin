@@ -78,9 +78,12 @@ void gc::mark::ParallelMark::beginMarkingEpoch(gc::GCHandle gcHandle) {
 
     parallelProcessor_.construct();
 
-    pacer_.beginEpoch(gcHandle.getEpoch());
-    // main worker is always accounted, so others would not be able to exhaust all the parallelism before main is instantiated
-    workersRegistry_.reset(1, maxParallelism_);
+    if (!compiler::gcMarkSingleThreaded()) {
+        std::unique_lock guard(workerCreationMutex_);
+        pacer_.beginEpoch(gcHandle.getEpoch());
+        // main worker is always accounted, so others would not be able to exhaust all the parallelism before main is instantiated
+        activeWorkersCount_ = 1;
+    }
 }
 
 void gc::mark::ParallelMark::waitForThreadsPauseMutation() noexcept {
@@ -93,22 +96,26 @@ void gc::mark::ParallelMark::waitForThreadsPauseMutation() noexcept {
 }
 
 void gc::mark::ParallelMark::endMarkingEpoch() {
-    workersRegistry_.disable();
-    pacer_.begin(MarkPacer::Phase::kIdle);
+    if (!compiler::gcMarkSingleThreaded()) {
+        std::unique_lock guard(workerCreationMutex_);
+        RuntimeAssert(activeWorkersCount_ == 0, "All the workers must already finish");
+        pacer_.begin(MarkPacer::Phase::kIdle);
+    }
     parallelProcessor_.destroy();
     resetMutatorFlags();
     lockedMutatorsList_ = std::nullopt;
 }
 
 void gc::mark::ParallelMark::runMainInSTW() {
-    RuntimeAssert(workersRegistry_.count() > 0, "Main worker must always be accounted");
-    ParallelProcessor::Worker mainWorker(*parallelProcessor_);
-    GCLogDebug(gcHandle().getEpoch(), "Creating main (#0) mark worker");
-
     if (compiler::gcMarkSingleThreaded()) {
-        gc::collectRootSet<MarkTraits>(gcHandle(), mainWorker, [] (mm::ThreadData&) { return true; });
-        gc::Mark<MarkTraits>(gcHandle(), mainWorker);
+        ParallelProcessor::Worker worker(*parallelProcessor_);
+        gc::collectRootSet<MarkTraits>(gcHandle(), worker, [] (mm::ThreadData&) { return true; });
+        gc::Mark<MarkTraits>(gcHandle(), worker);
     } else {
+        RuntimeAssert(activeWorkersCount_ > 0, "Main worker must always be accounted");
+        ParallelProcessor::Worker mainWorker(*parallelProcessor_);
+        GCLogDebug(gcHandle().getEpoch(), "Creating main (#0) mark worker");
+
         pacer_.begin(MarkPacer::Phase::kRootSet);
         completeMutatorsRootSet(mainWorker);
         spinWait([this] {
@@ -210,20 +217,23 @@ void gc::mark::ParallelMark::parallelMark(ParallelProcessor::Worker& worker) {
 }
 
 std::optional<gc::mark::ParallelMark::ParallelProcessor::Worker> gc::mark::ParallelMark::createWorker() {
-    if (!pacer_.acceptingNewWorkers()) return std::nullopt;
+    std::unique_lock guard(workerCreationMutex_);
+    if (!pacer_.acceptingNewWorkers() ||
+        activeWorkersCount_.load(std::memory_order_relaxed) >= maxParallelism_ ||
+        activeWorkersCount_.load(std::memory_order_relaxed) == 0) return std::nullopt;
 
-    bool allowed = workersRegistry_.tryRegister();
-    if (!allowed) return std::nullopt;
-
-    GCLogDebug(gcHandle().getEpoch(), "Mark worker #%zu'th registered", workersRegistry_.count());
+    auto num = activeWorkersCount_.fetch_add(1, std::memory_order_relaxed);
+    GCLogDebug(gcHandle().getEpoch(), "Creating mark worker #%zu", num);
     return std::make_optional<ParallelProcessor::Worker>(*parallelProcessor_);
 }
 
 void gc::mark::ParallelMark::waitEveryWorkerTermination() {
     auto curEpoch = gcHandle().getEpoch();
-    workersRegistry_.deregister();
-    GCLogDebug(gcHandle().getEpoch(), "Mark worker deregistered");
-    spinWait([=]() { return curEpoch != gcHandle().getEpoch() || workersRegistry_.allTheWorkersHaveDeregistered(); });
+    {
+        std::unique_lock guard(workerCreationMutex_);
+        activeWorkersCount_.fetch_sub(1, std::memory_order_relaxed);
+    }
+    spinWait([=]() { return curEpoch != gcHandle().getEpoch() || activeWorkersCount_.load(std::memory_order_relaxed) == 0; });
 }
 
 void gc::mark::ParallelMark::resetMutatorFlags() {
