@@ -158,7 +158,6 @@ abstract class AbstractAtomicfuIrBuilder(
         val property = this
         val field = requireNotNull(backingField) { "BackingField of the property $property should not be null"}
         addGetter {
-            origin = IrDeclarationOrigin.DEFAULT_PROPERTY_ACCESSOR
             visibility = property.visibility
             returnType = field.type
             origin = AbstractAtomicSymbols.ATOMICFU_GENERATED_PROPERTY_ACCESSOR
@@ -192,7 +191,6 @@ abstract class AbstractAtomicfuIrBuilder(
         val property = this
         val field = requireNotNull(property.backingField) { "BackingField of the property $property should not be null"}
         this@addSetter.addSetter {
-            origin = IrDeclarationOrigin.DEFAULT_PROPERTY_ACCESSOR
             visibility = property.visibility
             returnType = irBuiltIns.unitType
             origin = AbstractAtomicSymbols.ATOMICFU_GENERATED_PROPERTY_ACCESSOR
