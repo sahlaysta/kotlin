@@ -178,7 +178,7 @@ internal class StubBasedFirMemberDeserializer(
                 visibility.toEffectiveVisibility(owner = null)
             ).apply {
                 isExpect = typeAlias.hasModifier(KtTokens.EXPECT_KEYWORD)
-                isActual = false
+                isActual = false // huh?
             }
 
             annotations += c.annotationDeserializer.loadAnnotations(typeAlias)

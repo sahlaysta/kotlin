@@ -27,13 +27,12 @@ import org.jetbrains.kotlin.fir.symbols.impl.*
 import org.jetbrains.kotlin.name.*
 import org.jetbrains.kotlin.psi.*
 import org.jetbrains.kotlin.resolve.jvm.JvmClassName
-import org.jetbrains.kotlin.serialization.deserialization.MetadataPackageFragment
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 
 typealias DeserializedTypeAliasPostProcessor = (FirTypeAliasSymbol) -> Unit
 
 /**
- * [JvmStubBasedFirDeserializedSymbolProvider] works over existing stubs,
+ * [StubBasedFirDeserializedSymbolProvider] works over existing stubs,
  * retrieving them by classId/callableId from [KotlinDeclarationProvider].
  *
  * It works in IDE only, in standalone mode works [JvmClassFileBasedSymbolProvider].
@@ -44,7 +43,7 @@ typealias DeserializedTypeAliasPostProcessor = (FirTypeAliasSymbol) -> Unit
  *
  * Same as [JvmClassFileBasedSymbolProvider], resulting fir elements are already resolved.
  */
-internal open class JvmStubBasedFirDeserializedSymbolProvider(
+internal open class StubBasedFirDeserializedSymbolProvider(
     session: FirSession,
     moduleDataProvider: SingleModuleDataProvider,
     private val kotlinScopeProvider: FirKotlinScopeProvider,
@@ -145,7 +144,6 @@ internal open class JvmStubBasedFirDeserializedSymbolProvider(
             .mapNotNullTo(result) { function ->
                 val file = function.containingKtFile
                 val virtualFile = file.virtualFile
-                if (virtualFile.extension == MetadataPackageFragment.METADATA_FILE_EXTENSION) return@mapNotNullTo null
                 if (initialOrigin != FirDeclarationOrigin.BuiltIns && file.packageFqName.asString()
                         .replace(".", "/") + "/" + virtualFile.nameWithoutExtension in KotlinBuiltins
                 ) return@mapNotNullTo null
