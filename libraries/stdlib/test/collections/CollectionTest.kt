@@ -1256,18 +1256,18 @@ class CollectionTest {
         )
 
         assertEquals(
-            "{a=1, b=(this Map), c=3}",
+            "{a=1, (this Map)=(this Map), c=3}",
             linkedMapOf<Any, Any>().apply {
                 put("a", "1")
-                put("b", this)
+                put(this, this)
                 put("c", "3")
             }.toString()
         )
         assertEquals(
-            "{a=1, b=(this Map), c=3}",
+            "{a=1, (this Map)=(this Map), c=3}",
             buildMap<Any, Any> {
                 put("a", "1")
-                put("b", this)
+                put(this, this)
                 put("c", "3")
             }.toString()
         )
