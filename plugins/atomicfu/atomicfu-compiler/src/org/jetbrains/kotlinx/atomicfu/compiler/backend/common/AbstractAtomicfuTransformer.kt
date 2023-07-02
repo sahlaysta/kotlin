@@ -532,11 +532,6 @@ abstract class AbstractAtomicfuTransformer(val pluginContext: IrPluginContext) {
             parentFunction: IrFunction?
         ): IrCall
 
-        abstract fun IrDeclarationContainer.getTransformedAtomicExtension(
-            declaration: IrSimpleFunction,
-            isArrayReceiver: Boolean
-        ): IrSimpleFunction
-
         override fun visitGetValue(expression: IrGetValue, data: IrFunction?): IrExpression {
             /**
              * During transformation of atomic extensions value parameters are changed, though the body is just copied from the original declaration.
