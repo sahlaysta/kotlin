@@ -26,8 +26,8 @@ import org.jetbrains.kotlin.ir.backend.js.WholeWorldStageController
 import org.jetbrains.kotlin.ir.backend.js.ic.*
 import org.jetbrains.kotlin.ir.backend.js.jsPhases
 import org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.CompilationOutputs
-import org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.extension
 import org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.JsGenerationGranularity
+import org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.extension
 import org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.safeModuleName
 import org.jetbrains.kotlin.ir.declarations.impl.IrFactoryImplForJsIC
 import org.jetbrains.kotlin.js.config.JSConfigurationKeys
@@ -60,6 +60,11 @@ abstract class AbstractInvalidationTest(private val targetBackend: TargetBackend
         private val TEST_FILE_IGNORE_PATTERN = Regex("^.*\\..+\\.\\w\\w$")
 
         private const val SOURCE_MAPPING_URL_PREFIX = "//# sourceMappingURL="
+
+        private val outputDirByGranularity = mapOf(
+            JsGenerationGranularity.PER_FILE to "outPf",
+            JsGenerationGranularity.PER_MODULE to "outPm",
+        )
     }
 
     open fun getModuleInfoFile(directory: File): File {
@@ -153,14 +158,14 @@ abstract class AbstractInvalidationTest(private val targetBackend: TargetBackend
         private val testDir: File,
         private val sourceDir: File,
         private val buildDir: File,
-        private val jsDir: File
+        private val jsDir: File,
     ) {
         private inner class TestStepInfo(
             val moduleName: String,
             val modulePath: String,
             val friends: List<String>,
             val expectedFileStats: Map<String, Set<String>>,
-            val expectedDTS: String?
+            val expectedDTS: String?,
         )
 
         private fun setupTestStep(projStep: ProjectInfo.ProjectBuildStep, module: String): TestStepInfo {
@@ -235,10 +240,21 @@ abstract class AbstractInvalidationTest(private val targetBackend: TargetBackend
 
         private fun verifyJsExecutableProducerBuildModules(stepId: Int, gotRebuilt: List<String>, expectedRebuilt: List<String>) {
             val got = gotRebuilt.filter { it != STDLIB_MODULE_NAME }
-            JUnit4Assertions.assertSameElements(got, expectedRebuilt) {
+            JUnit4Assertions.assertSameElementsTemplated(expectedRebuilt, got) {
                 "Mismatched rebuilt modules at step $stepId"
             }
         }
+
+        private fun JUnit4Assertions.assertSameElementsTemplated(
+            expected: Collection<String>,
+            actual: Collection<String>,
+            message: (() -> String)?,
+        ) {
+            if (expected.size != 1 || expected.first() != "*") {
+                assertSameElements(expected, actual, message)
+            }
+        }
+
 
         private fun File.writeAsJsModule(jsCode: String, moduleName: String) {
             writeText(ClassicJsBackendFacade.wrapWithModuleEmulationMarkers(jsCode, projectInfo.moduleKind, moduleName))
@@ -263,8 +279,8 @@ abstract class AbstractInvalidationTest(private val targetBackend: TargetBackend
                     testFunctionName = BOX_FUNCTION_NAME,
                     testFunctionArgs = "$stepId",
                     expectedResult = "OK",
-                    entryModulePath = jsFiles.last(),
-                    withModuleSystem = projectInfo.moduleKind in setOf(ModuleKind.COMMON_JS, ModuleKind.UMD, ModuleKind.AMD)
+                    entryModulePath = jsFiles.find { it.endsWith("$mainModuleName/box.export.mjs") } ?: jsFiles.last(),
+                    withModuleSystem = projectInfo.moduleKind in setOf(ModuleKind.COMMON_JS, ModuleKind.UMD, ModuleKind.AMD),
                 )
             } catch (e: ComparisonFailure) {
                 throw ComparisonFailure("Mismatched box out at step $stepId", e.expected, e.actual)
@@ -301,8 +317,19 @@ abstract class AbstractInvalidationTest(private val targetBackend: TargetBackend
             )
         }
 
-        private fun writeJsCode(stepId: Int, mainModuleName: String, jsOutput: CompilationOutputs): List<String> {
-            val compiledJsFiles = jsOutput.writeAll(jsDir, mainModuleName, true, mainModuleName, projectInfo.moduleKind).filter {
+        private fun writeJsCode(
+            stepId: Int,
+            granularity: JsGenerationGranularity,
+            mainModuleName: String,
+            jsOutput: CompilationOutputs,
+        ): List<String> {
+            val compiledJsFiles = jsOutput.writeAll(
+                File(jsDir, outputDirByGranularity[granularity]!!),
+                mainModuleName,
+                true,
+                mainModuleName,
+                projectInfo.moduleKind
+            ).filter {
                 it.extension == "js" || it.extension == "mjs"
             }
             for (jsCodeFile in compiledJsFiles) {
@@ -361,12 +388,19 @@ abstract class AbstractInvalidationTest(private val targetBackend: TargetBackend
                     relativeRequirePath = true
                 )
 
-                val (jsOutput, rebuiltModules) = jsExecutableProducer.buildExecutable(granularity = JsGenerationGranularity.PER_MODULE, outJsProgram = true)
-                val writtenFiles = writeJsCode(projStep.id, mainModuleName, jsOutput)
+                val granularityToDirtyData = mapOf(
+                    JsGenerationGranularity.PER_MODULE to projStep.dirtyJsModules,
+                    JsGenerationGranularity.PER_FILE to projStep.dirtyJsFiles,
+                )
 
-                verifyJsExecutableProducerBuildModules(projStep.id, rebuiltModules, projStep.dirtyJS)
-                verifyJsCode(projStep.id, mainModuleName, writtenFiles)
-                verifyDTS(projStep.id, testInfo)
+                for ((granularity, dirtyData) in granularityToDirtyData) {
+                    val (jsOutput, rebuiltModules) = jsExecutableProducer.buildExecutable(granularity = granularity, outJsProgram = true)
+                    val writtenFiles = writeJsCode(projStep.id, granularity, mainModuleName, jsOutput)
+
+                    verifyJsExecutableProducerBuildModules(projStep.id, rebuiltModules, dirtyData)
+                    verifyJsCode(projStep.id, mainModuleName, writtenFiles)
+                    verifyDTS(projStep.id, testInfo)
+                }
             }
         }
     }
@@ -426,6 +460,6 @@ abstract class AbstractInvalidationTest(private val targetBackend: TargetBackend
         sourceDir: File,
         dependencies: Collection<File>,
         friends: Collection<File>,
-        outputKlibFile: File
+        outputKlibFile: File,
     )
 }

@@ -265,10 +265,10 @@ class IrModuleToJsTransformer(
                     if (fileExports.file.couldBeSkipped()) continue
                     val (programFragment, exportProgramFragment) = generateProgramFragment(fileExports, mode)
 
-                    add(fileExports.toJsIrModule(mode, programFragment))
+                    add(fileExports.toJsIrModule(programFragment))
 
                     if (fileExports.exports.isNotEmpty()) {
-                        add(fileExports.toJsIrModuleForExport(module, mode, exportProgramFragment))
+                        add(fileExports.toJsIrModuleForExport(module,exportProgramFragment))
                         hasFileWithJsExportedDeclaration = true
                     }
                 }
@@ -282,22 +282,18 @@ class IrModuleToJsTransformer(
         return JsIrProgram(modulesPerFile)
     }
 
-    private fun IrFileExports.toJsIrModule(mode: TranslationMode, programFragment: JsIrProgramFragment): JsIrModule {
+    private fun IrFileExports.toJsIrModule(programFragment: JsIrProgramFragment): JsIrModule {
         return JsIrModule(
             moduleFragmentToNameMapper.getSafeNameFor(file),
-            moduleFragmentToNameMapper.getExternalNameFor(file, mode.granularity),
+            moduleFragmentToNameMapper.getExternalNameFor(file),
             listOf(programFragment),
         )
     }
 
-    private fun IrFileExports.toJsIrModuleForExport(
-        module: IrAndExportedDeclarations,
-        mode: TranslationMode,
-        programFragment: JsIrProgramFragment
-    ): JsIrModule {
+    private fun IrFileExports.toJsIrModuleForExport(module: IrAndExportedDeclarations, programFragment: JsIrProgramFragment): JsIrModule {
         return JsIrModule(
             moduleFragmentToNameMapper.getSafeNameExporterFor(file),
-            moduleFragmentToNameMapper.getExternalNameForExporterFile(file, mode.granularity),
+            moduleFragmentToNameMapper.getExternalNameForExporterFile(file),
             listOf(programFragment),
             module.fragment.safeName
         )
@@ -307,7 +303,7 @@ class IrModuleToJsTransformer(
         return JsIrModule(
             fragment.safeName,
             moduleFragmentToNameMapper.getExternalNameFor(fragment),
-            listOf(JsIrProgramFragment("<proxy-file>"))
+            listOf(JsIrProgramFragment(fragment.safeName, "<proxy-file>"))
         )
     }
 
@@ -324,7 +320,7 @@ class IrModuleToJsTransformer(
         val internalModuleName = ReservedJsNames.makeInternalModuleName().takeIf { !isEsModules }
         val staticContext = JsStaticContext(backendContext, nameGenerator, nameScope, mode)
 
-        return JsIrProgramFragment(file.packageFqName.asString()).apply {
+        return JsIrProgramFragment("", file.packageFqName.asString()).apply {
             dts = tsDeclarations
             exports.statements += ExportModelToJsStatements(staticContext, backendContext.es6mode, { globalNames.declareFreshName(it, it) })
                 .generateModuleExport(
@@ -341,7 +337,10 @@ class IrModuleToJsTransformer(
         val nameGenerator = JsNameLinkingNamer(backendContext, mode.minimizedMemberNames, isEsModules)
         val staticContext = JsStaticContext(backendContext, nameGenerator, globalNameScope, mode)
 
-        val result = JsIrProgramFragment(fileExports.file.packageFqName.asString()).apply {
+        val result = JsIrProgramFragment(
+            fileExports.file.getJsName() ?: fileExports.file.nameWithoutExtension,
+            fileExports.file.packageFqName.asString()
+        ).apply {
             if (shouldGeneratePolyfills) {
                 polyfills.statements += backendContext.polyfills.getAllPolyfillsFor(fileExports.file)
             }

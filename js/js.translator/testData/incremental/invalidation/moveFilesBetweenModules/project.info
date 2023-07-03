@@ -2,4 +2,4 @@ MODULES: lib1, lib2, lib3, main
 
 STEP 0..2:
     libs: lib1, lib2, lib3, main
-    dirty js: lib1, lib2, lib3, main
+    dirty js modules: lib1, lib2, lib3, main

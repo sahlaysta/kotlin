@@ -5,6 +5,9 @@
 
 @file:kotlin.jvm.JvmName("GroupingKt")
 @file:kotlin.jvm.JvmMultifileClass
+// TODO: Suppress will be until the next bootstrapping, after the bootstrapping the annotation should be replaced with [kotlin.js.JsFileName]
+@file:Suppress("ANNOTATION_IS_NOT_APPLICABLE_TO_MULTIFILE_CLASSES")
+@file:kotlin.js.JsName("GroupingKt")
 
 package kotlin.collections
 

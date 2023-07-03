@@ -33,6 +33,8 @@ import org.jetbrains.kotlin.ir.util.isEnumClass
 import org.jetbrains.kotlin.ir.util.parentClassOrNull
 import org.jetbrains.kotlin.name.FqName
 
+val IrFile.nameWithoutExtension: String get() = name.substringBeforeLast(".kt")
+
 fun IrClass.jsConstructorReference(context: JsIrBackendContext): IrExpression {
     return JsIrBuilder.buildCall(context.intrinsics.jsClass, origin = JsStatementOrigins.CLASS_REFERENCE)
         .apply { putTypeArgument(0, defaultType) }

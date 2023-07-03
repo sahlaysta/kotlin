@@ -10,9 +10,21 @@ import org.jetbrains.kotlin.serialization.js.ModuleKind
 import java.io.File
 import java.util.regex.Pattern
 
-class ProjectInfo(val name: String, val modules: List<String>, val steps: List<ProjectBuildStep>, val muted: Boolean, val moduleKind: ModuleKind) {
+class ProjectInfo(
+    val name: String,
+    val modules: List<String>,
+    val steps: List<ProjectBuildStep>,
+    val muted: Boolean,
+    val moduleKind: ModuleKind
+) {
 
-    class ProjectBuildStep(val id: Int, val order: List<String>, val dirtyJS: List<String>, val language: List<String>)
+    class ProjectBuildStep(
+        val id: Int,
+        val order: List<String>,
+        val dirtyJsFiles: List<String>,
+        val dirtyJsModules: List<String>,
+        val language: List<String>,
+    )
 }
 
 class ModuleInfo(val moduleName: String) {
@@ -60,7 +72,8 @@ const val PROJECT_INFO_FILE = "project.info"
 private const val MODULES_LIST = "MODULES"
 private const val MODULES_KIND = "MODULE_KIND"
 private const val LIBS_LIST = "libs"
-private const val DIRTY_JS_MODULES_LIST = "dirty js"
+private const val DIRTY_JS_FILES_LIST = "dirty js files"
+private const val DIRTY_JS_MODULES_LIST = "dirty js modules"
 private const val LANGUAGE = "language"
 
 const val MODULE_INFO_FILE = "module.info"
@@ -119,7 +132,8 @@ class ProjectInfoParser(infoFile: File) : InfoParser<ProjectInfo>(infoFile) {
 
     private fun parseSteps(firstId: Int, lastId: Int): List<ProjectInfo.ProjectBuildStep> {
         val order = mutableListOf<String>()
-        val dirtyJS = mutableListOf<String>()
+        val dirtyJsFiles = mutableListOf<String>()
+        val dirtyJsModules = mutableListOf<String>()
         val language = mutableListOf<String>()
 
         loop { line ->
@@ -138,7 +152,8 @@ class ProjectInfoParser(infoFile: File) : InfoParser<ProjectInfo>(infoFile) {
 
             when (op) {
                 LIBS_LIST -> order += split[1].splitAndTrim()
-                DIRTY_JS_MODULES_LIST -> dirtyJS += split[1].splitAndTrim()
+                DIRTY_JS_FILES_LIST -> dirtyJsFiles += split[1].splitAndTrim()
+                DIRTY_JS_MODULES_LIST -> dirtyJsModules += split[1].splitAndTrim()
                 LANGUAGE -> language += split[1].splitAndTrim()
                 else -> println(diagnosticMessage("Unknown op $op", line))
             }
@@ -146,7 +161,7 @@ class ProjectInfoParser(infoFile: File) : InfoParser<ProjectInfo>(infoFile) {
             false
         }
 
-        return (firstId..lastId).map { ProjectInfo.ProjectBuildStep(it, order, dirtyJS, language) }
+        return (firstId..lastId).map { ProjectInfo.ProjectBuildStep(it, order, dirtyJsFiles, dirtyJsModules, language) }
     }
 
     override fun parse(entryName: String): ProjectInfo {

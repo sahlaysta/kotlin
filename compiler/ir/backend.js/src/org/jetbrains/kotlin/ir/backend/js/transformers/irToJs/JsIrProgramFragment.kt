@@ -11,7 +11,7 @@ import org.jetbrains.kotlin.js.backend.ast.*
 import java.io.File
 import org.jetbrains.kotlin.serialization.js.ModuleKind
 
-class JsIrProgramFragment(val packageFqn: String) {
+class JsIrProgramFragment(val name: String, val packageFqn: String) {
     val nameBindings = mutableMapOf<String, JsName>()
     val optionalCrossModuleImports = hashSetOf<String>()
     val declarations = JsCompositeBlock()
