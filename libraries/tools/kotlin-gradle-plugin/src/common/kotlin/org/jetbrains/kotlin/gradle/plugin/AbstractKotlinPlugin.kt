@@ -231,17 +231,21 @@ internal abstract class AbstractKotlinPlugin(
         private fun configureJavaTestFixturesSourceSets(kotlinTarget: KotlinTarget) {
             val project = kotlinTarget.project
             project.plugins.withId(JAVA_TEST_FIXTURES_PLUGIN_ID) {
-                try {
-                    kotlinTarget.compilations.run {
-                        getByName(TEST_FIXTURES_FEATURE_NAME).associateWith(getByName(KotlinCompilation.MAIN_COMPILATION_NAME))
-                        getByName(KotlinCompilation.TEST_COMPILATION_NAME).associateWith(getByName(TEST_FIXTURES_FEATURE_NAME))
+                kotlinTarget.compilations.run {
+                    val testFixturesSourceSet = findByName(TEST_FIXTURES_FEATURE_NAME)
+                    if (testFixturesSourceSet == null) {
+                        project.logger.warn(
+                            "The `$JAVA_TEST_FIXTURES_PLUGIN_ID` plugin has been detected, " +
+                                    "however the `$TEST_FIXTURES_FEATURE_NAME` source set cannot be found. " +
+                                    "`internal` declarations can be not available in the test fixtures.",
+                        )
+                        return@withId
                     }
-                } catch (e: Throwable) {
-                    project.logger.warn(
-                        "The `$JAVA_TEST_FIXTURES_PLUGIN_ID` plugin has been detected, " +
-                                "however an exception has occurred during association of `$TEST_FIXTURES_FEATURE_NAME` with the default java source sets. " +
-                                "`internal` declarations can be not available in the test fixtures.",
-                        e
+                    getByName(TEST_FIXTURES_FEATURE_NAME).associateWith(getByName(KotlinCompilation.MAIN_COMPILATION_NAME))
+                    getByName(KotlinCompilation.TEST_COMPILATION_NAME).associateWith(getByName(TEST_FIXTURES_FEATURE_NAME))
+                    project.logger.debug(
+                        "The `$JAVA_TEST_FIXTURES_PLUGIN_ID` plugin has been detected, and the `$TEST_FIXTURES_FEATURE_NAME` " +
+                                "source set has been associated with the default source sets to provide `internal` declarations access"
                     )
                 }
             }
