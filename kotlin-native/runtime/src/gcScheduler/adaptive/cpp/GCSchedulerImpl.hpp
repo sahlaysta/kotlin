@@ -84,7 +84,13 @@ private:
         safePoint();
     }
 
-    void resumeMutators() noexcept { stop_.store(false, std::memory_order_relaxed); }
+    void resumeMutators() noexcept {
+        stop_.store(false, std::memory_order_relaxed);
+        // TODO: Must wait for all to be released. GC thread cannot continue.
+        //       This is the contract between GC and mutators. With regular native state
+        //       each mutator must check that GC is not doing something. Here GC must check
+        //       that each mutator is a-okay.
+    }
 
     GCSchedulerConfig& config_;
     std::function<void()> scheduleGC_;
