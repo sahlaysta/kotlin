@@ -13,6 +13,10 @@
 
 using namespace kotlin;
 
+gcScheduler::GCScheduler::ThreadData::ThreadData(gcScheduler::GCScheduler& gcScheduler) noexcept : impl_(std_support::make_unique<Impl>(static_cast<internal::GCSchedulerDataAggressive&>(gcScheduler.gcData()))) {}
+
+gcScheduler::GCScheduler::ThreadData::~ThreadData() = default;
+
 gcScheduler::GCScheduler::GCScheduler() noexcept :
     gcData_(std_support::make_unique<internal::GCSchedulerDataAggressive>(config_, []() noexcept {
         // This call acquires a lock, but the lock are always short-lived,
@@ -21,6 +25,10 @@ gcScheduler::GCScheduler::GCScheduler() noexcept :
         mm::GlobalData::Instance().gc().Schedule();
     })) {}
 
-ALWAYS_INLINE void gcScheduler::GCScheduler::safePoint() noexcept {
-    static_cast<internal::GCSchedulerDataAggressive&>(gcData()).safePoint();
+ALWAYS_INLINE void gcScheduler::GCScheduler::ThreadData::safePoint() noexcept {
+    impl().scheduler().safePoint();
+}
+
+ALWAYS_INLINE void gcScheduler::GCScheduler::onGCFinish(int64_t epoch, size_t aliveBytes) noexcept {
+    static_cast<internal::GCSchedulerDataAggressive&>(gcData()).onGCFinish(epoch, aliveBytes);
 }

@@ -213,7 +213,7 @@ void gc::ConcurrentMarkAndSweep::PerformFullGC(int64_t epoch) noexcept {
     // also sweeps extraObjects
     auto finalizerQueue = heap_.Sweep(gcHandle);
 #endif
-    scheduler.gcData().UpdateAliveSetBytes(allocatedBytes());
+    scheduler.onGCFinish(epoch, allocatedBytes());
     state_.finish(epoch);
     gcHandle.finalizersScheduled(finalizerQueue.size());
     gcHandle.finished();

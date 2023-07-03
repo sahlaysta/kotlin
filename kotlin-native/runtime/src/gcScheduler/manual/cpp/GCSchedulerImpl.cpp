@@ -7,6 +7,12 @@
 
 using namespace kotlin;
 
+gcScheduler::GCScheduler::ThreadData::ThreadData(gcScheduler::GCScheduler&) noexcept : impl_(std_support::make_unique<Impl>()) {}
+
+gcScheduler::GCScheduler::ThreadData::~ThreadData() = default;
+
 gcScheduler::GCScheduler::GCScheduler() noexcept : gcData_(std_support::make_unique<internal::GCSchedulerDataManual>()) {}
 
-ALWAYS_INLINE void gcScheduler::GCScheduler::safePoint() noexcept {}
+ALWAYS_INLINE void gcScheduler::GCScheduler::ThreadData::safePoint() noexcept {}
+
+ALWAYS_INLINE void gcScheduler::GCScheduler::onGCFinish(int64_t epoch, size_t aliveBytes) noexcept {}

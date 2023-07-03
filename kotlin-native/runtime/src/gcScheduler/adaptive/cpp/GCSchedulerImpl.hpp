@@ -12,11 +12,14 @@
 #include "GlobalData.hpp"
 #include "HeapGrowthController.hpp"
 #include "Logging.hpp"
+#include "MutatorAssists.hpp"
 #include "RegularIntervalPacer.hpp"
 #include "RepeatedTimer.hpp"
 #include "SafePoint.hpp"
 
-namespace kotlin::gcScheduler::internal {
+namespace kotlin::gcScheduler {
+
+namespace internal {
 
 template <typename Clock>
 class GCSchedulerDataAdaptive : public GCSchedulerData {
@@ -42,12 +45,6 @@ public:
     void OnPerformFullGC() noexcept override {
         regularIntervalPacer_.OnPerformFullGC();
         timer_.restart(config_.regularGcInterval());
-    }
-
-    void UpdateAliveSetBytes(size_t bytes) noexcept override {
-        heapGrowthController_.UpdateAliveSetBytes(bytes);
-        scheduled_ = false;
-        resumeMutators();
     }
 
     void SetAllocatedBytes(size_t bytes) noexcept override {
@@ -76,6 +73,14 @@ public:
         }
     }
 
+    void onGCFinish(int64_t epoch, size_t bytes) noexcept {
+        heapGrowthController_.UpdateAliveSetBytes(bytes);
+        scheduled_ = false;
+        resumeMutators();
+    }
+
+    MutatorAssists& mutatorAssists() noexcept { return mutatorAssists_; }
+
 private:
     void pauseMutators() noexcept {
         kotlin::NativeOrUnregisteredThreadGuard guard(/* reentrant= */ true);
@@ -98,8 +103,24 @@ private:
     HeapGrowthController heapGrowthController_;
     RegularIntervalPacer<Clock> regularIntervalPacer_;
     RepeatedTimer<Clock> timer_;
+    MutatorAssists mutatorAssists_;
     std::atomic<bool> scheduled_ = false;
     std::atomic<bool> stop_ = false;
 };
 
-} // namespace kotlin::gcScheduler::internal
+}
+
+class GCScheduler::ThreadData::Impl : private Pinned {
+public:
+    explicit Impl(GCSchedulerData& scheduler) noexcept : scheduler_(static_cast<internal::GCSchedulerDataAdaptive<steady_clock>&>(scheduler)), mutatorAssists_(scheduler_.mutatorAssists()) {}
+
+    internal::GCSchedulerDataAdaptive<steady_clock>& scheduler() noexcept { return scheduler_; }
+
+    internal::MutatorAssists::ThreadData& mutatorAssists() noexcept { return mutatorAssists_; }
+
+private:
+    internal::GCSchedulerDataAdaptive<steady_clock>& scheduler_;
+    internal::MutatorAssists::ThreadData mutatorAssists_;
+};
+
+} // namespace kotlin::gcScheduler

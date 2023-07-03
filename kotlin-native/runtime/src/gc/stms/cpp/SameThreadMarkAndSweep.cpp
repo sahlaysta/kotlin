@@ -147,7 +147,7 @@ void gc::SameThreadMarkAndSweep::PerformFullGC(int64_t epoch) noexcept {
     auto finalizerQueue = gc::Sweep<SweepTraits>(gcHandle, *objectFactoryIterable);
     objectFactoryIterable = std::nullopt;
     kotlin::compactObjectPoolInMainThread();
-    scheduler.gcData().UpdateAliveSetBytes(allocatedBytes());
+    scheduler.onGCFinish(epoch, allocatedBytes());
 
     mm::ResumeThreads();
     gcHandle.threadsAreResumed();

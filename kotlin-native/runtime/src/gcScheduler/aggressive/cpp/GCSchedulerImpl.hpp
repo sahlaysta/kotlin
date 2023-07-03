@@ -15,7 +15,9 @@
 #include "SafePoint.hpp"
 #include "SafePointTracker.hpp"
 
-namespace kotlin::gcScheduler::internal {
+namespace kotlin::gcScheduler {
+
+namespace internal {
 
 // The slowpath will trigger GC if this thread didn't meet this safepoint/allocation site before.
 class GCSchedulerDataAggressive : public GCSchedulerData {
@@ -26,7 +28,6 @@ public:
     }
 
     void OnPerformFullGC() noexcept override {}
-    void UpdateAliveSetBytes(size_t bytes) noexcept override { heapGrowthController_.UpdateAliveSetBytes(bytes); }
     void SetAllocatedBytes(size_t bytes) noexcept override {
         // Still checking allocations: with a long running loop all safepoints
         // might be "met", so that's the only trigger to not run out of memory.
@@ -45,6 +46,10 @@ public:
         }
     }
 
+    void onGCFinish(int64_t epoch, size_t aliveBytes) noexcept {
+        heapGrowthController_.UpdateAliveSetBytes(aliveBytes);
+    }
+
 private:
     std::function<void()> scheduleGC_;
     HeapGrowthController heapGrowthController_;
@@ -52,4 +57,16 @@ private:
     mm::SafePointActivator safePointActivator_;
 };
 
-} // namespace kotlin::gcScheduler::internal
+}
+
+class GCScheduler::ThreadData::Impl : private Pinned {
+public:
+    explicit Impl(internal::GCSchedulerDataAggressive& scheduler) noexcept : scheduler_(scheduler) {}
+
+    internal::GCSchedulerDataAggressive& scheduler() noexcept { return scheduler_; }
+
+private:
+    internal::GCSchedulerDataAggressive& scheduler_;
+};
+
+} // namespace kotlin::gcScheduler

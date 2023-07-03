@@ -33,22 +33,34 @@ public:
     // Always called by the GC thread.
     virtual void OnPerformFullGC() noexcept = 0;
 
-    // Always called by the GC thread.
-    virtual void UpdateAliveSetBytes(size_t bytes) noexcept = 0;
-
     // Called by different mutator threads.
     virtual void SetAllocatedBytes(size_t bytes) noexcept = 0;
 };
 
 class GCScheduler : private Pinned {
 public:
+    class ThreadData : private Pinned {
+    public:
+        class Impl;
+
+        explicit ThreadData(GCScheduler&) noexcept;
+        ~ThreadData();
+
+        Impl& impl() noexcept { return *impl_; }
+
+        void safePoint() noexcept;
+
+    private:
+        std_support::unique_ptr<Impl> impl_;
+    };
+
     GCScheduler() noexcept;
 
     GCSchedulerConfig& config() noexcept { return config_; }
     GCSchedulerData& gcData() noexcept { return *gcData_; }
 
-    // Should be called on encountering a safepoint.
-    void safePoint() noexcept;
+    // Called by the GC thread only.
+    void onGCFinish(int64_t epoch, size_t aliveBytes) noexcept;
 
 private:
     GCSchedulerConfig config_;
