@@ -10,7 +10,7 @@ import org.jetbrains.kotlin.gradle.testbase.*
 import org.junit.jupiter.api.DisplayName
 import kotlin.io.path.appendText
 
-@DisplayName("Integration with the Gradle test-fixtures plugin")
+@DisplayName("Integration with the Gradle java-test-fixtures plugin")
 class TestFixturesIT : KGPBaseTest() {
     @DisplayName("Test fixtures can access internals of the main source set in Kotlin/JVM projects")
     @JvmGradlePluginTests
