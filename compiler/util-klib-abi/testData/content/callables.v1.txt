@@ -1,3 +1,8 @@
+// Rendering settings:
+// - Signature versions: V1
+// - Show manifest properties: false
+
+// Library unique name: <testCallables>
 final const val callables.test/constProperty|-946595011727133850[0]
     final fun callables.test/constProperty.<get-constProperty>|4493949707887227090[0]
 final val callables.test/inlineVal|-5201927927744237303[0]

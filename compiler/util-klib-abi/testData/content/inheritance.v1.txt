@@ -1,3 +1,8 @@
+// Rendering settings:
+// - Signature versions: V1
+// - Show manifest properties: false
+
+// Library unique name: <testInheritance>
 abstract class classifiers.inheritance/AbstractClass|null[0] {
     abstract val classifiers.inheritance/AbstractClass.abstractVal|2000751617811374017[0]
         abstract fun classifiers.inheritance/AbstractClass.abstractVal.<get-abstractVal>|-836793625462255519[0]

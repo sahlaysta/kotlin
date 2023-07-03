@@ -1,3 +1,8 @@
+// Rendering settings:
+// - Signature versions: V1
+// - Show manifest properties: false
+
+// Library unique name: <testClassifiers>
 open annotation class classifiers.test/AnnotationClass|null[0] : kotlin/Annotation {
     final val classifiers.test/AnnotationClass.property|4634558160746314112[0]
         final fun classifiers.test/AnnotationClass.property.<get-property>|4838831487146901942[0]

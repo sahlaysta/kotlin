@@ -10,13 +10,44 @@ import java.lang.Appendable
 
 @ExperimentalLibraryAbiReader
 internal class AbiRendererImpl(
-    private val topLevelDeclarations: AbiTopLevelDeclarations,
+    private val libraryAbi: LibraryAbi,
     private val settings: AbiRenderingSettings
 ) {
     private val signatureVersionForOrdering = settings.renderedSignatureVersions[0]
 
     fun renderTo(output: Appendable) {
-        topLevelDeclarations.renderDeclarationContainer(isTopLevel = true, output)
+        renderHeader(output)
+
+        if (settings.renderDeclarations) {
+            libraryAbi.topLevelDeclarations.renderDeclarationContainer(isTopLevel = true, output)
+        }
+    }
+
+    private fun renderHeader(output: Appendable) {
+        output.appendLine(
+            """
+                // Rendering settings:
+                // - Signature versions: ${settings.renderedSignatureVersions.joinToString(separator = ", ")}
+                // - Show manifest properties: ${settings.renderManifest}
+               
+                // Library unique name: <${libraryAbi.uniqueName}>
+            """.trimIndent()
+        )
+
+        if (settings.renderManifest) {
+            with(libraryAbi.manifest) {
+                listOfNotNull(
+                    platform?.let { "Platform" to it },
+                    nativeTargets.takeIf { it.isNotEmpty() }?.let { "Native targets" to it.joinToString(separator = ", ") },
+                    compilerVersion?.let { "Compiler version" to it },
+                    abiVersion?.let { "ABI version" to it },
+                    libraryVersion?.let { "Library version" to it },
+                    irProviderName?.let { "IR provider" to it }
+                ).forEach { (name, value) ->
+                    output.append("// ").append(name).append(": ").appendLine(value)
+                }
+            }
+        }
     }
 
     private fun AbiDeclarationContainer.renderDeclarationContainer(isTopLevel: Boolean, output: Appendable) {

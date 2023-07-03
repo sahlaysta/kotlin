@@ -42,7 +42,10 @@ import org.jetbrains.kotlin.backend.common.serialization.IrFlags as ProtoFlags
 
 @ExperimentalLibraryAbiReader
 internal class LibraryAbiReaderImpl(libraryFile: File) {
-    private val library = resolveSingleFileKlib(KFile(libraryFile.absolutePath))
+    private val library = resolveSingleFileKlib(
+        KFile(libraryFile.absolutePath),
+        strategy = ToolingSingleFileKlibResolveStrategy
+    )
 
     fun readAbi(): LibraryAbi {
         val supportedSignatureVersions = readSupportedSignatureVersions()
