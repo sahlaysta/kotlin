@@ -29,7 +29,7 @@ import org.jetbrains.kotlin.fir.types.constructClassType
 import org.jetbrains.kotlin.library.KotlinLibrary
 import org.jetbrains.kotlin.library.includedForwardDeclarations
 import org.jetbrains.kotlin.library.isInterop
-import org.jetbrains.kotlin.library.metadata.impl.ForwardDeclarationKind
+import org.jetbrains.kotlin.name.ForwardDeclarationKind
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
