@@ -45,6 +45,7 @@ data class BuildOptions(
     val useDaemonFallbackStrategy: Boolean = false,
     val verboseDiagnostics: Boolean = true,
     val nativeOptions: NativeOptions = NativeOptions(),
+    val konanDataDir: String? = null,
 ) {
     val safeAndroidVersion: String
         get() = androidVersion ?: error("AGP version is expected to be set")
@@ -186,6 +187,10 @@ data class BuildOptions(
 
         if (verboseDiagnostics) {
             arguments.add("-Pkotlin.internal.verboseDiagnostics=$verboseDiagnostics")
+        }
+
+        if (konanDataDir != null) {
+            arguments.add("-Pkonan.data.dir=$konanDataDir")
         }
 
         arguments.addAll(freeArgs)
