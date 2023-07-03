@@ -104,9 +104,7 @@ internal enum class IntrinsicType {
     GET_AND_SET,
     GET_AND_ADD,
     // Atomic arrays
-    ATOMIC_GET_ARRAY_ELEMENT,
-    ATOMIC_SET_ARRAY_ELEMENT,
-    COMPARE_AND_SET_ARRAY_ELEMENT
+    ATOMIC_GET_ARRAY_ELEMENT
 }
 
 internal enum class ConstantConstructorIntrinsicType {
@@ -265,6 +263,7 @@ internal class IntrinsicGenerator(private val environment: IntrinsicGeneratorEnv
                 IntrinsicType.COMPARE_AND_EXCHANGE -> emitCompareAndSwap(callSite, args, resultSlot)
                 IntrinsicType.GET_AND_SET -> emitGetAndSet(callSite, args, resultSlot)
                 IntrinsicType.GET_AND_ADD -> emitGetAndAdd(callSite, args)
+                IntrinsicType.ATOMIC_GET_ARRAY_ELEMENT -> error("shouldn't be called")
                 IntrinsicType.GET_CONTINUATION,
                 IntrinsicType.RETURN_IF_SUSPENDED,
                 IntrinsicType.INTEROP_BITS_TO_FLOAT,
@@ -287,10 +286,6 @@ internal class IntrinsicGenerator(private val environment: IntrinsicGeneratorEnv
                 IntrinsicType.OBJC_GET_SELECTOR,
                 IntrinsicType.IMMUTABLE_BLOB ->
                     reportSpecialIntrinsic(intrinsicType)
-                IntrinsicType.ATOMIC_GET_ARRAY_ELEMENT,
-                IntrinsicType.ATOMIC_SET_ARRAY_ELEMENT,
-                IntrinsicType.COMPARE_AND_SET_ARRAY_ELEMENT ->
-                    TODO("not implemented yet")
             }
 
     fun evaluateConstantConstructorFields(constant: IrConstantObject, args: List<ConstValue>) : List<ConstValue> {

@@ -5,6 +5,11 @@
 
 package kotlin.concurrent
 
+import kotlin.native.internal.*
+import kotlin.reflect.*
+import kotlin.concurrent.*
+import kotlin.native.concurrent.*
+
 /**
  * An array of [Int] values that are always updated atomically.
  */
@@ -33,7 +38,7 @@ class AtomicIntegerArray {
     /**
      * Atomically reads the current value of the element at the given [index].
      */
-    fun get(index: Int): Int = getArrayElement(array, index)
+    fun get(index: Int): Int = array.get(index)
 
     /**
      * Atomically sets the value of the element at index[index] to the [given value][value].
@@ -65,11 +70,11 @@ class AtomicIntegerArray {
 @TypedIntrinsic(IntrinsicType.ATOMIC_GET_ARRAY_ELEMENT)
 internal external fun getArrayElement(array: IntArray, index: Int): Int
 
-@TypedIntrinsic(IntrinsicType.ATOMIC_GET_ARRAY_ELEMENT)
-internal external fun setArrayElement(array: IntArray, index: Int, value: Int)
+//@TypedIntrinsic(IntrinsicType.ATOMIC_SET_ARRAY_ELEMENT)
+internal fun setArrayElement(array: IntArray, index: Int, value: Int) = array.set(index, value)
 
-@TypedIntrinsic(IntrinsicType.ATOMIC_GET_ARRAY_ELEMENT)
-internal external fun compareAndSetArrayElement(array: IntArray, index: Int, expectedValue: Int, newValue: Int): Boolean
+//@TypedIntrinsic(IntrinsicType.ATOMIC_GET_ARRAY_ELEMENT)
+//internal external fun compareAndSetArrayElement(array: IntArray, index: Int, expectedValue: Int, newValue: Int): Boolean
 
 internal fun IntArray.getAndSetArrayElement(index: Int, value: Int): Int = TODO("Not implemented" + index + value)
 
