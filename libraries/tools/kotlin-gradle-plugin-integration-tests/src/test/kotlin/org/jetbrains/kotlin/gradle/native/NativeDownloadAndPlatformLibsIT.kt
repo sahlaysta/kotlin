@@ -8,7 +8,6 @@ package org.jetbrains.kotlin.gradle.native
 import org.gradle.api.logging.LogLevel
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.util.GradleVersion
-import org.jetbrains.kotlin.gradle.native.GeneralNativeIT.Companion.containsSequentially
 import org.jetbrains.kotlin.gradle.testbase.*
 import org.jetbrains.kotlin.gradle.util.replaceFirst
 import org.jetbrains.kotlin.gradle.utils.NativeCompilerDownloader
@@ -25,11 +24,11 @@ import org.junit.jupiter.api.condition.DisabledOnOs
 import org.junit.jupiter.api.condition.OS
 import kotlin.io.path.appendText
 
-@DisabledOnOs(
-    OS.WINDOWS, disabledReason =
-    " This test class causes build timeouts on Windows CI machines. " +
-            "We temporarily disable it for windows until a proper fix is found."
-)
+// This test class causes build timeouts on Windows CI machines.
+// We temporarily disable it for windows until a proper fix is found.
+//@OsCondition(
+//    supportedOn = [OS.MAC, OS.LINUX], enabledOnCI = [OS.MAC, OS.LINUX]
+//)
 @DisplayName("Tests for K/N builds with native downloading and platform libs")
 @NativeGradlePluginTests
 class NativeDownloadAndPlatformLibsIT : KGPBaseTest() {
@@ -149,11 +148,8 @@ class NativeDownloadAndPlatformLibsIT : KGPBaseTest() {
                     ":compileKotlinLinuxX64",
                     ":linkDebugSharedLinuxX64"
                 )
-                assertNativeTasksCommandLineArguments(":linkDebugSharedLinuxX64") {
-                    assertCommandLineArgumentsContain(
-                        "-Xfoo=bar", "-Xbaz=qux", "-Xmen=pool",
-                        commandLineArguments = it
-                    )
+                extractNativeTasksCommandLineArgumentsFromOutput(":linkDebugSharedLinuxX64") {
+                    assertCommandLineArgumentsContain("-Xfoo=bar", "-Xbaz=qux", "-Xmen=pool")
                 }
                 assertFileInProjectExists("build/bin/linuxX64/debugShared/libnative_platform_libraries.so")
                 assertFileInProjectExists("build/bin/linuxX64/debugShared/libnative_platform_libraries_api.h")
@@ -178,7 +174,7 @@ class NativeDownloadAndPlatformLibsIT : KGPBaseTest() {
         platformLibrariesProject("linuxX64", gradleVersion = gradleVersion) {
             build(
                 "assemble", buildOptions = defaultBuildOptions.copy(
-                    nativeOptions = BuildOptions.NativeOptions(
+                    nativeOptions = defaultBuildOptions.nativeOptions.copy(
                         distributionType = "prebuilt"
                     )
                 )
@@ -201,7 +197,7 @@ class NativeDownloadAndPlatformLibsIT : KGPBaseTest() {
             // Reinstall the compiler.
             buildWithLightDist(
                 "tasks",
-                buildOptions = defaultBuildOptions.copy(nativeOptions = BuildOptions.NativeOptions(reinstall = true))
+                buildOptions = defaultBuildOptions.copy(nativeOptions = defaultBuildOptions.nativeOptions.copy(reinstall = true))
             ) {
                 assertOutputContains("Unpack Kotlin/Native compiler to ")
                 assertOutputContains("Generate platform libraries for linux_x64")
@@ -233,7 +229,7 @@ class NativeDownloadAndPlatformLibsIT : KGPBaseTest() {
 
             build(
                 "assemble",
-                buildOptions = defaultBuildOptions.copy(nativeOptions = BuildOptions.NativeOptions(distributionDownloadFromMaven = true))
+                buildOptions = defaultBuildOptions.copy(nativeOptions = defaultBuildOptions.nativeOptions.copy(distributionDownloadFromMaven = true))
             ) {
                 assertOutputContains("Unpack Kotlin/Native compiler to ")
                 assertOutputDoesNotContain("Generate platform libraries for ")
@@ -255,7 +251,7 @@ class NativeDownloadAndPlatformLibsIT : KGPBaseTest() {
 
         nativeProject("native-download-maven", gradleVersion = gradleVersion) {
             buildGradleKts.replaceFirst("// <MavenPlaceholder>", "maven(\"${maven}\")")
-            val nativeOptions = BuildOptions.NativeOptions(
+            val nativeOptions = defaultBuildOptions.nativeOptions.copy(
                 distributionType = "light",
                 distributionDownloadFromMaven = true
             )
