@@ -41,6 +41,7 @@ import org.jetbrains.kotlin.gradle.plugin.PropertiesProvider.PropertyNames.KOTLI
 import org.jetbrains.kotlin.gradle.plugin.UsesBuildFinishedListenerService
 import org.jetbrains.kotlin.gradle.plugin.UsesVariantImplementationFactories
 import org.jetbrains.kotlin.gradle.plugin.diagnostics.UsesKotlinToolingDiagnostics
+import org.jetbrains.kotlin.gradle.plugin.internal.UsesBuildIdProviderService
 import org.jetbrains.kotlin.gradle.plugin.statistics.KotlinBuildStatsService
 import org.jetbrains.kotlin.gradle.report.*
 import org.jetbrains.kotlin.gradle.utils.*
@@ -64,6 +65,7 @@ abstract class AbstractKotlinCompile<T : CommonCompilerArguments> @Inject constr
     UsesBuildFinishedListenerService,
     UsesClassLoadersCachingBuildService,
     UsesKotlinToolingDiagnostics,
+    UsesBuildIdProviderService,
     BaseKotlinCompile {
 
     init {
@@ -192,6 +194,8 @@ abstract class AbstractKotlinCompile<T : CommonCompilerArguments> @Inject constr
                                     workerExecutor,
                                     runViaBuildToolsApi.get(),
                                     classLoadersCachingService,
+                                    buildFinishedListenerService,
+                                    buildIdService,
                                 )
                             }
                     }
