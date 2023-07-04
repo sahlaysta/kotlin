@@ -59,6 +59,15 @@ public:
     GCSchedulerConfig& config() noexcept { return config_; }
     GCSchedulerData& gcData() noexcept { return *gcData_; }
 
+    // Can be called by any thread.
+    void schedule() noexcept;
+
+    // Can be called by any thread.
+    void scheduleAndWaitFinished() noexcept;
+
+    // Can be called by any thread.
+    void scheduleAndWaitFinalized() noexcept;
+
     // Called by the GC thread only.
     void onGCFinish(int64_t epoch, size_t aliveBytes) noexcept;
 

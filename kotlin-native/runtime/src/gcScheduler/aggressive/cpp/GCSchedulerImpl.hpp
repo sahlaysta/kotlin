@@ -12,17 +12,36 @@
 #include "GCSchedulerConfig.hpp"
 #include "HeapGrowthController.hpp"
 #include "Logging.hpp"
+#include "MutatorAssists.hpp"
 #include "SafePoint.hpp"
 #include "SafePointTracker.hpp"
+#include "ThreadData.hpp"
 
 namespace kotlin::gcScheduler {
+
+namespace internal {
+class GCSchedulerDataAggressive;
+}
+
+class GCScheduler::ThreadData::Impl : private Pinned {
+public:
+    explicit Impl(GCSchedulerData& scheduler) noexcept;
+
+    internal::GCSchedulerDataAggressive& scheduler() noexcept { return scheduler_; }
+
+    internal::MutatorAssists::ThreadData& mutatorAssists() noexcept { return mutatorAssists_; }
+
+private:
+    internal::GCSchedulerDataAggressive& scheduler_;
+    internal::MutatorAssists::ThreadData mutatorAssists_;
+};
 
 namespace internal {
 
 // The slowpath will trigger GC if this thread didn't meet this safepoint/allocation site before.
 class GCSchedulerDataAggressive : public GCSchedulerData {
 public:
-    GCSchedulerDataAggressive(GCSchedulerConfig& config, std::function<void()> scheduleGC) noexcept :
+    GCSchedulerDataAggressive(GCSchedulerConfig& config, std::function<int64_t()> scheduleGC) noexcept :
         scheduleGC_(std::move(scheduleGC)), heapGrowthController_(config) {
         RuntimeLogInfo({kTagGC}, "Aggressive GC scheduler initialized");
     }
@@ -31,42 +50,54 @@ public:
     void SetAllocatedBytes(size_t bytes) noexcept override {
         // Still checking allocations: with a long running loop all safepoints
         // might be "met", so that's the only trigger to not run out of memory.
-        if (heapGrowthController_.SetAllocatedBytes(bytes) != HeapGrowthController::MemoryBoundary::kNone) {
-            RuntimeLogDebug({kTagGC}, "Scheduling GC by allocation");
-            scheduleGC_();
-        } else {
-            safePoint();
+        auto boundary = heapGrowthController_.SetAllocatedBytes(bytes);
+        switch (boundary) {
+            case HeapGrowthController::MemoryBoundary::kNone:
+                safePoint();
+                return;
+            case HeapGrowthController::MemoryBoundary::kSoft:
+                RuntimeLogDebug({kTagGC}, "Scheduling GC by allocation");
+                schedule();
+                return;
+            case HeapGrowthController::MemoryBoundary::kHard:
+                RuntimeLogDebug({kTagGC}, "Scheduling GC by allocation");
+                auto epoch = schedule();
+                RuntimeLogWarning({kTagGC}, "Pausing the mutators");
+                mutatorAssists_.requestAssists(epoch);
+                return;
         }
     }
 
     void safePoint() noexcept {
         if (safePointTracker_.registerCurrentSafePoint(1)) {
             RuntimeLogDebug({kTagGC}, "Scheduling GC by safepoint");
-            scheduleGC_();
+            schedule();
         }
     }
 
     void onGCFinish(int64_t epoch, size_t aliveBytes) noexcept {
         heapGrowthController_.UpdateAliveSetBytes(aliveBytes);
+        // Must wait for all mutators to be released. GC thread cannot continue.
+        // This is the contract between GC and mutators. With regular native state
+        // each mutator must check that GC is not doing something. Here GC must check
+        // that each mutator has done all it needs.
+        mutatorAssists_.completeEpoch(epoch, [](mm::ThreadData& threadData) noexcept -> MutatorAssists::ThreadData& {
+            return threadData.gcScheduler().impl().mutatorAssists();
+        });
     }
 
+    int64_t schedule() noexcept { return scheduleGC_(); }
+
+    MutatorAssists& mutatorAssists() noexcept { return mutatorAssists_; }
+
 private:
-    std::function<void()> scheduleGC_;
+    std::function<int64_t()> scheduleGC_;
     HeapGrowthController heapGrowthController_;
     SafePointTracker<> safePointTracker_;
     mm::SafePointActivator safePointActivator_;
+    MutatorAssists mutatorAssists_;
 };
 
-}
-
-class GCScheduler::ThreadData::Impl : private Pinned {
-public:
-    explicit Impl(internal::GCSchedulerDataAggressive& scheduler) noexcept : scheduler_(scheduler) {}
-
-    internal::GCSchedulerDataAggressive& scheduler() noexcept { return scheduler_; }
-
-private:
-    internal::GCSchedulerDataAggressive& scheduler_;
-};
+} // namespace internal
 
 } // namespace kotlin::gcScheduler

@@ -6,6 +6,7 @@
 #pragma once
 
 #include <atomic>
+#include <cstdint>
 
 #include "GCScheduler.hpp"
 #include "Memory.h"
@@ -33,10 +34,6 @@ public:
         ~ThreadData();
 
         Impl& impl() noexcept { return *impl_; }
-
-        void Schedule() noexcept;
-        void ScheduleAndWaitFullGC() noexcept;
-        void ScheduleAndWaitFullGCWithFinalizers() noexcept;
 
         void Publish() noexcept;
         void ClearForTests() noexcept;
@@ -71,10 +68,10 @@ public:
     static void processArrayInMark(void* state, ArrayHeader* array) noexcept;
     static void processFieldInMark(void* state, ObjHeader* field) noexcept;
 
-    // TODO: These should be moved into the scheduler.
+    // TODO: These should exist only in the scheduler.
     int64_t Schedule() noexcept;
+    void WaitFinished(int64_t epoch) noexcept;
     void WaitFinalizers(int64_t epoch) noexcept;
-    void ScheduleAndWaitFullGCWithFinalizers() noexcept { WaitFinalizers(Schedule()); }
 
 private:
     std_support::unique_ptr<Impl> impl_;

@@ -59,29 +59,10 @@ struct ProcessWeaksTraits {
 
 } // namespace
 
-void gc::ConcurrentMarkAndSweep::ThreadData::Schedule() noexcept {
-    RuntimeLogInfo({kTagGC}, "Scheduling GC manually");
-    ThreadStateGuard guard(ThreadState::kNative);
-    gc_.state_.schedule();
-}
-
-void gc::ConcurrentMarkAndSweep::ThreadData::ScheduleAndWaitFullGC() noexcept {
-    RuntimeLogInfo({kTagGC}, "Scheduling GC manually");
-    ThreadStateGuard guard(ThreadState::kNative);
-    auto scheduled_epoch = gc_.state_.schedule();
-    gc_.state_.waitEpochFinished(scheduled_epoch);
-}
-
-void gc::ConcurrentMarkAndSweep::ThreadData::ScheduleAndWaitFullGCWithFinalizers() noexcept {
-    RuntimeLogInfo({kTagGC}, "Scheduling GC manually");
-    ThreadStateGuard guard(ThreadState::kNative);
-    auto scheduled_epoch = gc_.state_.schedule();
-    gc_.state_.waitEpochFinalized(scheduled_epoch);
-}
-
 void gc::ConcurrentMarkAndSweep::ThreadData::OnOOM(size_t size) noexcept {
     RuntimeLogDebug({kTagGC}, "Attempt to GC on OOM at size=%zu", size);
-    ScheduleAndWaitFullGC();
+    // TODO: This will print the log for "manual" scheduling. Fix this.
+    mm::GlobalData::Instance().gcScheduler().scheduleAndWaitFinished();
 }
 
 void gc::ConcurrentMarkAndSweep::ThreadData::OnSuspendForGC() noexcept {

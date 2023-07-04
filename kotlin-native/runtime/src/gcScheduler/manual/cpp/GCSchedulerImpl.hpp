@@ -21,7 +21,7 @@ public:
     void SetAllocatedBytes(size_t bytes) noexcept override {}
 };
 
-}
+} // namespace internal
 
 class GCScheduler::ThreadData::Impl : private Pinned {};
 

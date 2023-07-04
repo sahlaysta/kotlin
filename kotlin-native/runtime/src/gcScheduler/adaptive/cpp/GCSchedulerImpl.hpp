@@ -16,15 +16,34 @@
 #include "RegularIntervalPacer.hpp"
 #include "RepeatedTimer.hpp"
 #include "SafePoint.hpp"
+#include "ThreadData.hpp"
 
 namespace kotlin::gcScheduler {
+
+namespace internal {
+template <typename Clock>
+class GCSchedulerDataAdaptive;
+}
+
+class GCScheduler::ThreadData::Impl : private Pinned {
+public:
+    explicit Impl(GCSchedulerData& scheduler) noexcept;
+
+    internal::GCSchedulerDataAdaptive<steady_clock>& scheduler() noexcept { return scheduler_; }
+
+    internal::MutatorAssists::ThreadData& mutatorAssists() noexcept { return mutatorAssists_; }
+
+private:
+    internal::GCSchedulerDataAdaptive<steady_clock>& scheduler_;
+    internal::MutatorAssists::ThreadData mutatorAssists_;
+};
 
 namespace internal {
 
 template <typename Clock>
 class GCSchedulerDataAdaptive : public GCSchedulerData {
 public:
-    GCSchedulerDataAdaptive(GCSchedulerConfig& config, std::function<void()> scheduleGC) noexcept :
+    GCSchedulerDataAdaptive(GCSchedulerConfig& config, std::function<int64_t()> scheduleGC) noexcept :
         config_(config),
         scheduleGC_(std::move(scheduleGC)),
         appStateTracking_(mm::GlobalData::Instance().appStateTracking()),
@@ -36,7 +55,7 @@ public:
             }
             if (regularIntervalPacer_.NeedsGC()) {
                 RuntimeLogDebug({kTagGC}, "Scheduling GC by timer");
-                scheduleGC_();
+                schedule();
             }
         }) {
         RuntimeLogInfo({kTagGC}, "Adaptive GC scheduler initialized");
@@ -53,74 +72,43 @@ public:
             case HeapGrowthController::MemoryBoundary::kNone:
                 return;
             case HeapGrowthController::MemoryBoundary::kSoft:
-                if (scheduled_) return;
-                scheduled_ = true;
                 RuntimeLogDebug({kTagGC}, "Scheduling GC by allocation");
-                scheduleGC_();
+                schedule();
+                return;
             case HeapGrowthController::MemoryBoundary::kHard:
-                if (!scheduled_) {
-                    scheduled_ = true;
-                    scheduleGC_();
-                }
-                pauseMutators();
-                RuntimeLogWarning({kTagGC}, "Scheduling GC by allocation");
-        }
-    }
-
-    void safePoint() noexcept {
-        kotlin::NativeOrUnregisteredThreadGuard guard(/* reentrant= */ true);
-        while (stop_.load(std::memory_order_relaxed)) {
+                RuntimeLogDebug({kTagGC}, "Scheduling GC by allocation");
+                auto epoch = schedule();
+                RuntimeLogWarning({kTagGC}, "Pausing the mutators");
+                mutatorAssists_.requestAssists(epoch);
+                return;
         }
     }
 
     void onGCFinish(int64_t epoch, size_t bytes) noexcept {
         heapGrowthController_.UpdateAliveSetBytes(bytes);
-        scheduled_ = false;
-        resumeMutators();
+        // Must wait for all mutators to be released. GC thread cannot continue.
+        // This is the contract between GC and mutators. With regular native state
+        // each mutator must check that GC is not doing something. Here GC must check
+        // that each mutator has done all it needs.
+        mutatorAssists_.completeEpoch(epoch, [](mm::ThreadData& threadData) noexcept -> MutatorAssists::ThreadData& {
+            return threadData.gcScheduler().impl().mutatorAssists();
+        });
     }
+
+    int64_t schedule() noexcept { return scheduleGC_(); }
 
     MutatorAssists& mutatorAssists() noexcept { return mutatorAssists_; }
 
 private:
-    void pauseMutators() noexcept {
-        kotlin::NativeOrUnregisteredThreadGuard guard(/* reentrant= */ true);
-        mm::SafePointActivator activator;
-        stop_.store(true, std::memory_order_relaxed);
-        safePoint();
-    }
-
-    void resumeMutators() noexcept {
-        stop_.store(false, std::memory_order_relaxed);
-        // TODO: Must wait for all to be released. GC thread cannot continue.
-        //       This is the contract between GC and mutators. With regular native state
-        //       each mutator must check that GC is not doing something. Here GC must check
-        //       that each mutator is a-okay.
-    }
-
     GCSchedulerConfig& config_;
-    std::function<void()> scheduleGC_;
+    std::function<int64_t()> scheduleGC_;
     mm::AppStateTracking& appStateTracking_;
     HeapGrowthController heapGrowthController_;
     RegularIntervalPacer<Clock> regularIntervalPacer_;
     RepeatedTimer<Clock> timer_;
     MutatorAssists mutatorAssists_;
-    std::atomic<bool> scheduled_ = false;
-    std::atomic<bool> stop_ = false;
 };
 
-}
-
-class GCScheduler::ThreadData::Impl : private Pinned {
-public:
-    explicit Impl(GCSchedulerData& scheduler) noexcept : scheduler_(static_cast<internal::GCSchedulerDataAdaptive<steady_clock>&>(scheduler)), mutatorAssists_(scheduler_.mutatorAssists()) {}
-
-    internal::GCSchedulerDataAdaptive<steady_clock>& scheduler() noexcept { return scheduler_; }
-
-    internal::MutatorAssists::ThreadData& mutatorAssists() noexcept { return mutatorAssists_; }
-
-private:
-    internal::GCSchedulerDataAdaptive<steady_clock>& scheduler_;
-    internal::MutatorAssists::ThreadData mutatorAssists_;
-};
+} // namespace internal
 
 } // namespace kotlin::gcScheduler

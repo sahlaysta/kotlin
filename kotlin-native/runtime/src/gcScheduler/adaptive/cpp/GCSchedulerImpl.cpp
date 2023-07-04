@@ -13,7 +13,12 @@
 
 using namespace kotlin;
 
-gcScheduler::GCScheduler::ThreadData::ThreadData(gcScheduler::GCScheduler& scheduler) noexcept : impl_(std_support::make_unique<Impl>(scheduler.gcData())) {}
+gcScheduler::GCScheduler::ThreadData::Impl::Impl(GCSchedulerData& scheduler) noexcept :
+    scheduler_(static_cast<internal::GCSchedulerDataAdaptive<steady_clock>&>(scheduler)),
+    mutatorAssists_(scheduler_.mutatorAssists()) {}
+
+gcScheduler::GCScheduler::ThreadData::ThreadData(gcScheduler::GCScheduler& scheduler) noexcept :
+    impl_(std_support::make_unique<Impl>(scheduler.gcData())) {}
 
 gcScheduler::GCScheduler::ThreadData::~ThreadData() = default;
 
@@ -22,11 +27,30 @@ gcScheduler::GCScheduler::GCScheduler() noexcept :
         // This call acquires a lock, but the lock are always short-lived,
         // so we ignore thread state switching to avoid recursive safe points.
         CallsCheckerIgnoreGuard guard;
-        mm::GlobalData::Instance().gc().Schedule();
+        return mm::GlobalData::Instance().gc().Schedule();
     })) {}
 
 ALWAYS_INLINE void gcScheduler::GCScheduler::ThreadData::safePoint() noexcept {
     impl().mutatorAssists().safePoint();
+}
+
+void gcScheduler::GCScheduler::schedule() noexcept {
+    RuntimeLogInfo({kTagGC}, "Scheduling GC manually");
+    static_cast<internal::GCSchedulerDataAdaptive<steady_clock>&>(gcData()).schedule();
+}
+
+void gcScheduler::GCScheduler::scheduleAndWaitFinished() noexcept {
+    RuntimeLogInfo({kTagGC}, "Scheduling GC manually");
+    auto epoch = static_cast<internal::GCSchedulerDataAdaptive<steady_clock>&>(gcData()).schedule();
+    NativeOrUnregisteredThreadGuard guard(/* reentrant = */ true);
+    mm::GlobalData::Instance().gc().WaitFinished(epoch);
+}
+
+void gcScheduler::GCScheduler::scheduleAndWaitFinalized() noexcept {
+    RuntimeLogInfo({kTagGC}, "Scheduling GC manually");
+    auto epoch = static_cast<internal::GCSchedulerDataAdaptive<steady_clock>&>(gcData()).schedule();
+    NativeOrUnregisteredThreadGuard guard(/* reentrant = */ true);
+    mm::GlobalData::Instance().gc().WaitFinalizers(epoch);
 }
 
 ALWAYS_INLINE void gcScheduler::GCScheduler::onGCFinish(int64_t epoch, size_t aliveBytes) noexcept {

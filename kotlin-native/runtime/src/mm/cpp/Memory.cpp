@@ -112,7 +112,7 @@ extern "C" void DeinitMemory(MemoryState* state, bool destroyRuntime) {
     auto* node = mm::FromMemoryState(state);
     if (destroyRuntime) {
         ThreadStateGuard guard(state, ThreadState::kRunnable);
-        node->Get()->gc().ScheduleAndWaitFullGCWithFinalizers();
+        mm::GlobalData::Instance().gcScheduler().scheduleAndWaitFinalized();
         // TODO: Why not just destruct `GC` object and its thread data counterpart entirely?
         mm::GlobalData::Instance().gc().StopFinalizerThreadIfRunning();
     }
@@ -307,15 +307,11 @@ extern "C" RUNTIME_NOTHROW void GC_CollectorCallback(void* worker) {
 }
 
 extern "C" void Kotlin_native_internal_GC_collect(ObjHeader*) {
-    auto* threadData = mm::ThreadRegistry::Instance().CurrentThreadData();
-    AssertThreadState(threadData, ThreadState::kRunnable);
-    threadData->gc().ScheduleAndWaitFullGCWithFinalizers();
+    mm::GlobalData::Instance().gcScheduler().scheduleAndWaitFinalized();
 }
 
 extern "C" void Kotlin_native_internal_GC_schedule(ObjHeader*) {
-    auto* threadData = mm::ThreadRegistry::Instance().CurrentThreadData();
-    AssertThreadState(threadData, ThreadState::kRunnable);
-    threadData->gc().Schedule();
+    mm::GlobalData::Instance().gcScheduler().schedule();
 }
 
 extern "C" void Kotlin_native_internal_GC_collectCyclic(ObjHeader*) {
@@ -460,9 +456,7 @@ extern "C" void Kotlin_Any_share(ObjHeader* thiz) {
 }
 
 extern "C" RUNTIME_NOTHROW void PerformFullGC(MemoryState* memory) {
-    auto* threadData = memory->GetThreadData();
-    AssertThreadState(threadData, ThreadState::kRunnable);
-    threadData->gc().ScheduleAndWaitFullGCWithFinalizers();
+    mm::GlobalData::Instance().gcScheduler().scheduleAndWaitFinalized();
 }
 
 extern "C" RUNTIME_NOTHROW bool ClearSubgraphReferences(ObjHeader* root, bool checked) {
