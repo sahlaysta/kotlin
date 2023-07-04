@@ -203,13 +203,65 @@ class AtomicfuJvmIrTransformer(
     }
 
     private inner class JvmAtomicExtensionTransformer : AtomicExtensionTransformer() {
+
         override fun IrDeclarationContainer.transformAllAtomicExtensions() {
-            /**
-             * Atomic extension declarations are removed, transformed declarations are generated on call-site by `JvmAtomicFunctionCallTransformer`
-             */
             declarations.filter { it is IrFunction && it.isAtomicExtension() }.forEach { atomicExtension ->
                 atomicExtension as IrFunction
+                declarations.add(transformAtomicExtension(atomicExtension, this, false))
+                declarations.add(transformAtomicExtension(atomicExtension, this, true))
+                // the original atomic extension is removed
                 declarations.remove(atomicExtension)
+            }
+        }
+
+        private fun transformAtomicExtension(atomicExtension: IrFunction, parent: IrDeclarationContainer, isArrayReceiver: Boolean): IrFunction {
+            /**
+             * At this step, only signature of the atomic extension is changed,
+             * the body is just copied and will be transformed at the next step by JvmAtomicFunctionCallTransformer.
+             *
+             * Two different signatures are generated for the case of atomic property receiver
+             * and for the case of atomic array element receiver, due to different atomic updaters.
+             *
+             * inline fun AtomicInt.foo(arg: Int) --> inline fun foo$atomicfu(dispatchReceiver: Any?, atomicHandler: AtomicIntegerFieldUpdater, arg': Int)
+             *                                        inline fun foo$atomicfu$array(dispatchReceiver: Any?, atomicHandler: AtomicIntegerArray, index: Int, arg': Int)
+             */
+            val mangledName = mangleAtomicExtensionName(atomicExtension.name.asString(), isArrayReceiver)
+            val valueType = atomicExtension.extensionReceiverParameter!!.type.atomicToPrimitiveType()
+            return pluginContext.irFactory.buildFun {
+                name = Name.identifier(mangledName)
+                isInline = true
+                visibility = atomicExtension.visibility
+                origin = AbstractAtomicSymbols.ATOMICFU_GENERATED_FUNCTION
+            }.apply {
+                val newDeclaration = this
+                extensionReceiverParameter = null
+                dispatchReceiverParameter = atomicExtension.dispatchReceiverParameter?.deepCopyWithSymbols(this)
+                if (isArrayReceiver) {
+                    addValueParameter(DISPATCH_RECEIVER, irBuiltIns.anyNType)
+                    addValueParameter(ATOMIC_HANDLER, atomicSymbols.getAtomicArrayClassByValueType(valueType).defaultType)
+                    addValueParameter(INDEX, irBuiltIns.intType)
+                } else {
+                    addValueParameter(DISPATCH_RECEIVER, irBuiltIns.anyNType)
+                    addValueParameter(ATOMIC_HANDLER, atomicSymbols.getFieldUpdaterType(valueType))
+                }
+                atomicExtension.valueParameters.forEach { addValueParameter(it.name, it.type) }
+                // the body will be transformed later by `AtomicFUTransformer`
+                body = atomicExtension.body?.deepCopyWithSymbols(this)
+                body?.transform(
+                    object : IrElementTransformerVoid() {
+                        override fun visitReturn(expression: IrReturn): IrExpression = super.visitReturn(
+                            if (expression.returnTargetSymbol == atomicExtension.symbol) {
+                                with(atomicSymbols.createBuilder(newDeclaration.symbol)) {
+                                    irReturn(expression.value)
+                                }
+                            } else {
+                                expression
+                            }
+                        )
+                    }, null
+                )
+                returnType = atomicExtension.returnType
+                this.parent = parent
             }
         }
     }
@@ -354,12 +406,10 @@ class AtomicfuJvmIrTransformer(
         ): IrCall {
             with(atomicSymbols.createBuilder(expression.symbol)) {
                 /**
-                 * When atomic extension call is found, it is replaced with the call to the transformed atomic extension.
-                 * The transformed atomic extension is either generated and added as a child of the original extension parent
-                 * or if it was already generated it is retrieved from declarations of the original extension parent.
+                 * Atomic extension call is replaced with the call to transformed atomic extension:
                  *
                  * 1. Function call receiver is atomic property getter call.
-                 * Transformation variant of the atomic extension is chosen according to the type of receiver
+                 * Transformation variant of the atomic extension is chosen accorfin to the type of receiver
                  * (atomic property -> foo$atomicfu, atomic array element -> foo$atomicfu$array)
                  *
                  * inline fun AtomicInt.foo(atg: Int) {..}
@@ -376,7 +426,7 @@ class AtomicfuJvmIrTransformer(
                  * }                                             }
                  */
                 val parent = originalAtomicExtension.parent as IrDeclarationContainer
-                val transformedAtomicExtension = parent.getOrBuildTransformedAtomicExtension(originalAtomicExtension, isArrayReceiver)
+                val transformedAtomicExtension = parent.getTransformedAtomicExtension(originalAtomicExtension, isArrayReceiver)
                 val dispatchReceiver = getDispatchReceiver(getPropertyReceiver, parentFunction)
                 val getAtomicHandler = getAtomicHandler(getPropertyReceiver, parentFunction)
                 return callAtomicExtension(
@@ -392,70 +442,14 @@ class AtomicfuJvmIrTransformer(
             }
         }
 
-        private fun IrDeclarationContainer.getOrBuildTransformedAtomicExtension(
+        override fun IrDeclarationContainer.getTransformedAtomicExtension(
             declaration: IrSimpleFunction,
             isArrayReceiver: Boolean
-        ): IrSimpleFunction {
-            findDeclaration<IrSimpleFunction> {
+        ): IrSimpleFunction =
+            findDeclaration {
                 it.name.asString() == mangleAtomicExtensionName(declaration.name.asString(), isArrayReceiver) &&
                         it.isTransformedAtomicExtension()
-            }?.let { return it }
-            return generateAtomicExtension(declaration, this, isArrayReceiver)
-        }
-
-        private fun generateAtomicExtension(atomicExtension: IrFunction, parent: IrDeclarationContainer, isArrayReceiver: Boolean): IrSimpleFunction {
-            /**
-             * This function generates the transformed atomic extension from the given original declaration [atomicExtension].
-             * [isArrayReceiver] parameter defines which transformed variant will be generated according to the type of the atomic extension call receiver:
-             * 1. If the receiver of the atomic extension call is an atomic property ([isArrayReceiver] == false), then Atomic*FieldUpdater is passed as the atomic handler
-             *
-             * inline fun AtomicInt.foo(arg: Int) --> inline fun foo$atomicfu(dispatchReceiver: Any?, atomicHandler: AtomicIntegerFieldUpdater, arg': Int)
-             *
-             * 2. If the receiver of the atomic extension call is an array element ([isArrayReceiver] == true), then Atomic*Array is passed as the atomic handler
-             *
-             * inline fun AtomicInt.foo(arg: Int) --> inline fun foo$atomicfu$array(dispatchReceiver: Any?, atomicHandler: AtomicIntegerArray, index: Int, arg': Int)
-             */
-            val mangledName = mangleAtomicExtensionName(atomicExtension.name.asString(), isArrayReceiver)
-            val valueType = atomicExtension.extensionReceiverParameter!!.type.atomicToPrimitiveType()
-            return pluginContext.irFactory.buildFun {
-                name = Name.identifier(mangledName)
-                isInline = true
-                visibility = atomicExtension.visibility
-                origin = AbstractAtomicSymbols.ATOMICFU_GENERATED_FUNCTION
-            }.apply {
-                val newDeclaration = this
-                this.parent = parent
-                parent.declarations.add(newDeclaration)
-                extensionReceiverParameter = null
-                dispatchReceiverParameter = atomicExtension.dispatchReceiverParameter?.deepCopyWithSymbols(this)
-                if (isArrayReceiver) {
-                    addValueParameter(DISPATCH_RECEIVER, irBuiltIns.anyNType)
-                    addValueParameter(ATOMIC_HANDLER, atomicSymbols.getAtomicArrayClassByValueType(valueType).defaultType)
-                    addValueParameter(INDEX, irBuiltIns.intType)
-                } else {
-                    addValueParameter(DISPATCH_RECEIVER, irBuiltIns.anyNType)
-                    addValueParameter(ATOMIC_HANDLER, atomicSymbols.getFieldUpdaterType(valueType))
-                }
-                atomicExtension.valueParameters.forEach { addValueParameter(it.name, it.type) }
-                body = atomicExtension.body?.deepCopyWithSymbols(this)
-                // transform the body of the atomic extension
-                body?.transform(this@JvmAtomicFunctionCallTransformer, this)
-                body?.transform(
-                    object : IrElementTransformerVoid() {
-                        override fun visitReturn(expression: IrReturn): IrExpression = super.visitReturn(
-                            if (expression.returnTargetSymbol == atomicExtension.symbol) {
-                                with(atomicSymbols.createBuilder(newDeclaration.symbol)) {
-                                    irReturn(expression.value)
-                                }
-                            } else {
-                                expression
-                            }
-                        )
-                    }, null
-                )
-                returnType = atomicExtension.returnType
-            }
-        }
+            } ?: error("Could not find corresponding transformed declaration for the atomic extension ${declaration.render()} ${if (isArrayReceiver) "for array element receiver" else ""}" + CONSTRAINTS_MESSAGE)
 
         override fun IrFunction.isTransformedAtomicExtension(): Boolean {
             val isArrayReceiver = name.asString().isMangledAtomicArrayExtension()
