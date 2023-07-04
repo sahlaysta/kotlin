@@ -29,13 +29,6 @@ import kotlin.test.BeforeTest
 class NativeDownloadAndPlatformLibsIT : BaseGradleIT() {
 
     companion object {
-        @BeforeClass
-        @JvmStatic
-        fun skipOnWindows() {
-            // This test class causes build timeouts on Windows CI machines.
-            // We temporarily disable it for windows until a proper fix is found.
-            Assume.assumeFalse(HostManager.hostIsMingw)
-        }
 
         private const val KOTLIN_SPACE_DEV = "https://cache-redirector.jetbrains.com/maven.pkg.jetbrains.space/kotlin/p/kotlin/dev"
         private const val MAVEN_CENTRAL = "https://cache-redirector.jetbrains.com/maven-central"
