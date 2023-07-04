@@ -156,6 +156,7 @@ class MultiInheritance_Interface2_Interface1_OpenClass: Interface2, Interface1, 
 
 open class OpenClassWithTypeParameters<P, Q>
 class OpenClassWithTypeParametersImpl_Int_String : OpenClassWithTypeParameters<Int, String>()
+class OpenClassWithTypeParametersImpl_NInt_NString : OpenClassWithTypeParameters<Int?, String?>()
 class OpenClassWithTypeParametersImpl_String_Int : OpenClassWithTypeParameters<String, Int>()
 class OpenClassWithTypeParametersImpl_T1_T2<T1, T2> : OpenClassWithTypeParameters<T1, T2>()
 class OpenClassWithTypeParametersImpl_T2_T1<T2, T1> : OpenClassWithTypeParameters<T1, T2>()

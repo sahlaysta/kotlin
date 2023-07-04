@@ -89,7 +89,7 @@ private class LibraryDeserializer(private val library: KotlinLibrary, supportedS
     private val needV1Signatures = AbiSignatureVersion.V1 in supportedSignatureVersions
     private val needV2Signatures = AbiSignatureVersion.V2 in supportedSignatureVersions
 
-    inner class FileDeserializer(fileIndex: Int) {
+    private inner class FileDeserializer(fileIndex: Int) {
         private val fileReader = IrLibraryFileFromBytes(IrKlibBytesSource(library, fileIndex))
 
         private val topLevelDeclarationIds: List<Int>
@@ -117,7 +117,7 @@ private class LibraryDeserializer(private val library: KotlinLibrary, supportedS
 
         private fun deserializeDeclaration(proto: ProtoDeclaration, containingClassModality: AbiModality?): AbiDeclaration? =
             when (proto.declaratorCase) {
-                ProtoDeclaration.DeclaratorCase.IR_CLASS -> deserializeClass(proto.irClass)
+                ProtoDeclaration.DeclaratorCase.IR_CLASS -> deserializeClass(proto.irClass, containingClassModality)
                 ProtoDeclaration.DeclaratorCase.IR_CONSTRUCTOR -> deserializeFunction(
                     proto.irConstructor.base,
                     containingClassModality,
@@ -129,8 +129,8 @@ private class LibraryDeserializer(private val library: KotlinLibrary, supportedS
                 else -> null
             }
 
-        private fun deserializeClass(proto: ProtoClass): AbiClass? {
-            if (!getVisibilityStatus(proto.base).isPubliclyVisible)
+        private fun deserializeClass(proto: ProtoClass, containingClassModality: AbiModality?): AbiClass? {
+            if (!getVisibilityStatus(proto.base, containingClassModality).isPubliclyVisible)
                 return null
 
             val flags = ClassFlags.decode(proto.base.flags)
@@ -188,7 +188,7 @@ private class LibraryDeserializer(private val library: KotlinLibrary, supportedS
             parentVisibilityStatus: VisibilityStatus? = null,
             isConstructor: Boolean = false,
         ): AbiFunction? {
-            if (!getVisibilityStatus(proto.base, parentVisibilityStatus).isPubliclyVisible)
+            if (!getVisibilityStatus(proto.base, containingClassModality, parentVisibilityStatus).isPubliclyVisible)
                 return null
 
             val flags = FunctionFlags.decode(proto.base.flags)
@@ -213,7 +213,7 @@ private class LibraryDeserializer(private val library: KotlinLibrary, supportedS
             proto: ProtoProperty,
             containingClassModality: AbiModality?
         ): AbiProperty? {
-            val visibilityStatus = getVisibilityStatus(proto.base)
+            val visibilityStatus = getVisibilityStatus(proto.base, containingClassModality)
             if (!visibilityStatus.isPubliclyVisible)
                 return null
 
@@ -252,16 +252,28 @@ private class LibraryDeserializer(private val library: KotlinLibrary, supportedS
             )
         }
 
-        private fun getVisibilityStatus(proto: ProtoDeclarationBase, parentVisibilityStatus: VisibilityStatus? = null): VisibilityStatus =
-            when (ProtoFlags.VISIBILITY.get(proto.flags.toInt())) {
-                ProtoBuf.Visibility.PUBLIC, ProtoBuf.Visibility.PROTECTED -> VisibilityStatus.PUBLIC
-                ProtoBuf.Visibility.INTERNAL -> when {
-                    parentVisibilityStatus == VisibilityStatus.INTERNAL_PUBLISHED_API -> VisibilityStatus.INTERNAL_PUBLISHED_API
-                    proto.annotationList.any { deserializeIdSignature(it.symbol).isPublishedApi() } -> VisibilityStatus.INTERNAL_PUBLISHED_API
-                    else -> VisibilityStatus.NON_PUBLIC
-                }
+        private fun getVisibilityStatus(
+            proto: ProtoDeclarationBase,
+            containingClassModality: AbiModality?,
+            parentVisibilityStatus: VisibilityStatus? = null
+        ): VisibilityStatus = when (ProtoFlags.VISIBILITY.get(proto.flags.toInt())) {
+            ProtoBuf.Visibility.PUBLIC -> VisibilityStatus.PUBLIC
+
+            ProtoBuf.Visibility.PROTECTED -> {
+                if (containingClassModality == AbiModality.FINAL)
+                    VisibilityStatus.NON_PUBLIC
+                else
+                    VisibilityStatus.PUBLIC
+            }
+
+            ProtoBuf.Visibility.INTERNAL -> when {
+                parentVisibilityStatus == VisibilityStatus.INTERNAL_PUBLISHED_API -> VisibilityStatus.INTERNAL_PUBLISHED_API
+                proto.annotationList.any { deserializeIdSignature(it.symbol).isPublishedApi() } -> VisibilityStatus.INTERNAL_PUBLISHED_API
                 else -> VisibilityStatus.NON_PUBLIC
             }
+
+            else -> VisibilityStatus.NON_PUBLIC
+        }
 
         private fun deserializeModality(modality: Modality, containingClassModality: AbiModality?): AbiModality = when (modality) {
             Modality.FINAL -> AbiModality.FINAL

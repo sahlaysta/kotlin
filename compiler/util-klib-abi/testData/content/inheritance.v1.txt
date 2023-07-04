@@ -223,6 +223,9 @@ open class classifiers.inheritance/OpenClassWithTypeParameters|null[0] {
 final class classifiers.inheritance/OpenClassWithTypeParametersImpl_Int_String|null[0] : classifiers.inheritance/OpenClassWithTypeParameters<kotlin/Int, kotlin/String> {
     constructor classifiers.inheritance/OpenClassWithTypeParametersImpl_Int_String.<init>|-5645683436151566731[0]
 }
+final class classifiers.inheritance/OpenClassWithTypeParametersImpl_NInt_NString|null[0] : classifiers.inheritance/OpenClassWithTypeParameters<kotlin/Int?, kotlin/String?> {
+    constructor classifiers.inheritance/OpenClassWithTypeParametersImpl_NInt_NString.<init>|-5645683436151566731[0]
+}
 final class classifiers.inheritance/OpenClassWithTypeParametersImpl_String_Int|null[0] : classifiers.inheritance/OpenClassWithTypeParameters<kotlin/String, kotlin/Int> {
     constructor classifiers.inheritance/OpenClassWithTypeParametersImpl_String_Int.<init>|-5645683436151566731[0]
 }

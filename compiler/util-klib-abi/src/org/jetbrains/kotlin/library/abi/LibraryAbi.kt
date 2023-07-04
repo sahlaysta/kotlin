@@ -95,7 +95,15 @@ interface AbiFunction : AbiPossiblyTopLevelDeclaration {
     val isInline: Boolean
     val isSuspend: Boolean
 
-    /** Additional value parameter flags that might affect binary compatibility and that should be rendered along with the function itself. */
+    /**
+     * Additional value parameter flags that might affect binary compatibility and that should be rendered
+     * along with the function itself.
+     *
+     * Important: Only regular value parameters are included in [valueParameters]. The extension receiver and
+     * context receivers, which formally are also value parameters, are not included in [valueParameters].
+     * That's because none of the existing flags in [AbiValueParameter] such as [AbiValueParameter.hasDefaultArg]
+     * or [AbiValueParameter.isNoinline] is relevant for extension and context receivers.
+     */
     val valueParameters: List<AbiValueParameter>
 }
 
