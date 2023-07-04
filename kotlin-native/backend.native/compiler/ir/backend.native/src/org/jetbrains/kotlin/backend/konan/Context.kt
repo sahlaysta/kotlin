@@ -38,7 +38,7 @@ internal class NativeMapping : DefaultMapping() {
     data class BridgeKey(val target: IrSimpleFunction, val bridgeDirections: BridgeDirections)
     enum class AtomicFunctionType {
         COMPARE_AND_EXCHANGE, COMPARE_AND_SET, GET_AND_SET, GET_AND_ADD,
-        GET_ARRAY_ELEMENT_VALUE;
+        GET_ARRAY_ELEMENT_VALUE, COMPARE_AND_SET_ARRAY_ELEMENT;
     }
     data class AtomicFunctionKey(val field: IrField, val type: AtomicFunctionType)
 

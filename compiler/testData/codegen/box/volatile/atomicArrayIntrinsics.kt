@@ -10,7 +10,7 @@ import kotlin.native.internal.*
 class AtomicArrayTest {
     private val intArr = intArrayOf(1, 2, 3, 4, 5, 6)
 
-    fun atomicGet(index: Int) = getArrayElement(intArr, index)
+    fun atomicGet(index: Int) = intArr.getArrayElement(index)
 
     fun testAtomicIntArray() {
         val res = atomicGet(1)

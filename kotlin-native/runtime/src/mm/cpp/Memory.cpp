@@ -206,8 +206,16 @@ extern "C" ALWAYS_INLINE RUNTIME_NOTHROW OBJ_GETTER(GetAndSetVolatileHeapRef, Ob
 
 extern "C" ALWAYS_INLINE RUNTIME_NOTHROW int GetAtomicIntArrayElement(ObjHeader** location, KInt index) {
     AssertThreadState(ThreadState::kRunnable);;
-    KInt* arrayElement = IntArrayAddressOfElementAt(reinterpret_cast<ArrayHeader*>(*location), index);
+    KInt* arrayElement = IntArrayAddressOfElementAt((*location)->array(), index);
     auto result = __atomic_load_n(arrayElement, __ATOMIC_SEQ_CST);
+    return result;
+}
+
+extern "C" ALWAYS_INLINE RUNTIME_NOTHROW bool CompareAndExchangeArrayElement(ObjHeader** location, KInt index, KInt expectValue, KInt newValue) {
+    AssertThreadState(ThreadState::kRunnable);;
+    KInt* arrayElement = IntArrayAddressOfElementAt((*location)->array(), index);
+    __atomic_compare_exchange_n(location, &actual, value, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
+    //auto result = __atomic_load_n(arrayElement, __ATOMIC_SEQ_CST);
     return result;
 }
 

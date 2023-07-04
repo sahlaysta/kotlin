@@ -92,5 +92,6 @@ internal class IntrinsicType {
         const val GET_AND_SET                   = "GET_AND_SET"
         const val GET_AND_ADD                   = "GET_AND_ADD"
         const val ATOMIC_GET_ARRAY_ELEMENT      = "ATOMIC_GET_ARRAY_ELEMENT"
+        const val COMPARE_AND_SET_ARRAY_ELEMENT = "COMPARE_AND_SET_ARRAY_ELEMENT"
     }
 }

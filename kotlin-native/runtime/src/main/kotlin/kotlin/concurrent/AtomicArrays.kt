@@ -69,14 +69,14 @@ class AtomicIntegerArray {
 // 1. todo pass IntArray as first arg -> IntrinsicGenerator
 // todo rename to atomicGetArrayElement()
 @TypedIntrinsic(IntrinsicType.ATOMIC_GET_ARRAY_ELEMENT)
-internal external fun getArrayElement(array: IntArray, index: Int): Int
+internal external fun IntArray.getArrayElement(index: Int): Int
 
 //@TypedIntrinsic(IntrinsicType.ATOMIC_SET_ARRAY_ELEMENT)
 // todo rename to atomicSetArrayElement()
 internal fun setArrayElement(array: IntArray, index: Int, value: Int) = array.set(index, value)
 
-//@TypedIntrinsic(IntrinsicType.ATOMIC_GET_ARRAY_ELEMENT)
-//internal external fun compareAndSetArrayElement(array: IntArray, index: Int, expectedValue: Int, newValue: Int): Boolean
+@TypedIntrinsic(IntrinsicType.COMPARE_AND_SET_ARRAY_ELEMENT)
+internal external fun compareAndSetArrayElement(array: IntArray, index: Int, expectedValue: Int, newValue: Int): Boolean
 
 internal fun IntArray.getAndSetArrayElement(index: Int, value: Int): Int = TODO("Not implemented" + index + value)
 

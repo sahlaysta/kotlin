@@ -104,7 +104,8 @@ internal enum class IntrinsicType {
     GET_AND_SET,
     GET_AND_ADD,
     // Atomic arrays
-    ATOMIC_GET_ARRAY_ELEMENT
+    ATOMIC_GET_ARRAY_ELEMENT,
+    COMPARE_AND_SET_ARRAY_ELEMENT
 }
 
 internal enum class ConstantConstructorIntrinsicType {
@@ -264,6 +265,7 @@ internal class IntrinsicGenerator(private val environment: IntrinsicGeneratorEnv
                 IntrinsicType.GET_AND_SET -> emitGetAndSet(callSite, args, resultSlot)
                 IntrinsicType.GET_AND_ADD -> emitGetAndAdd(callSite, args)
                 IntrinsicType.ATOMIC_GET_ARRAY_ELEMENT -> emitAtomicGetArrayElement(callSite, args)
+                IntrinsicType.COMPARE_AND_SET_ARRAY_ELEMENT -> emitCompareAndSetArrayElement(callSite, args)
                 IntrinsicType.GET_CONTINUATION,
                 IntrinsicType.RETURN_IF_SUSPENDED,
                 IntrinsicType.INTEROP_BITS_TO_FLOAT,
@@ -411,7 +413,22 @@ internal class IntrinsicGenerator(private val environment: IntrinsicGeneratorEnv
         val field = context.mapping.functionToVolatileField[callSite.symbol.owner]!!
         val address: LLVMValueRef
         val value: LLVMValueRef
-        require(callSite.dispatchReceiver != null) { "TODO: get the pointer to the array element" }
+        require(callSite.dispatchReceiver != null) { "Static array fields are not supported yet" }
+        require(!field.isStatic)
+        require(args.size == 2)
+        // args[0] -- dispatchReceiver
+        // field -- intArr
+        address = environment.getObjectFieldPointer(args[0], field) // got the address of the array
+        value = args[1] // index
+        return call(llvm.GetAtomicIntArrayElement, listOf(address, value),
+                environment.calculateLifetime(callSite), resultSlot = null)
+    }
+
+    private fun FunctionGenerationContext.emitCompareAndSetArrayElement(callSite: IrCall, args: List<LLVMValueRef>): LLVMValueRef {
+        val field = context.mapping.functionToVolatileField[callSite.symbol.owner]!!
+        val address: LLVMValueRef
+        val value: LLVMValueRef
+        require(callSite.dispatchReceiver != null) { "Static array fields are not supported yet" }
         require(!field.isStatic)
         require(args.size == 2)
         // args[0] -- dispatchReceiver
