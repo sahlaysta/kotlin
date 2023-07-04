@@ -455,6 +455,8 @@ object ImplementationConfigurator : AbstractFirTreeImplementationConfigurator() 
             publicImplementation()
         }
 
+        impl(preResolvedNamedReference)
+
         impl(resolvedErrorReference)
 
         impl(resolvedCallableReference)

@@ -5,6 +5,8 @@
 
 package org.jetbrains.kotlin.fir.resolve.transformers.body.resolve
 
+import org.jetbrains.kotlin.KtFakeSourceElementKind
+import org.jetbrains.kotlin.fakeElement
 import org.jetbrains.kotlin.fir.FirElement
 import org.jetbrains.kotlin.fir.declarations.FirCallableDeclaration
 import org.jetbrains.kotlin.fir.declarations.FirSimpleFunction
@@ -13,6 +15,7 @@ import org.jetbrains.kotlin.fir.expressions.builder.buildArgumentList
 import org.jetbrains.kotlin.fir.expressions.builder.buildArrayOfCall
 import org.jetbrains.kotlin.fir.references.FirResolvedErrorReference
 import org.jetbrains.kotlin.fir.references.FirResolvedNamedReference
+import org.jetbrains.kotlin.fir.references.isError
 import org.jetbrains.kotlin.fir.resolve.calls.FirNamedReferenceWithCandidate
 import org.jetbrains.kotlin.fir.symbols.FirBasedSymbol
 import org.jetbrains.kotlin.fir.types.isArrayType
@@ -24,22 +27,34 @@ import org.jetbrains.kotlin.fir.visitors.FirDefaultTransformer
  * Note that arrayOf() calls only in [FirAnnotation] or the default value of annotation constructor are transformed.
  */
 class FirArrayOfCallTransformer : FirDefaultTransformer<Nothing?>() {
-    private fun toArrayOfCall(functionCall: FirFunctionCall): FirArrayOfCall? {
+    private fun toArrayOfCall(functionCall: FirFunctionCall): FirExpression? {
         if (!functionCall.isArrayOfCall) {
             return null
         }
-        return buildArrayOfCall {
+        val arrayOfCall = buildArrayOfCall {
             source = functionCall.source
             annotations += functionCall.annotations
             // Note that the signature is: arrayOf(vararg element). Hence, unwrapping the original argument list here.
             argumentList = buildArgumentList {
                 if (functionCall.arguments.isNotEmpty()) {
-                    (functionCall.argument as FirVarargArgumentsExpression).arguments.forEach {
-                        arguments += it
+                    functionCall.arguments.flatMapTo(arguments) {
+                        if (it is FirVarargArgumentsExpression) it.arguments else listOf(it)
                     }
                 }
             }
             typeRef = functionCall.typeRef
+        }
+
+        val calleeReference = functionCall.calleeReference
+
+        return if (calleeReference.isError()) {
+            buildErrorExpression(
+                functionCall.source?.fakeElement(KtFakeSourceElementKind.ErrorTypeRef),
+                calleeReference.diagnostic,
+                arrayOfCall
+            )
+        } else {
+            arrayOfCall
         }
     }
 
@@ -80,7 +95,7 @@ class FirArrayOfCallTransformer : FirDefaultTransformer<Nothing?>() {
 
 private fun FirFunctionCall.getOriginalFunction(): FirCallableDeclaration? {
     val symbol: FirBasedSymbol<*>? = when (val reference = calleeReference) {
-        is FirResolvedErrorReference -> null
+        is FirResolvedErrorReference -> reference.resolvedSymbol
         is FirResolvedNamedReference -> reference.resolvedSymbol
         is FirNamedReferenceWithCandidate -> reference.candidateSymbol
         else -> null

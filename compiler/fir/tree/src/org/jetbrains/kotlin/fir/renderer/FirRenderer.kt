@@ -845,6 +845,10 @@ class FirRenderer(
             print("${namedReference.name}#")
         }
 
+        override fun visitPreResolvedNamedReference(preResolvedNamedReference: FirPreResolvedNamedReference) {
+            visitNamedReference(preResolvedNamedReference)
+        }
+
         override fun visitNamedReferenceWithCandidateBase(namedReferenceWithCandidateBase: FirNamedReferenceWithCandidateBase) {
             print("R?C|")
             referencedSymbolRenderer.printReference(namedReferenceWithCandidateBase.candidateSymbol)

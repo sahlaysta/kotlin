@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.fir.resolve.transformers.body.resolve
 
 import org.jetbrains.kotlin.KtFakeSourceElementKind
 import org.jetbrains.kotlin.KtSourceElement
+import org.jetbrains.kotlin.builtins.StandardNames
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.fakeElement
 import org.jetbrains.kotlin.fir.*
@@ -24,12 +25,14 @@ import org.jetbrains.kotlin.fir.extensions.extensionService
 import org.jetbrains.kotlin.fir.references.*
 import org.jetbrains.kotlin.fir.references.builder.buildErrorNamedReference
 import org.jetbrains.kotlin.fir.references.builder.buildExplicitSuperReference
+import org.jetbrains.kotlin.fir.references.builder.buildPreResolvedNamedReference
 import org.jetbrains.kotlin.fir.references.builder.buildSimpleNamedReference
 import org.jetbrains.kotlin.fir.references.impl.FirSimpleNamedReference
 import org.jetbrains.kotlin.fir.resolve.*
 import org.jetbrains.kotlin.fir.resolve.calls.*
 import org.jetbrains.kotlin.fir.resolve.diagnostics.*
 import org.jetbrains.kotlin.fir.resolve.inference.FirStubInferenceSession
+import org.jetbrains.kotlin.fir.resolve.providers.symbolProvider
 import org.jetbrains.kotlin.fir.resolve.substitution.ConeSubstitutor
 import org.jetbrains.kotlin.fir.resolve.transformers.replaceLambdaArgumentInvocationKinds
 import org.jetbrains.kotlin.fir.scopes.impl.isWrappedIntegerOperator
@@ -45,6 +48,7 @@ import org.jetbrains.kotlin.fir.visitors.transformSingle
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.name.SpecialNames
 import org.jetbrains.kotlin.name.StandardClassIds
+import org.jetbrains.kotlin.resolve.ArrayFqNames
 import org.jetbrains.kotlin.resolve.calls.inference.buildAbstractResultingSubstitutor
 import org.jetbrains.kotlin.types.AbstractTypeChecker
 import org.jetbrains.kotlin.types.ConstantValueKind
@@ -408,7 +412,7 @@ open class FirExpressionsResolveTransformer(transformer: FirAbstractBodyResolveT
                 storeTypeFromCallee(functionCall, isLhsOfAssignment = false)
             }
             if (calleeReference is FirNamedReferenceWithCandidate) return functionCall
-            if (calleeReference !is FirSimpleNamedReference) {
+            if (calleeReference !is FirSimpleNamedReference && calleeReference !is FirPreResolvedNamedReference) {
                 // The callee reference can be resolved as an error very early, e.g., `super` as a callee during raw FIR creation.
                 // We still need to visit/transform other parts, e.g., call arguments, to check if any other errors are there.
                 if (calleeReference !is FirResolvedNamedReference) {
@@ -1635,16 +1639,42 @@ open class FirExpressionsResolveTransformer(transformer: FirAbstractBodyResolveT
         )
     }
 
+    private val arrayOfSymbol by lazy(LazyThreadSafetyMode.NONE) {
+        session.symbolProvider
+            .getTopLevelFunctionSymbols(StandardNames.BUILT_INS_PACKAGE_FQ_NAME, ArrayFqNames.ARRAY_OF_FUNCTION)
+            .first()
+    }
+
     override fun transformArrayOfCall(arrayOfCall: FirArrayOfCall, data: ResolutionMode): FirStatement =
         whileAnalysing(session, arrayOfCall) {
             if (data is ResolutionMode.ContextDependent) {
                 arrayOfCall.transformChildren(transformer, data)
                 return arrayOfCall
             }
-            val syntheticIdCall = components.syntheticCallGenerator.generateSyntheticCallForArrayOfCall(arrayOfCall, resolutionContext)
-            arrayOfCall.transformChildren(transformer, ResolutionMode.ContextDependent)
-            callCompleter.completeCall(syntheticIdCall, data)
-            return arrayOfCall
+
+            if (data is ResolutionMode.WithExpectedType && !data.expectedTypeRef.coneType.isPrimitiveOrUnsignedArray) {
+                val call = buildFunctionCall {
+                    argumentList = arrayOfCall.argumentList
+                    calleeReference = buildPreResolvedNamedReference {
+                        symbol = arrayOfSymbol
+                        name = ArrayFqNames.ARRAY_OF_FUNCTION
+                    }
+                    source = arrayOfCall.source
+                }
+
+                val transformed = transformFunctionCall(call, data)
+
+                return if (transformed is FirFunctionCall) {
+                    arrayOfCallTransformer.transformFunctionCall(transformed, null)
+                } else {
+                    transformed
+                }
+            } else {
+                val syntheticIdCall = components.syntheticCallGenerator.generateSyntheticCallForArrayOfCall(arrayOfCall, resolutionContext)
+                arrayOfCall.transformChildren(transformer, ResolutionMode.ContextDependent)
+                callCompleter.completeCall(syntheticIdCall, data)
+                return arrayOfCall
+            }
         }
 
     override fun transformStringConcatenationCall(

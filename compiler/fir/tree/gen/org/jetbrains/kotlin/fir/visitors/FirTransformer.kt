@@ -139,6 +139,7 @@ import org.jetbrains.kotlin.fir.references.FirSuperReference
 import org.jetbrains.kotlin.fir.references.FirThisReference
 import org.jetbrains.kotlin.fir.references.FirControlFlowGraphReference
 import org.jetbrains.kotlin.fir.references.FirResolvedNamedReference
+import org.jetbrains.kotlin.fir.references.FirPreResolvedNamedReference
 import org.jetbrains.kotlin.fir.references.FirResolvedErrorReference
 import org.jetbrains.kotlin.fir.references.FirDelegateFieldReference
 import org.jetbrains.kotlin.fir.references.FirBackingFieldReference
@@ -697,6 +698,10 @@ abstract class FirTransformer<in D> : FirVisitor<FirElement, D>() {
 
     open fun transformResolvedNamedReference(resolvedNamedReference: FirResolvedNamedReference, data: D): FirReference {
         return transformElement(resolvedNamedReference, data)
+    }
+
+    open fun transformPreResolvedNamedReference(preResolvedNamedReference: FirPreResolvedNamedReference, data: D): FirReference {
+        return transformElement(preResolvedNamedReference, data)
     }
 
     open fun transformResolvedErrorReference(resolvedErrorReference: FirResolvedErrorReference, data: D): FirReference {
@@ -1305,6 +1310,10 @@ abstract class FirTransformer<in D> : FirVisitor<FirElement, D>() {
 
     final override fun visitResolvedNamedReference(resolvedNamedReference: FirResolvedNamedReference, data: D): FirReference {
         return transformResolvedNamedReference(resolvedNamedReference, data)
+    }
+
+    final override fun visitPreResolvedNamedReference(preResolvedNamedReference: FirPreResolvedNamedReference, data: D): FirReference {
+        return transformPreResolvedNamedReference(preResolvedNamedReference, data)
     }
 
     final override fun visitResolvedErrorReference(resolvedErrorReference: FirResolvedErrorReference, data: D): FirReference {

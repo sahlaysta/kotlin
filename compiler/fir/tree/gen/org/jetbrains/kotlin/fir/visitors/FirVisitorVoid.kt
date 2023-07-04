@@ -139,6 +139,7 @@ import org.jetbrains.kotlin.fir.references.FirSuperReference
 import org.jetbrains.kotlin.fir.references.FirThisReference
 import org.jetbrains.kotlin.fir.references.FirControlFlowGraphReference
 import org.jetbrains.kotlin.fir.references.FirResolvedNamedReference
+import org.jetbrains.kotlin.fir.references.FirPreResolvedNamedReference
 import org.jetbrains.kotlin.fir.references.FirResolvedErrorReference
 import org.jetbrains.kotlin.fir.references.FirDelegateFieldReference
 import org.jetbrains.kotlin.fir.references.FirBackingFieldReference
@@ -696,6 +697,10 @@ abstract class FirVisitorVoid : FirVisitor<Unit, Nothing?>() {
 
     open fun visitResolvedNamedReference(resolvedNamedReference: FirResolvedNamedReference) {
         visitElement(resolvedNamedReference)
+    }
+
+    open fun visitPreResolvedNamedReference(preResolvedNamedReference: FirPreResolvedNamedReference) {
+        visitElement(preResolvedNamedReference)
     }
 
     open fun visitResolvedErrorReference(resolvedErrorReference: FirResolvedErrorReference) {
@@ -1304,6 +1309,10 @@ abstract class FirVisitorVoid : FirVisitor<Unit, Nothing?>() {
 
     final override fun visitResolvedNamedReference(resolvedNamedReference: FirResolvedNamedReference, data: Nothing?) {
         visitResolvedNamedReference(resolvedNamedReference)
+    }
+
+    final override fun visitPreResolvedNamedReference(preResolvedNamedReference: FirPreResolvedNamedReference, data: Nothing?) {
+        visitPreResolvedNamedReference(preResolvedNamedReference)
     }
 
     final override fun visitResolvedErrorReference(resolvedErrorReference: FirResolvedErrorReference, data: Nothing?) {

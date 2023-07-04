@@ -665,6 +665,10 @@ object NodeConfigurator : AbstractFieldConfigurator<FirTreeBuilder>(FirTreeBuild
             +field("resolvedSymbol", firBasedSymbolType, "*")
         }
 
+        preResolvedNamedReference.configure {
+            +field("symbol", firBasedSymbolType, "*")
+        }
+
         resolvedCallableReference.configure {
             +fieldList("inferredTypeArguments", coneKotlinTypeType)
             +field("mappedArguments", callableReferenceMappedArgumentsType)

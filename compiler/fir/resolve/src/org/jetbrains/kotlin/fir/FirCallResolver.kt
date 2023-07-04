@@ -37,6 +37,7 @@ import org.jetbrains.kotlin.fir.resolve.transformers.body.resolve.FirExpressions
 import org.jetbrains.kotlin.fir.resolve.transformers.body.resolve.resultType
 import org.jetbrains.kotlin.fir.scopes.unsubstitutedScope
 import org.jetbrains.kotlin.fir.symbols.ConeClassLikeLookupTag
+import org.jetbrains.kotlin.fir.symbols.FirBasedSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.*
 import org.jetbrains.kotlin.fir.types.*
 import org.jetbrains.kotlin.fir.types.builder.buildResolvedTypeRef
@@ -69,8 +70,14 @@ class FirCallResolver(
         session.callConflictResolverFactory.create(TypeSpecificityComparator.NONE, session.inferenceComponents, components)
 
     fun resolveCallAndSelectCandidate(functionCall: FirFunctionCall): FirFunctionCall {
-        val name = functionCall.calleeReference.name
-        val result = collectCandidates(functionCall, name, origin = functionCall.origin)
+        val calleeReference = functionCall.calleeReference
+        val name = calleeReference.name
+        val result = collectCandidates(
+            functionCall,
+            name,
+            origin = functionCall.origin,
+            preResolvedSymbol = (calleeReference as? FirPreResolvedNamedReference)?.symbol
+        )
 
         var forceCandidates: Collection<Candidate>? = null
         if (result.candidates.isEmpty()) {
@@ -81,7 +88,7 @@ class FirCallResolver(
         }
 
         val nameReference = createResolvedNamedReference(
-            functionCall.calleeReference,
+            calleeReference,
             name,
             result.info,
             result.candidates,
@@ -151,6 +158,7 @@ class FirCallResolver(
         resolutionContext: ResolutionContext = transformer.resolutionContext,
         collector: CandidateCollector? = null,
         callSite: FirElement = qualifiedAccess,
+        preResolvedSymbol: FirBasedSymbol<*>? = null,
     ): ResolutionResult {
         val explicitReceiver = qualifiedAccess.explicitReceiver
         val argumentList = (qualifiedAccess as? FirFunctionCall)?.argumentList ?: FirEmptyArgumentList
@@ -169,13 +177,18 @@ class FirCallResolver(
             containingDeclarations,
             origin = origin
         )
-        towerResolver.reset()
-        val result = towerResolver.runResolver(info, resolutionContext, collector)
 
-        var (reducedCandidates, newApplicability) = reduceCandidates(result, explicitReceiver, resolutionContext)
-        reducedCandidates = overloadByLambdaReturnTypeResolver.reduceCandidates(qualifiedAccess, reducedCandidates, reducedCandidates)
+        return if (preResolvedSymbol != null) {
+            createResolutionResultForSymbol(info, preResolvedSymbol)
+        } else {
+            towerResolver.reset()
+            val result = towerResolver.runResolver(info, resolutionContext, collector)
 
-        return ResolutionResult(info, newApplicability ?: result.currentApplicability, reducedCandidates)
+            var (reducedCandidates, newApplicability) = reduceCandidates(result, explicitReceiver, resolutionContext)
+            reducedCandidates = overloadByLambdaReturnTypeResolver.reduceCandidates(qualifiedAccess, reducedCandidates, reducedCandidates)
+
+            ResolutionResult(info, newApplicability ?: result.currentApplicability, reducedCandidates)
+        }
     }
 
     /**
@@ -577,11 +590,14 @@ class FirCallResolver(
                 constructorSymbol = it
             }
         }
-        if (constructorSymbol == null) return null
+        return constructorSymbol?.let { createResolutionResultForSymbol(callInfo, it) }
+    }
+
+    private fun createResolutionResultForSymbol(callInfo: CallInfo, symbol: FirBasedSymbol<*>): ResolutionResult {
         val candidateFactory = CandidateFactory(transformer.resolutionContext, callInfo)
         val candidate = candidateFactory.createCandidate(
             callInfo,
-            constructorSymbol!!,
+            symbol,
             ExplicitReceiverKind.NO_EXPLICIT_RECEIVER,
             scope = null
         )
