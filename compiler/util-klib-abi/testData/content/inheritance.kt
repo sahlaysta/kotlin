@@ -161,6 +161,7 @@ class OpenClassWithTypeParametersImpl_String_Int : OpenClassWithTypeParameters<S
 class OpenClassWithTypeParametersImpl_T1_T2<T1, T2> : OpenClassWithTypeParameters<T1, T2>()
 class OpenClassWithTypeParametersImpl_T2_T1<T2, T1> : OpenClassWithTypeParameters<T1, T2>()
 class OpenClassWithTypeParametersImpl_T1_Number_T2_CS<T1 : Number, T2 : CharSequence> : OpenClassWithTypeParameters<T1, T2>()
+class OpenClassWithTypeParametersImpl_DNNT1_DNNT2<T1, T2> : OpenClassWithTypeParameters<T1 & Any, T2 & Any>()
 
 public interface PublicInterface {
     public fun publicDefaultFunInPublicInterface(): String = ""

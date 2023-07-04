@@ -220,6 +220,9 @@ final class classifiers.inheritance/OpenClassImpl4|null[0] : classifiers.inherit
 open class classifiers.inheritance/OpenClassWithTypeParameters|null[0] {
     constructor classifiers.inheritance/OpenClassWithTypeParameters.<init>|-5645683436151566731[0]
 }
+final class classifiers.inheritance/OpenClassWithTypeParametersImpl_DNNT1_DNNT2|null[0] : classifiers.inheritance/OpenClassWithTypeParameters<{classifiers.inheritance/OpenClassWithTypeParametersImpl_DNNT1_DNNT2#0 & kotlin/Any}, {classifiers.inheritance/OpenClassWithTypeParametersImpl_DNNT1_DNNT2#1 & kotlin/Any}> {
+    constructor classifiers.inheritance/OpenClassWithTypeParametersImpl_DNNT1_DNNT2.<init>|-5645683436151566731[0]
+}
 final class classifiers.inheritance/OpenClassWithTypeParametersImpl_Int_String|null[0] : classifiers.inheritance/OpenClassWithTypeParameters<kotlin/Int, kotlin/String> {
     constructor classifiers.inheritance/OpenClassWithTypeParametersImpl_Int_String.<init>|-5645683436151566731[0]
 }
