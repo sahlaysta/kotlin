@@ -268,7 +268,7 @@ class IrModuleToJsTransformer(
                     add(fileExports.toJsIrModule(programFragment))
 
                     if (fileExports.exports.isNotEmpty()) {
-                        add(fileExports.toJsIrModuleForExport(module,exportProgramFragment))
+                        add(fileExports.toJsIrModuleForExport(module, exportProgramFragment))
                         hasFileWithJsExportedDeclaration = true
                     }
                 }
@@ -314,22 +314,21 @@ class IrModuleToJsTransformer(
     private fun IrFileExports.generateProgramFragmentForExport(
         mode: TranslationMode,
         nameScope: NameTable<IrDeclaration>
-    ): JsIrProgramFragment {
+    ): JsIrProgramFragment? {
+        if (exports.isEmpty()) return null
+
         val globalNames = NameTable<String>(nameScope)
         val nameGenerator = JsNameLinkingNamer(backendContext, mode.minimizedMemberNames, isEsModules)
         val internalModuleName = ReservedJsNames.makeInternalModuleName().takeIf { !isEsModules }
         val staticContext = JsStaticContext(backendContext, nameGenerator, nameScope, mode)
 
-        return JsIrProgramFragment("", file.packageFqName.asString()).apply {
-            dts = tsDeclarations
-            exports.statements += ExportModelToJsStatements(staticContext, backendContext.es6mode, { globalNames.declareFreshName(it, it) })
-                .generateModuleExport(
-                    ExportedModule(mainModuleName, moduleKind, this@generateProgramFragmentForExport.exports),
-                    internalModuleName,
-                    isEsModules
-                )
-            computeAndSaveNameBindings(emptySet(), nameGenerator)
-        }
+        return JsIrProgramFragment("", file.packageFqName.asString())
+            .also {
+                it.dts = tsDeclarations
+                it.exports.statements += ExportModelToJsStatements(staticContext, backendContext.es6mode, { globalNames.declareFreshName(it, it) })
+                    .generateModuleExport(ExportedModule(mainModuleName, moduleKind, exports), internalModuleName, isEsModules)
+                it.computeAndSaveNameBindings(emptySet(), nameGenerator)
+            }
     }
 
     private fun generateProgramFragment(fileExports: IrFileExports, mode: TranslationMode): List<JsIrProgramFragment> {
@@ -413,7 +412,7 @@ class IrModuleToJsTransformer(
             optimizeFragmentByJsAst(result)
         }
 
-        return listOf(result, exportFragment)
+        return listOfNotNull(result, exportFragment)
     }
 
     private fun Set<IrDeclaration>.computeTag(declaration: IrDeclaration): String? {

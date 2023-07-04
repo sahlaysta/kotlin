@@ -27,12 +27,16 @@ abstract class CompilationOutputs {
 
     abstract val jsProgram: JsProgram?
 
+    open val isWritable: Boolean = true
+
     abstract fun writeJsCode(outputJsFile: File, outputJsMapFile: File)
 
     fun writeAll(outputDir: File, outputName: String, genDTS: Boolean, moduleName: String, moduleKind: ModuleKind): Collection<File> {
         val writtenFiles = LinkedHashSet<File>(2 * (dependencies.size + 1) + 1)
 
         fun File.writeAsJsFile(out: CompilationOutputs) {
+            if (!out.isWritable) return
+
             parentFile.mkdirs()
             val jsMapFile = mapForJsFile
             val jsFile = normalizedAbsoluteFile
@@ -49,7 +53,7 @@ abstract class CompilationOutputs {
         val outputJsFile = outputDir.resolve("$outputName${moduleKind.extension}")
         outputJsFile.writeAsJsFile(this)
 
-        if (genDTS) {
+        if (genDTS && isWritable) {
             val dtsFile = outputJsFile.dtsForJsFile
             dtsFile.writeText(getFullTsDefinition(moduleName, moduleKind))
             writtenFiles += dtsFile
@@ -100,11 +104,20 @@ class CompilationOutputsBuilt(
         outputJsFile.writeText(rawJsCode + sourceMappingUrl)
     }
 
-    fun writeJsCodeIntoModuleCache(outputJsFile: File, outputJsMapFile: File): CompilationOutputsBuiltForCache {
-        sourceMap?.let { outputJsMapFile.writeText(it) }
+    fun writeJsCodeIntoModuleCache(outputJsFile: File, outputJsMapFile: File?): CompilationOutputsBuiltForCache {
+        sourceMap?.let { outputJsMapFile?.writeText(it) }
         outputJsFile.writeText(rawJsCode)
         return CompilationOutputsBuiltForCache(outputJsFile, outputJsMapFile, this)
     }
+}
+
+// TODO: Find a way to not create this mediator output
+class NonWritableCompilationOutput : CompilationOutputs() {
+    override val tsDefinitions: TypeScriptFragment? = null
+    override val jsProgram: JsProgram? = null
+    override val isWritable: Boolean = false
+
+    override fun writeJsCode(outputJsFile: File, outputJsMapFile: File) {}
 }
 
 class CompilationOutputsCached(
@@ -142,7 +155,7 @@ class CompilationOutputsCached(
 
 class CompilationOutputsBuiltForCache(
     private val jsCodeFile: File,
-    private val sourceMapFile: File,
+    private val sourceMapFile: File?,
     private val outputBuilt: CompilationOutputsBuilt
 ) : CompilationOutputs() {
 
@@ -160,6 +173,6 @@ class CompilationOutputsBuiltForCache(
         outputBuilt.writeJsCode(outputJsFile, outputJsMapFile)
 
         jsCodeFile.copyModificationTimeFrom(outputJsFile)
-        sourceMapFile.copyModificationTimeFrom(outputJsMapFile)
+        sourceMapFile?.copyModificationTimeFrom(outputJsMapFile)
     }
 }

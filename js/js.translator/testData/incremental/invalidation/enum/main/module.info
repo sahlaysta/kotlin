@@ -2,12 +2,12 @@ STEP 0:
     modifications:
         U : testEnumEntries.0.kt -> testEnumEntries.kt
     dependencies: lib1
-    added file: box.kt, testEnumEntries.kt, testEnumValues.kt
+    added file: m.kt, testEnumEntries.kt, testEnumValues.kt
 STEP 1:
     dependencies: lib1
 STEP 2:
     dependencies: lib1
-    added file: box.kt, testEnumEntries.kt, testEnumValues.kt
+    added file: m.kt, testEnumEntries.kt, testEnumValues.kt
 STEP 3:
     modifications:
         U : testEnumEntries.3.kt -> testEnumEntries.kt

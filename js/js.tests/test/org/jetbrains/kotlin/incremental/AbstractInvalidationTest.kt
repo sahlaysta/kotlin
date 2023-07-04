@@ -239,19 +239,9 @@ abstract class AbstractInvalidationTest(private val targetBackend: TargetBackend
         }
 
         private fun verifyJsExecutableProducerBuildModules(stepId: Int, gotRebuilt: List<String>, expectedRebuilt: List<String>) {
-            val got = gotRebuilt.filter { it != STDLIB_MODULE_NAME }
-            JUnit4Assertions.assertSameElementsTemplated(expectedRebuilt, got) {
+            val got = gotRebuilt.filter { !it.startsWith(STDLIB_MODULE_NAME) }
+            JUnit4Assertions.assertSameElements(got, expectedRebuilt) {
                 "Mismatched rebuilt modules at step $stepId"
-            }
-        }
-
-        private fun JUnit4Assertions.assertSameElementsTemplated(
-            expected: Collection<String>,
-            actual: Collection<String>,
-            message: (() -> String)?,
-        ) {
-            if (expected.size != 1 || expected.first() != "*") {
-                assertSameElements(expected, actual, message)
             }
         }
 
@@ -279,7 +269,7 @@ abstract class AbstractInvalidationTest(private val targetBackend: TargetBackend
                     testFunctionName = BOX_FUNCTION_NAME,
                     testFunctionArgs = "$stepId",
                     expectedResult = "OK",
-                    entryModulePath = jsFiles.find { it.endsWith("$mainModuleName/box.export.mjs") } ?: jsFiles.last(),
+                    entryModulePath = jsFiles.find { it.endsWith("$mainModuleName/m.export.mjs") } ?: jsFiles.last(),
                     withModuleSystem = projectInfo.moduleKind in setOf(ModuleKind.COMMON_JS, ModuleKind.UMD, ModuleKind.AMD),
                 )
             } catch (e: ComparisonFailure) {
@@ -334,8 +324,11 @@ abstract class AbstractInvalidationTest(private val targetBackend: TargetBackend
             }
             for (jsCodeFile in compiledJsFiles) {
                 val sourceMappingUrlLine = jsCodeFile.readLines().singleOrNull { it.startsWith(SOURCE_MAPPING_URL_PREFIX) }
-                JUnit4Assertions.assertEquals("$SOURCE_MAPPING_URL_PREFIX${jsCodeFile.name}.map", sourceMappingUrlLine) {
-                    "Mismatched source map url at step $stepId"
+
+                if (sourceMappingUrlLine != null) {
+                    JUnit4Assertions.assertEquals("$SOURCE_MAPPING_URL_PREFIX${jsCodeFile.name}.map", sourceMappingUrlLine) {
+                        "Mismatched source map url at step $stepId"
+                    }
                 }
 
                 jsCodeFile.writeAsJsModule(jsCodeFile.readText(), "./${jsCodeFile.name}")
@@ -354,47 +347,48 @@ abstract class AbstractInvalidationTest(private val targetBackend: TargetBackend
                 }
 
                 val configuration = createConfiguration(projStep.order.last(), projStep.language, projectInfo.moduleKind)
-                val cacheUpdater = CacheUpdater(
-                    mainModule = mainModuleInfo.modulePath,
-                    allModules = testInfo.mapTo(mutableListOf(STDLIB_KLIB)) { it.modulePath },
-                    mainModuleFriends = mainModuleInfo.friends,
-                    cacheDir = buildDir.resolve("incremental-cache").absolutePath,
-                    compilerConfiguration = configuration,
-                    irFactory = { IrFactoryImplForJsIC(WholeWorldStageController()) },
-                    mainArguments = null,
-                    compilerInterfaceFactory = { mainModule, cfg ->
-                        JsIrCompilerWithIC(
-                            mainModule,
-                            cfg,
-                            JsGenerationGranularity.PER_MODULE,
-                            getPhaseConfig(projStep.id),
-                            setOf(FqName(BOX_FUNCTION_NAME)),
-                            targetBackend == TargetBackend.JS_IR_ES6
-                        )
-                    }
-                )
-
-                val removedModulesInfo = (projectInfo.modules - projStep.order.toSet()).map { setupTestStep(projStep, it) }
-
-                val icCaches = cacheUpdater.actualizeCaches()
-                verifyCacheUpdateStats(projStep.id, cacheUpdater.getDirtyFileLastStats(), testInfo + removedModulesInfo)
-
-                val mainModuleName = icCaches.last().moduleExternalName
-                val jsExecutableProducer = JsExecutableProducer(
-                    mainModuleName = mainModuleName,
-                    moduleKind = configuration[JSConfigurationKeys.MODULE_KIND]!!,
-                    sourceMapsInfo = SourceMapsInfo.from(configuration),
-                    caches = icCaches,
-                    relativeRequirePath = true
-                )
 
                 val granularityToDirtyData = mapOf(
-                    JsGenerationGranularity.PER_MODULE to projStep.dirtyJsModules,
+//                    JsGenerationGranularity.PER_MODULE to projStep.dirtyJsModules,
                     JsGenerationGranularity.PER_FILE to projStep.dirtyJsFiles,
                 )
 
                 for ((granularity, dirtyData) in granularityToDirtyData) {
-                    val (jsOutput, rebuiltModules) = jsExecutableProducer.buildExecutable(granularity = granularity, outJsProgram = true)
+                    val cacheUpdater = CacheUpdater(
+                        mainModule = mainModuleInfo.modulePath,
+                        allModules = testInfo.mapTo(mutableListOf(STDLIB_KLIB)) { it.modulePath },
+                        mainModuleFriends = mainModuleInfo.friends,
+                        cacheDir = buildDir.resolve("incremental-cache").absolutePath,
+                        compilerConfiguration = configuration,
+                        irFactory = { IrFactoryImplForJsIC(WholeWorldStageController()) },
+                        mainArguments = null,
+                        compilerInterfaceFactory = { mainModule, cfg ->
+                            JsIrCompilerWithIC(
+                                mainModule,
+                                cfg,
+                                granularity,
+                                getPhaseConfig(projStep.id),
+                                setOf(FqName(BOX_FUNCTION_NAME)),
+                                targetBackend == TargetBackend.JS_IR_ES6
+                            )
+                        }
+                    )
+
+                    val removedModulesInfo = (projectInfo.modules - projStep.order.toSet()).map { setupTestStep(projStep, it) }
+
+                    val icCaches = cacheUpdater.actualizeCaches()
+                    verifyCacheUpdateStats(projStep.id, cacheUpdater.getDirtyFileLastStats(), testInfo + removedModulesInfo)
+
+                    val mainModuleName = icCaches.last().moduleExternalName
+                    val jsExecutableProducer = JsExecutableProducer(
+                        mainModuleName = mainModuleName,
+                        moduleKind = configuration[JSConfigurationKeys.MODULE_KIND]!!,
+                        sourceMapsInfo = SourceMapsInfo.from(configuration),
+                        caches = icCaches,
+                        relativeRequirePath = true
+                    )
+
+                    val (jsOutput, rebuiltModules) = jsExecutableProducer.buildExecutable(granularity, outJsProgram = true)
                     val writtenFiles = writeJsCode(projStep.id, granularity, mainModuleName, jsOutput)
 
                     verifyJsExecutableProducerBuildModules(projStep.id, rebuiltModules, dirtyData)

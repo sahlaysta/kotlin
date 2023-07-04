@@ -93,14 +93,13 @@ class JsExecutableProducer(
             return jsMultiArtifactCache.commitCompiledJsCode(this, compiledModule)
         }
 
-        val cachedMainModule = cachedProgram.last()
-        val mainModule = cachedMainModule.compileModule(mainModuleName, true)
-
-        val cachedOtherModules = cachedProgram.dropLast(1)
-        mainModule.dependencies = cachedOtherModules.map {
-            it.jsIrHeader.externalModuleName to it.compileModule(it.jsIrHeader.externalModuleName, false)
+        val mainModuleCompilationOutput = NonWritableCompilationOutput().apply {
+            dependencies = cachedProgram.map {
+                it.jsIrHeader.externalModuleName to it.compileModule(it.jsIrHeader.externalModuleName, false)
+            }
         }
+
         stopwatch.stop()
-        return BuildResult(mainModule, rebuildModules)
+        return BuildResult(mainModuleCompilationOutput, rebuildModules)
     }
 }
