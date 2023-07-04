@@ -18,6 +18,7 @@ package org.jetbrains.kotlin.resolve.checkers
 
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.psi.PsiElement
+import org.jetbrains.kotlin.builtins.StandardNames
 import org.jetbrains.kotlin.config.AnalysisFlags
 import org.jetbrains.kotlin.config.LanguageFeature
 import org.jetbrains.kotlin.descriptors.*
@@ -64,6 +65,7 @@ class ExpectedActualDeclarationChecker(
                 declaration, descriptor, context.trace,
                 checkActualModifier, context.expectActualTracker
             )
+            checkOptInAnnotation(declaration, descriptor, context.trace)
         }
         if (descriptor.isActualOrSomeContainerIsActual()) {
             val allDependsOnModules = moduleStructureOracle.findAllDependsOnPaths(descriptor.module).flatMap { it.nodes }.toHashSet()
@@ -74,6 +76,7 @@ class ExpectedActualDeclarationChecker(
                 context.trace,
                 moduleVisibilityFilter = { it in allDependsOnModules }
             )
+            checkOptInAnnotation(declaration, descriptor, context.trace)
         }
     }
 
@@ -424,6 +427,13 @@ class ExpectedActualDeclarationChecker(
         }
 
         return null
+    }
+
+    private fun checkOptInAnnotation(element: KtNamedDeclaration, descriptor: MemberDescriptor, trace: BindingTrace) {
+        if (descriptor !is ClassDescriptor || descriptor.kind != ClassKind.ANNOTATION_CLASS) return
+        if (descriptor.annotations.hasAnnotation(OptInNames.REQUIRES_OPT_IN_FQ_NAME)) {
+            trace.report(Errors.EXPECT_ACTUAL_OPT_IN_ANNOTATION.on(element))
+        }
     }
 
     companion object {

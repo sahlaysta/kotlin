@@ -30,6 +30,7 @@ import org.jetbrains.kotlin.fir.symbols.SymbolInternals
 import org.jetbrains.kotlin.fir.symbols.impl.*
 import org.jetbrains.kotlin.fir.types.coneType
 import org.jetbrains.kotlin.fir.types.toSymbol
+import org.jetbrains.kotlin.resolve.checkers.OptInNames
 import org.jetbrains.kotlin.resolve.multiplatform.ExpectActualCompatibility
 import org.jetbrains.kotlin.resolve.multiplatform.ExpectActualCompatibility.*
 import org.jetbrains.kotlin.utils.addToStdlib.firstIsInstanceOrNull
@@ -52,9 +53,11 @@ object FirExpectActualDeclarationChecker : FirBasicDeclarationChecker() {
         }
         if (declaration.isExpect) {
             checkExpectDeclarationModifiers(declaration, context, reporter)
+            checkOptInAnnotation(declaration, context, reporter)
         }
         if (declaration.isActual) {
             checkActualDeclarationHasExpected(declaration, context, reporter)
+            checkOptInAnnotation(declaration, context, reporter)
         }
     }
 
@@ -311,6 +314,13 @@ object FirExpectActualDeclarationChecker : FirBasicDeclarationChecker() {
 //            else -> true
 //        }
         return true
+    }
+
+    private fun checkOptInAnnotation(declaration: FirMemberDeclaration, context: CheckerContext, reporter: DiagnosticReporter) {
+        if (declaration !is FirClass || declaration.classKind != ClassKind.ANNOTATION_CLASS) return
+        if (declaration.hasAnnotation(OptInNames.REQUIRES_OPT_IN_CLASS_ID, context.session)) {
+            reporter.reportOn(declaration.source, FirErrors.EXPECT_ACTUAL_OPT_IN_ANNOTATION, context)
+        }
     }
 }
 
