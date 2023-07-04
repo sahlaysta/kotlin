@@ -488,6 +488,9 @@ internal class CodegenLlvmHelpers(private val generationState: NativeGenerationS
     val CompareAndSwapVolatileHeapRef by lazyRtFunction
     val GetAndSetVolatileHeapRef by lazyRtFunction
 
+    // ARRAYS
+    val GetAtomicIntArrayElement by lazyRtFunction
+
     val tlsMode by lazy {
         when (target) {
             KonanTarget.WASM32,

@@ -20,6 +20,7 @@ import org.jetbrains.kotlin.ir.builders.declarations.addValueParameter
 import org.jetbrains.kotlin.ir.builders.declarations.buildFun
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.expressions.*
+import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
 import org.jetbrains.kotlin.ir.symbols.IrFieldSymbol
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classFqName
@@ -102,6 +103,12 @@ internal class VolatileFieldsLowering(val context: Context) : FileLoweringPass {
             buildIntrinsicFunction(irField, intrinsicType) {
                 // @TypedIntrinsic(IntrinsicType.ATOMIC_GET_ARRAY_ELEMENT) fun <atomicGetArrayElement-arr>()
                 returnType = irBuiltins.intType // TODO: map array type to the primitive type, only Ints are supported for now
+                addValueParameter {
+                    startOffset = irField.startOffset
+                    endOffset = irField.endOffset
+                    name = Name.identifier("index") // TODO: just index or also the array field
+                    type = irBuiltins.intType
+                }
             }
 
     private fun buildSetArrayElementFunction(irField: IrField, intrinsicType: IntrinsicType) =
@@ -159,37 +166,37 @@ internal class VolatileFieldsLowering(val context: Context) : FileLoweringPass {
             override fun visitClass(declaration: IrClass): IrStatement {
                 declaration.transformChildrenVoid()
                 addIntrinsicsForVolatileProperties(declaration.declarations)
-                addIntrinsicsForAtomicArrays(declaration.declarations)
+                //addIntrinsicsForAtomicArrays(declaration.declarations)
                 return declaration
             }
 
             override fun visitFile(declaration: IrFile): IrFile {
                 declaration.transformChildrenVoid()
                 addIntrinsicsForVolatileProperties(declaration.declarations)
-                addIntrinsicsForAtomicArrays(declaration.declarations)
+                //addIntrinsicsForAtomicArrays(declaration.declarations)
                 return declaration
             }
 
-            private fun addIntrinsicsForAtomicArrays(declarations: MutableList<IrDeclaration>) {
-                val generatedIntrinsics = mutableListOf<IrDeclaration>()
-                declarations.forEach {
-                    // for atomic array properties generate IR of intrinsics:
-                    // val intArr = AtomicIntegerArray(10)
-                    // <getArrayElement-intArr>
-                    // <setArrayElement-intArr>
-                    // <compareAndSetArrayElement-ilatilntArr>
-                    if (it is IrProperty && it.backingField?.type?.classFqName?.asString()?.contains("AtomicIntegerArray") == true) { // todo: more reliable check of the field type
-                        val field = it.backingField!!
-                        generatedIntrinsics.addAll(
-                                listOf(
-                                        getArrayElementFunction(field)
-                                        //setArrayElementFunction(field)
-                                )
-                        )
-                    }
-                }
-                declarations.addAll(generatedIntrinsics)
-            }
+//            private fun addIntrinsicsForAtomicArrays(declarations: MutableList<IrDeclaration>) {
+//                val generatedIntrinsics = mutableListOf<IrDeclaration>()
+//                declarations.forEach {
+//                    // for atomic array properties generate IR of intrinsics:
+//                    // val intArr = AtomicIntegerArray(10)
+//                    // <getArrayElement-intArr>
+//                    // <setArrayElement-intArr>
+//                    // <compareAndSetArrayElement-ilatilntArr>
+//                    if (it is IrProperty && it.backingField?.type?.classFqName?.asString()?.contains("AtomicIntegerArray") == true) { // todo: more reliable check of the field type
+//                        val field = it.backingField!!
+//                        generatedIntrinsics.addAll(
+//                                listOf(
+//                                        getArrayElementFunction(field)
+//                                        //setArrayElementFunction(field)
+//                                )
+//                        )
+//                    }
+//                }
+//                declarations.addAll(generatedIntrinsics)
+//            }
 
             private fun addIntrinsicsForVolatileProperties(declarations: MutableList<IrDeclaration>) {
                 declarations.transformFlat {
@@ -296,12 +303,15 @@ internal class VolatileFieldsLowering(val context: Context) : FileLoweringPass {
 
             private fun generateAtomicArrayIntrinsicCall(expression: IrCall, intrinsicType: IntrinsicType): IrExpression {
                 builder.at(expression)
-                val getArray = expression.getValueArgument(0) as IrCall // <get-arr>()
+                val getArray = expression.getValueArgument(0) as IrCallImpl // <get-arr>()
+                val arrayProperty = getArray.symbol.owner.correspondingPropertySymbol?.owner ?: error("The proeprty corresponding to the getter ${getArray.render()} is null.")
+                val arrayBackingField = arrayProperty.backingField!!
                 val index = expression.getValueArgument(1)
-                // todo check the type of array
-                //val function = volatilePropertyIntrinsicMap[intrinsicType]!!(backingField)
-
-                return expression // todo: return the newly generated array
+                val function = atomicArrayIntrinsicMap[intrinsicType]!!(arrayBackingField)
+                return builder.irCall(function).apply {
+                    dispatchReceiver = getArray.dispatchReceiver
+                    putValueArgument(0, index)
+                }
             }
 
             override fun visitCall(expression: IrCall): IrExpression {

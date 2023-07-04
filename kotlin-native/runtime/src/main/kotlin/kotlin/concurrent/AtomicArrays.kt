@@ -67,10 +67,12 @@ class AtomicIntegerArray {
 }
 
 // 1. todo pass IntArray as first arg -> IntrinsicGenerator
+// todo rename to atomicGetArrayElement()
 @TypedIntrinsic(IntrinsicType.ATOMIC_GET_ARRAY_ELEMENT)
 internal external fun getArrayElement(array: IntArray, index: Int): Int
 
 //@TypedIntrinsic(IntrinsicType.ATOMIC_SET_ARRAY_ELEMENT)
+// todo rename to atomicSetArrayElement()
 internal fun setArrayElement(array: IntArray, index: Int, value: Int) = array.set(index, value)
 
 //@TypedIntrinsic(IntrinsicType.ATOMIC_GET_ARRAY_ELEMENT)

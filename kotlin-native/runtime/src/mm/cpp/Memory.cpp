@@ -202,6 +202,17 @@ extern "C" ALWAYS_INLINE RUNTIME_NOTHROW OBJ_GETTER(GetAndSetVolatileHeapRef, Ob
     RETURN_RESULT_OF(mm::GetAndSetHeapRef, location, newValue);
 }
 
+// Array intrinsics
+
+extern "C" ALWAYS_INLINE RUNTIME_NOTHROW int GetAtomicIntArrayElement(ObjHeader** location, KInt index) {
+    AssertThreadState(ThreadState::kRunnable);;
+    KInt* arrayElement = IntArrayAddressOfElementAt(reinterpret_cast<ArrayHeader*>(*location), index);
+    auto result = __atomic_load_n(arrayElement, __ATOMIC_SEQ_CST);
+    return result;
+}
+
+// -----
+
 extern "C" ALWAYS_INLINE RUNTIME_NOTHROW void UpdateHeapRefIfNull(ObjHeader** location, const ObjHeader* object) {
     if (object == nullptr) return;
     ObjHeader* result = nullptr; // No need to store this value in a rootset.

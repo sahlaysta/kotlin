@@ -8,6 +8,7 @@
 #include "Common.h"
 #include "ThreadData.hpp"
 #include "ThreadState.hpp"
+#include "Natives.h"
 
 using namespace kotlin;
 

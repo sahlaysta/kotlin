@@ -38,6 +38,10 @@ touchFunction(UpdateVolatileHeapRef)
 touchFunction(CompareAndSwapVolatileHeapRef)
 touchFunction(CompareAndSetVolatileHeapRef)
 touchFunction(GetAndSetVolatileHeapRef)
+
+// Array intrinsics
+touchFunction(GetAtomicIntArrayElement)
+
 touchFunction(UpdateReturnRef)
 touchFunction(ZeroHeapRef)
 touchFunction(ZeroArrayRefs)

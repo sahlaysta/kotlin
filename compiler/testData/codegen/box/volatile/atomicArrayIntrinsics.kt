@@ -7,16 +7,19 @@ import kotlin.native.concurrent.*
 import kotlin.concurrent.*
 import kotlin.native.internal.*
 
-class IntArrayWrapper(val arr: IntArray) {
-    fun get(index: Int) = getArrayElement(arr, index)
-}
+class AtomicArrayTest {
+    private val intArr = intArrayOf(1, 2, 3, 4, 5, 6)
 
-fun testIntArray(): String {
-    val wrap = IntArrayWrapper(intArrayOf(1, 2, 3))
-    val res = wrap.get(2)
-    return if (res == 2) "OK" else "FAILURE" + res
+    fun atomicGet(index: Int) = getArrayElement(intArr, index)
+
+    fun testAtomicIntArray() {
+        val res = atomicGet(1)
+    }
 }
 
 fun box() : String {
-    return testIntArray()
+    val testClass = AtomicArrayTest()
+    testClass.testAtomicIntArray()
+    val res = testClass.atomicGet(3)
+    return "OK$res"
 }

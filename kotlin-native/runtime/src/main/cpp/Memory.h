@@ -260,6 +260,9 @@ OBJ_GETTER(CompareAndSwapVolatileHeapRef, ObjHeader** location, ObjHeader* expec
 bool CompareAndSetVolatileHeapRef(ObjHeader** location, ObjHeader* expectedValue, ObjHeader* newValue) RUNTIME_NOTHROW;
 OBJ_GETTER(GetAndSetVolatileHeapRef, ObjHeader** location, ObjHeader* newValue) RUNTIME_NOTHROW;
 
+// Array intrinsics
+int GetAtomicIntArrayElement(ObjHeader** obj, int index) RUNTIME_NOTHROW;
+
 // Updates heap/static data in one array.
 void UpdateHeapRefsInsideOneArray(const ArrayHeader* array, int fromIndex, int toIndex, int count) RUNTIME_NOTHROW;
 // Updates location if it is null, atomically.
