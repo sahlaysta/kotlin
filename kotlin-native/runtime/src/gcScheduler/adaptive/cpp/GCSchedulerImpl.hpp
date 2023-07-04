@@ -27,7 +27,7 @@ class GCSchedulerDataAdaptive;
 
 class GCScheduler::ThreadData::Impl : private Pinned {
 public:
-    explicit Impl(GCSchedulerData& scheduler) noexcept;
+    Impl(GCSchedulerData& scheduler, mm::ThreadData& thread) noexcept;
 
     internal::GCSchedulerDataAdaptive<steady_clock>& scheduler() noexcept { return scheduler_; }
 

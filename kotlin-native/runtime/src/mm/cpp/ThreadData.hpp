@@ -34,7 +34,7 @@ public:
         globalsThreadQueue_(GlobalsRegistry::Instance()),
         specialRefRegistry_(SpecialRefRegistry::instance()),
         extraObjectDataThreadQueue_(ExtraObjectDataFactory::Instance()),
-        gcScheduler_(GlobalData::Instance().gcScheduler()),
+        gcScheduler_(GlobalData::Instance().gcScheduler(), *this),
         gc_(GlobalData::Instance().gc(), *this),
         suspensionData_(ThreadState::kNative, *this) {}
 

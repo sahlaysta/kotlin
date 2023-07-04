@@ -13,11 +13,11 @@
 
 using namespace kotlin;
 
-gcScheduler::GCScheduler::ThreadData::Impl::Impl(GCSchedulerData& scheduler) noexcept :
-    scheduler_(static_cast<internal::GCSchedulerDataAggressive&>(scheduler)), mutatorAssists_(scheduler_.mutatorAssists()) {}
+gcScheduler::GCScheduler::ThreadData::Impl::Impl(GCSchedulerData& scheduler, mm::ThreadData& thread) noexcept :
+    scheduler_(static_cast<internal::GCSchedulerDataAggressive&>(scheduler)), mutatorAssists_(scheduler_.mutatorAssists(), thread) {}
 
-gcScheduler::GCScheduler::ThreadData::ThreadData(gcScheduler::GCScheduler& gcScheduler) noexcept :
-    impl_(std_support::make_unique<Impl>(gcScheduler.gcData())) {}
+gcScheduler::GCScheduler::ThreadData::ThreadData(gcScheduler::GCScheduler& gcScheduler, mm::ThreadData& thread) noexcept :
+    impl_(std_support::make_unique<Impl>(gcScheduler.gcData(), thread)) {}
 
 gcScheduler::GCScheduler::ThreadData::~ThreadData() = default;
 

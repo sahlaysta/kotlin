@@ -14,13 +14,11 @@
 #include "Utils.hpp"
 #include "std_support/Memory.hpp"
 
-namespace kotlin::gcScheduler {
-
-namespace test_support {
-class GCSchedulerThreadDataTestApi;
+namespace kotlin::mm {
+class ThreadData;
 }
 
-class GCSchedulerThreadData;
+namespace kotlin::gcScheduler {
 
 class GCSchedulerData {
 public:
@@ -43,7 +41,7 @@ public:
     public:
         class Impl;
 
-        explicit ThreadData(GCScheduler&) noexcept;
+        ThreadData(GCScheduler&, mm::ThreadData&) noexcept;
         ~ThreadData();
 
         Impl& impl() noexcept { return *impl_; }

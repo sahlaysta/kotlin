@@ -10,7 +10,8 @@
 
 using namespace kotlin;
 
-gcScheduler::GCScheduler::ThreadData::ThreadData(gcScheduler::GCScheduler&) noexcept : impl_(std_support::make_unique<Impl>()) {}
+gcScheduler::GCScheduler::ThreadData::ThreadData(gcScheduler::GCScheduler&, mm::ThreadData&) noexcept :
+    impl_(std_support::make_unique<Impl>()) {}
 
 gcScheduler::GCScheduler::ThreadData::~ThreadData() = default;
 

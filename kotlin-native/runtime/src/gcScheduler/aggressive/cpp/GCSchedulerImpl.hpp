@@ -25,7 +25,7 @@ class GCSchedulerDataAggressive;
 
 class GCScheduler::ThreadData::Impl : private Pinned {
 public:
-    explicit Impl(GCSchedulerData& scheduler) noexcept;
+    Impl(GCSchedulerData& scheduler, mm::ThreadData& thread) noexcept;
 
     internal::GCSchedulerDataAggressive& scheduler() noexcept { return scheduler_; }
 

@@ -6,7 +6,9 @@
 #pragma once
 
 #include <atomic>
+#include <condition_variable>
 #include <cstdint>
+#include <mutex>
 
 #include "ThreadRegistry.hpp"
 #include "Utils.hpp"
@@ -17,27 +19,37 @@ class MutatorAssists : private Pinned {
 public:
     class ThreadData : private Pinned {
     public:
-        explicit ThreadData(MutatorAssists& owner) noexcept : owner_(owner) {}
+        ThreadData(MutatorAssists& owner, mm::ThreadData& thread) noexcept : owner_(owner), thread_(thread) {}
 
         void safePoint() noexcept;
 
     private:
         friend class MutatorAssists;
 
+        bool completedEpoch(int64_t epoch) noexcept;
+
         MutatorAssists& owner_;
+        mm::ThreadData& thread_;
+        std::atomic<int64_t> startedWaiting_ = 0;
+        std::atomic<int64_t> stoppedWaiting_ = 0;
     };
 
     void requestAssists(int64_t epoch) noexcept;
 
     template <typename F>
     void completeEpoch(int64_t epoch, F&& f) noexcept {
-        TODO();
-        mm::ThreadRegistry::Instance().waitAllThreads([f = std::forward<F>(f), epoch](mm::ThreadData& threadData) noexcept {
-            std::invoke(std::forward<F>(f), threadData).completedEpoch(epoch);
-        });
+        markEpochCompleted(epoch);
+        mm::ThreadRegistry::Instance().waitAllThreads(
+                [f = std::forward<F>(f), epoch](mm::ThreadData& threadData) noexcept { return f(threadData).completedEpoch(epoch); });
     }
 
 private:
+    void markEpochCompleted(int64_t epoch) noexcept;
+
+    std::atomic<int64_t> assistsEpoch_ = 0;
+    std::atomic<int64_t> completedEpoch_ = 0;
+    std::mutex m_;
+    std::condition_variable cv_;
 };
 
 } // namespace kotlin::gcScheduler::internal
