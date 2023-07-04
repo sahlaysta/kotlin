@@ -20,6 +20,13 @@ sealed class ResolutionMode(val forceFullCompletion: Boolean) {
         override fun toString(): String = "ContextDependentDelegate"
     }
 
+    /**
+     * Same as [ContextDependent] but forces array literals to be transformed to arrayOf calls.
+     */
+    object ContextDependentTransformingArrayLiterals : ResolutionMode(forceFullCompletion = false) {
+        override fun toString(): String = "ContextDependentTransformingArrayLiterals"
+    }
+
     object ContextIndependent : ResolutionMode(forceFullCompletion = true) {
         override fun toString(): String = "ContextIndependent"
     }

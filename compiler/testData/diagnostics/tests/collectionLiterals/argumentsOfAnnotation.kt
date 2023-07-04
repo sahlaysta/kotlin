@@ -26,3 +26,13 @@ fun test7() {}
 
 @Foo(<!NON_CONST_VAL_USED_IN_CONSTANT_EXPRESSION!>[<!NON_CONST_VAL_USED_IN_CONSTANT_EXPRESSION!>two<!>]<!>, [], [])
 fun test8() {}
+
+interface I<T>
+class C<T> : I<T>
+
+annotation class Test1<T>(val x: Int)
+annotation class Test2<T1, T2 : I<T1>>(val x: Test1<I<T2>>)
+annotation class Test3(val x: Array<Test2<Int, C<Int>>>)
+
+@Test3(<!TYPE_MISMATCH!>[Test2<String, C<String>>(Test1(40))]<!>)
+fun test9() {}

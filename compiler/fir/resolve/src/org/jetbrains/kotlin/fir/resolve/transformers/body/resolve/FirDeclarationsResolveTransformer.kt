@@ -47,7 +47,6 @@ import org.jetbrains.kotlin.fir.types.builder.buildResolvedTypeRef
 import org.jetbrains.kotlin.fir.types.impl.FirImplicitTypeRefImplWithoutSource
 import org.jetbrains.kotlin.fir.visitors.FirTransformer
 import org.jetbrains.kotlin.fir.visitors.transformSingle
-import org.jetbrains.kotlin.name.Name
 
 open class FirDeclarationsResolveTransformer(
     transformer: FirAbstractBodyResolveTransformerDispatcher
@@ -791,7 +790,7 @@ open class FirDeclarationsResolveTransformer(
         }
 
         return when (data) {
-            is ResolutionMode.ContextDependent, is ResolutionMode.ContextDependentDelegate -> {
+            is ResolutionMode.ContextDependent, is ResolutionMode.ContextDependentDelegate, ResolutionMode.ContextDependentTransformingArrayLiterals -> {
                 context.storeContextForAnonymousFunction(anonymousFunction)
                 anonymousFunction
             }

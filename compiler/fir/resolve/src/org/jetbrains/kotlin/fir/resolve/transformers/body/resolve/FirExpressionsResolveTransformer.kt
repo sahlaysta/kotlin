@@ -503,7 +503,9 @@ open class FirExpressionsResolveTransformer(transformer: FirAbstractBodyResolveT
         )
 
         val approximationIsNeeded =
-            resolutionMode !is ResolutionMode.ReceiverResolution && resolutionMode !is ResolutionMode.ContextDependent
+            resolutionMode !is ResolutionMode.ReceiverResolution &&
+                    resolutionMode !is ResolutionMode.ContextDependent &&
+                    resolutionMode !is ResolutionMode.ContextDependentTransformingArrayLiterals
 
         val integerOperatorCall = buildIntegerLiteralOperatorCall {
             source = originalCall.source
@@ -1081,7 +1083,7 @@ open class FirExpressionsResolveTransformer(transformer: FirAbstractBodyResolveT
         transformedLHS?.let { callableReferenceAccess.replaceExplicitReceiver(transformedLHS) }
 
         return when (data) {
-            is ResolutionMode.ContextDependent -> {
+            is ResolutionMode.ContextDependent, ResolutionMode.ContextDependentTransformingArrayLiterals -> {
                 context.storeCallableReferenceContext(callableReferenceAccess)
                 callableReferenceAccess
             }
@@ -1652,7 +1654,9 @@ open class FirExpressionsResolveTransformer(transformer: FirAbstractBodyResolveT
                 return arrayOfCall
             }
 
-            if (data is ResolutionMode.WithExpectedType && !data.expectedTypeRef.coneType.isPrimitiveOrUnsignedArray) {
+            if (data is ResolutionMode.WithExpectedType && !data.expectedTypeRef.coneType.isPrimitiveOrUnsignedArray ||
+                data is ResolutionMode.ContextDependentTransformingArrayLiterals
+            ) {
                 val call = buildFunctionCall {
                     argumentList = arrayOfCall.argumentList
                     calleeReference = buildPreResolvedNamedReference {
@@ -1664,7 +1668,7 @@ open class FirExpressionsResolveTransformer(transformer: FirAbstractBodyResolveT
 
                 val transformed = transformFunctionCall(call, data)
 
-                return if (transformed is FirFunctionCall) {
+                return if (transformed is FirFunctionCall && data !is ResolutionMode.ContextDependentTransformingArrayLiterals) {
                     arrayOfCallTransformer.transformFunctionCall(transformed, null)
                 } else {
                     transformed
