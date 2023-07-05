@@ -25,6 +25,7 @@ import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.expressions.impl.*
 import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSymbol
+import org.jetbrains.kotlin.ir.symbols.IrTypeParameterSymbol
 import org.jetbrains.kotlin.ir.symbols.IrValueSymbol
 import org.jetbrains.kotlin.ir.symbols.impl.IrReturnableBlockSymbolImpl
 import org.jetbrains.kotlin.ir.types.*
@@ -88,7 +89,9 @@ class FunctionInlining(
     private val regenerateInlinedAnonymousObjects: Boolean = false,
     private val inlineArgumentsWithTheirOriginalTypeAndOffset: Boolean = false,
     private val allowExternalInlining: Boolean = false,
-    private val useTypeParameterUpperBound: Boolean = false
+    private val useTypeParameterUpperBound: Boolean = false,
+    private val copierBuilder: (Map<IrTypeParameterSymbol, IrType?>?, IrDeclarationParent?) -> AbstractDeepCopyIrTreeWithSymbolsForInliner =
+        ::DeepCopyIrTreeWithSymbolsForInliner,
 ) : IrElementTransformerVoidWithContext(), BodyLoweringPass {
     private var containerScope: ScopeWithIr? = null
 
@@ -159,7 +162,7 @@ class FunctionInlining(
         val callee: IrFunction,
         val currentScope: ScopeWithIr,
         val parent: IrDeclarationParent?,
-        val context: CommonBackendContext
+        val context: CommonBackendContext,
     ) {
 
         val copyIrElement = run {
@@ -171,7 +174,7 @@ class FunctionInlining(
                 (0 until callSite.typeArgumentsCount).associate {
                     typeParameters[it].symbol to callSite.getTypeArgument(it)
                 }
-            DeepCopyIrTreeWithSymbolsForInliner(typeArguments, parent)
+            copierBuilder(typeArguments, parent)
         }
 
         val substituteMap = mutableMapOf<IrValueParameter, IrExpression>()
@@ -187,7 +190,7 @@ class FunctionInlining(
             callSite: IrFunctionAccessExpression,
             callee: IrFunction,
             originalInlinedElement: IrElement,
-            performRecursiveInline: Boolean
+            performRecursiveInline: Boolean,
         ): IrReturnableBlock {
             val copiedCallee = callee.copy().apply {
                 parent = callee.parent
@@ -340,7 +343,7 @@ class FunctionInlining(
             }
 
             private fun wrapInStubFunction(
-                inlinedCall: IrExpression, invokeCall: IrFunctionAccessExpression, reference: IrCallableReference<*>
+                inlinedCall: IrExpression, invokeCall: IrFunctionAccessExpression, reference: IrCallableReference<*>,
             ): IrReturnableBlock {
                 // Note: This function is not exist in tree. It is appeared only in `IrInlinedFunctionBlock` as intermediate callee.
                 val stubForInline = context.irFactory.buildFun {
@@ -385,7 +388,7 @@ class FunctionInlining(
             fun inlineFunctionReference(
                 irCall: IrCall,
                 irFunctionReference: IrFunctionReference,
-                inlinedFunction: IrFunction
+                inlinedFunction: IrFunction,
             ): IrExpression {
                 irFunctionReference.transformChildrenVoid(this)
 
@@ -466,7 +469,8 @@ class FunctionInlining(
                                 this.dispatchReceiver = argument.doImplicitCastIfNeededTo(inlinedFunction.dispatchReceiverParameter!!.type)
 
                             function.extensionReceiverParameter ->
-                                this.extensionReceiver = argument.doImplicitCastIfNeededTo(inlinedFunction.extensionReceiverParameter!!.type)
+                                this.extensionReceiver =
+                                    argument.doImplicitCastIfNeededTo(inlinedFunction.extensionReceiverParameter!!.type)
 
                             else ->
                                 putValueArgument(
@@ -520,7 +524,7 @@ class FunctionInlining(
         private inner class ParameterToArgument(
             val parameter: IrValueParameter,
             val argumentExpression: IrExpression,
-            val isDefaultArg: Boolean = false
+            val isDefaultArg: Boolean = false,
         ) {
             val isInlinableLambdaArgument: Boolean
                 // must take "original" parameter because it can have generic type and so considered as no inline; see `lambdaAsGeneric.kt`
@@ -852,7 +856,7 @@ class FunctionInlining(
             parameter: IrValueParameter,
             variableInitializer: IrExpression,
             isDefaultArg: Boolean,
-            callee: IrFunction
+            callee: IrFunction,
         ): IrVariable {
             val variable = currentScope.scope.createTemporaryVariable(
                 irExpression = IrBlockImpl(
@@ -882,7 +886,7 @@ class FunctionInlining(
 
     private class IrGetValueWithoutLocation(
         override var symbol: IrValueSymbol,
-        override var origin: IrStatementOrigin? = null
+        override var origin: IrStatementOrigin? = null,
     ) : IrGetValue() {
         override val startOffset: Int get() = UNDEFINED_OFFSET
         override val endOffset: Int get() = UNDEFINED_OFFSET
