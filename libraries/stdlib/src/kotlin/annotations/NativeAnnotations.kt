@@ -20,6 +20,7 @@ import kotlin.experimental.ExperimentalObjCRefinement
 @OptionalExpectation
 public expect annotation class CName(val externName: String = "", val shortName: String = "")
 
+// This is here instead of kotlin-native/runtime because some of native-wasm uses this annotation.
 /**
  * Freezing API is deprecated since 1.7.20.
  *
@@ -47,8 +48,7 @@ public expect annotation class CName(val externName: String = "", val shortName:
     AnnotationTarget.TYPEALIAS,
 )
 @Retention(AnnotationRetention.BINARY)
-@OptionalExpectation
-expect annotation class FreezingIsDeprecated
+annotation class FreezingIsDeprecated
 
 /**
  * Instructs the Kotlin compiler to use a custom Objective-C and/or Swift name for this class, property, parameter or function.
