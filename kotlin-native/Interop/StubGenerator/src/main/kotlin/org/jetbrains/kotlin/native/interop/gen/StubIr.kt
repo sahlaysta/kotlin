@@ -264,6 +264,8 @@ sealed class AnnotationStub(val classifier: Classifier) {
     class CEnumVarTypeSize(val size: Int) :
             AnnotationStub(Classifier.topLevel(cinteropInternalPackage, "CEnumVarTypeSize"))
 
+    object ExperimentalInterop : AnnotationStub(KotlinTypes.experimentalInterop)
+
     private companion object {
         val cCallClassifier = Classifier.topLevel(cinteropInternalPackage, "CCall")
 

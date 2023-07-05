@@ -444,6 +444,7 @@ private class MappingExtensions(
             )
             is AnnotationStub.CStruct.CPlusPlusClass -> emptyMap()
             is AnnotationStub.CStruct.ManagedType -> emptyMap()
+            is AnnotationStub.ExperimentalInterop -> emptyMap()
         }
         return KmAnnotation(classifier.fqNameSerialized, args)
     }

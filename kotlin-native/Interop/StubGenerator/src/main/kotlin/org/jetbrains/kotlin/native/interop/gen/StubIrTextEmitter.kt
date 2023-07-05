@@ -115,7 +115,7 @@ class StubIrTextEmitter(
         }
 
         out("@file:Suppress(${suppress.joinToString { it.quoteAsKotlinLiteral() }})")
-        out("@file:OptIn(ExperimentalForeignApi::class)")
+        out("@file:OptIn(ExperimentalForeignApi::class, ExperimentalInterop::class)")
         if (pkgName != "") {
             out("package ${context.validPackageName}")
             out("")
@@ -500,6 +500,8 @@ class StubIrTextEmitter(
             "@CStruct.CPlusPlusClass"
         is AnnotationStub.CStruct.ManagedType ->
             "@CStruct.ManagedType"
+        is AnnotationStub.ExperimentalInterop ->
+            "@${KotlinTypes.experimentalInterop.topLevelName}"
         is AnnotationStub.CLength ->
             "@CLength(${annotationStub.length})"
         is AnnotationStub.Deprecated ->
