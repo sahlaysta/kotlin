@@ -11,13 +11,16 @@ STEP 1:
 STEP 2:
     libs: lib1, lib2, main
     dirty js modules: lib1
-    dirty js files:   lib1/l1b
+    dirty js files:   lib1/l1a, lib1/l1b, lib2/l2, main/m
 STEP 3..4:
     libs: lib1, lib2, main
     dirty js modules: lib1, lib2, main
+    dirty js files:   lib1/l1a, lib1/l1b, lib2/l2, main/m
 STEP 5:
     libs: lib1, lib2, main
     dirty js modules: lib1
+    dirty js files:   lib1/l1a, lib1/l1b, lib2/l2, main/m
 STEP 6..7:
     libs: lib1, lib2, main
     dirty js modules: lib1, lib2, main
+    dirty js files:   lib1/l1a, lib2/l2, main/m

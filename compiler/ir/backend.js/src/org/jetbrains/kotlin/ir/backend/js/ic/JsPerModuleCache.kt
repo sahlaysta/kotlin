@@ -8,7 +8,7 @@ package org.jetbrains.kotlin.ir.backend.js.ic
 import org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.*
 import java.io.File
 
-class JsMultiModuleCache(private val moduleArtifacts: List<ModuleArtifact>) : JsMultiArtifactCache<JsMultiModuleCache.CachedModuleInfo>() {
+class JsPerModuleCache(private val moduleArtifacts: List<ModuleArtifact>) : JsMultiArtifactCache<JsPerModuleCache.CachedModuleInfo>() {
     companion object {
         private const val JS_MODULE_HEADER = "js.module.header.bin"
         private const val CACHED_MODULE_JS = "module.js"

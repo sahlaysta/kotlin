@@ -5,7 +5,7 @@
 
 package org.jetbrains.kotlin.ir.backend.js.ic
 
-import org.jetbrains.kotlin.backend.common.serialization.cityHash64
+import org.jetbrains.kotlin.backend.common.serialization.cityHash64HexString
 import org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.*
 import org.jetbrains.kotlin.protobuf.CodedInputStream
 import org.jetbrains.kotlin.protobuf.CodedOutputStream
@@ -40,7 +40,7 @@ class JsPerFileCache(private val moduleArtifacts: List<ModuleArtifact>) : JsMult
 
         val artifactsDir: File? = moduleArtifact.artifactsDir?.let {
             val path = "${moduleArtifact.moduleSafeName}/${fileArtifact.srcFilePath}"
-            val pathHash = path.cityHash64().toULong().toString(Character.MAX_RADIX)
+            val pathHash = path.cityHash64HexString()
             File(moduleArtifact.artifactsDir, "${fileArtifact.srcFilePath.substringAfterLast('/')}$pathHash")
         }
     }
