@@ -50,18 +50,6 @@ class PersistentSetMultimap<K, V> private constructor(private val map: Persisten
         return PersistentSetMultimap(newMap)
     }
 
-    fun remove(key: K, value: V): PersistentSetMultimap<K, V> {
-        val set = map.get(key) ?: return this
-        val newSet = set.remove(value)
-        if (set === newSet) return this
-        val newMap = if (newSet.isEmpty()) {
-            map.remove(key)
-        } else {
-            map.put(key, newSet)
-        }
-        return PersistentSetMultimap(newMap)
-    }
-
     operator fun get(key: K): Set<V> {
         return map[key] ?: emptySet()
     }
