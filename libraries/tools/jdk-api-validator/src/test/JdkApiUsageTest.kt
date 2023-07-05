@@ -60,10 +60,13 @@ class JdkApiUsageTest {
         val mergedSignaturesOutputStream = mergedSignaturesFile.outputStream()
 
         val signatureBuilder = SignatureBuilder(signatureInputStreams.toTypedArray(), mergedSignaturesOutputStream, logger)
-        additionalArtifacts.forEach {
-            signatureBuilder.process(it.toFile()) // the overload that takes Path can't handle jar files
+        try {
+            additionalArtifacts.forEach {
+                signatureBuilder.process(it.toFile()) // the overload that takes Path can't handle jar files
+            }
+        } finally {
+            signatureBuilder.close()
         }
-        signatureBuilder.close()
 
         return mergedSignaturesFile
     }
