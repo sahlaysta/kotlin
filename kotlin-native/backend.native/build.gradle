@@ -38,6 +38,7 @@ compileCompilerKotlin {
             '-opt-in=kotlin.RequiresOptIn',
             "-opt-in=kotlinx.cinterop.BetaInteropApi",
             "-opt-in=kotlinx.cinterop.ExperimentalForeignApi",
+            "-opt-in=kotlinx.cinterop.ExperimentalInterop",
             '-Xskip-prerelease-check']
 }
 
