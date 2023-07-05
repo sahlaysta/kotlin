@@ -22,6 +22,15 @@ final class visibilities.test/InternalPAClassInternalPAMembers|null[0] {
         constructor visibilities.test/InternalPAClassInternalPAMembers.NestedClass.<init>|-5645683436151566731[0]
     }
 }
+abstract class visibilities.test/PublicAbstractClassProtectedMembers|null[0] {
+    final val visibilities.test/PublicAbstractClassProtectedMembers.property|4634558160746314112[0]
+        final fun visibilities.test/PublicAbstractClassProtectedMembers.property.<get-property>|4838831487146901942[0]
+    constructor visibilities.test/PublicAbstractClassProtectedMembers.<init>|1280618353163213788[0]
+    final fun visibilities.test/PublicAbstractClassProtectedMembers.function|-3322893411126713785[0]
+    final class visibilities.test/PublicAbstractClassProtectedMembers.NestedClass|null[0] {
+        constructor visibilities.test/PublicAbstractClassProtectedMembers.NestedClass.<init>|-5645683436151566731[0]
+    }
+}
 final class visibilities.test/PublicClass|null[0] {
     final val visibilities.test/PublicClass.property|4634558160746314112[0]
         final fun visibilities.test/PublicClass.property.<get-property>|4838831487146901942[0]
@@ -43,6 +52,15 @@ final class visibilities.test/PublicClassInternalPAMembers|null[0] {
 }
 final class visibilities.test/PublicClassPrivateMembers|null[0]
 final class visibilities.test/PublicClassProtectedMembers|null[0]
+open class visibilities.test/PublicOpenClassProtectedMembers|null[0] {
+    final val visibilities.test/PublicOpenClassProtectedMembers.property|4634558160746314112[0]
+        final fun visibilities.test/PublicOpenClassProtectedMembers.property.<get-property>|4838831487146901942[0]
+    constructor visibilities.test/PublicOpenClassProtectedMembers.<init>|1280618353163213788[0]
+    final fun visibilities.test/PublicOpenClassProtectedMembers.function|-3322893411126713785[0]
+    final class visibilities.test/PublicOpenClassProtectedMembers.NestedClass|null[0] {
+        constructor visibilities.test/PublicOpenClassProtectedMembers.NestedClass.<init>|-5645683436151566731[0]
+    }
+}
 final val visibilities.test/internalPAVal|-6296713716360945427[0]
     final fun visibilities.test/internalPAVal.<get-internalPAVal>|-2220884681594955448[0]
 final var visibilities.test/internalPAVarInternalSetter|8606185858874286601[0]

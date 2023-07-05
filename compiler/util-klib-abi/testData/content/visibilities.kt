@@ -31,6 +31,14 @@ public class PublicClassProtectedMembers protected constructor(protected val pro
     protected fun function(): String = ""
     protected class NestedClass
 }
+public abstract class PublicAbstractClassProtectedMembers protected constructor(protected val property: String) {
+    protected fun function(): String = ""
+    protected class NestedClass
+}
+public open class PublicOpenClassProtectedMembers protected constructor(protected val property: String) {
+    protected fun function(): String = ""
+    protected class NestedClass
+}
 public class PublicClassInternalMembers internal constructor(internal val property: String) {
     internal fun function(): String = ""
     internal class NestedClass
