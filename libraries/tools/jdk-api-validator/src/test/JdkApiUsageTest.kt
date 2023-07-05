@@ -36,7 +36,8 @@ class JdkApiUsageTest {
 
         checkSignatures(artifact, signatures, logger)
         if (logger.hasError) {
-            fail("Checking signatures has failed. See console logs for details.")
+            fail("Checking signatures has failed. See console logs for details. "
+                         + "See libraries/tools/jdk-api-validator/ReadMe.md to find out how to fix the failures.")
         }
     }
 
