@@ -30,8 +30,8 @@ public:
 
         MutatorAssists& owner_;
         mm::ThreadData& thread_;
-        std::atomic<int64_t> startedWaiting_ = 0;
-        std::atomic<int64_t> stoppedWaiting_ = 0;
+        // Contains epoch * 2. The lower bit is 1, if completed waiting.
+        std::atomic<int64_t> startedWaiting_ = 1;
     };
 
     void requestAssists(int64_t epoch) noexcept;
