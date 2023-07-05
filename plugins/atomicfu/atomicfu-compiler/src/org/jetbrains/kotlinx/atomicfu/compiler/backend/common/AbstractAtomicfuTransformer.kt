@@ -682,7 +682,11 @@ abstract class AbstractAtomicfuTransformer(val pluginContext: IrPluginContext) {
     protected fun IrFunction.isAtomicExtension(): Boolean =
         if (extensionReceiverParameter != null && extensionReceiverParameter!!.type.isAtomicValueType()) {
             require(this.isInline) { "Non-inline extension functions on kotlinx.atomicfu.Atomic* classes are not allowed, " +
-                    "please add inline modifier to the function ${this.render()}"}
+                    "please add inline modifier to the function ${this.render()}" }
+            require(this.visibility == DescriptorVisibilities.PRIVATE || this.visibility == DescriptorVisibilities.INTERNAL) {
+                "Only private or internal extension functions on kotlinx.atomicfu.Atomic* classes are allowed, " +
+                        "please make the extension function ${this.render()} private or internal."
+            }
             true
         } else false
 
