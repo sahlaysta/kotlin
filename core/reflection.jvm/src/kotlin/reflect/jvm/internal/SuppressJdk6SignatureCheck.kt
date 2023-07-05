@@ -6,10 +6,10 @@
 package kotlin.reflect.jvm.internal
 
 /**
- * Suppresses Animal Sniffer verification errors for certain scope.
+ * Suppresses verification errors of the jdk-api-validator tool for certain scope.
  * Such scopes include references to Java 8 API that are not available in Android API,
  * but can be desugared by R8 or their execution is prevented on Android platform.
  */
 @Retention(AnnotationRetention.BINARY)
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
-internal annotation class SuppressAnimalSniffer
+internal annotation class SuppressJdk6SignatureCheck
