@@ -3194,6 +3194,96 @@ public class DiagnosticTestGenerated extends AbstractDiagnosticTest {
         }
 
         @Nested
+        @TestMetadata("compiler/testData/diagnostics/tests/builderInference")
+        @TestDataPath("$PROJECT_ROOT")
+        public class BuilderInference {
+            @Test
+            public void testAllFilesPresentInBuilderInference() throws Exception {
+                KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("compiler/testData/diagnostics/tests/builderInference"), Pattern.compile("^(.*)\\.kts?$"), Pattern.compile("^(.+)\\.(reversed|fir|ll)\\.kts?$"), true);
+            }
+
+            @Nested
+            @TestMetadata("compiler/testData/diagnostics/tests/builderInference/singleLambda")
+            @TestDataPath("$PROJECT_ROOT")
+            public class SingleLambda {
+                @Test
+                public void testAllFilesPresentInSingleLambda() throws Exception {
+                    KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("compiler/testData/diagnostics/tests/builderInference/singleLambda"), Pattern.compile("^(.*)\\.kts?$"), Pattern.compile("^(.+)\\.(reversed|fir|ll)\\.kts?$"), true);
+                }
+
+                @Nested
+                @TestMetadata("compiler/testData/diagnostics/tests/builderInference/singleLambda/noValidTypeInfoOrigins")
+                @TestDataPath("$PROJECT_ROOT")
+                public class NoValidTypeInfoOrigins {
+                    @Test
+                    public void testAllFilesPresentInNoValidTypeInfoOrigins() throws Exception {
+                        KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("compiler/testData/diagnostics/tests/builderInference/singleLambda/noValidTypeInfoOrigins"), Pattern.compile("^(.*)\\.kts?$"), Pattern.compile("^(.+)\\.(reversed|fir|ll)\\.kts?$"), true);
+                    }
+
+                    @Nested
+                    @TestMetadata("compiler/testData/diagnostics/tests/builderInference/singleLambda/noValidTypeInfoOrigins/noUserProvidedTypeInfo")
+                    @TestDataPath("$PROJECT_ROOT")
+                    public class NoUserProvidedTypeInfo {
+                        @Test
+                        public void testAllFilesPresentInNoUserProvidedTypeInfo() throws Exception {
+                            KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("compiler/testData/diagnostics/tests/builderInference/singleLambda/noValidTypeInfoOrigins/noUserProvidedTypeInfo"), Pattern.compile("^(.*)\\.kts?$"), Pattern.compile("^(.+)\\.(reversed|fir|ll)\\.kts?$"), true);
+                        }
+
+                        @Test
+                        @TestMetadata("BasicCase.kt")
+                        public void testBasicCase() throws Exception {
+                            runTest("compiler/testData/diagnostics/tests/builderInference/singleLambda/noValidTypeInfoOrigins/noUserProvidedTypeInfo/BasicCase.kt");
+                        }
+
+                        @Nested
+                        @TestMetadata("compiler/testData/diagnostics/tests/builderInference/singleLambda/noValidTypeInfoOrigins/noUserProvidedTypeInfo/buildeeType")
+                        @TestDataPath("$PROJECT_ROOT")
+                        public class BuildeeType {
+                            @Test
+                            public void testAllFilesPresentInBuildeeType() throws Exception {
+                                KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("compiler/testData/diagnostics/tests/builderInference/singleLambda/noValidTypeInfoOrigins/noUserProvidedTypeInfo/buildeeType"), Pattern.compile("^(.*)\\.kts?$"), Pattern.compile("^(.+)\\.(reversed|fir|ll)\\.kts?$"), true);
+                            }
+
+                            @Test
+                            @TestMetadata("BuildeeWithBoundedTypeParameter.kt")
+                            public void testBuildeeWithBoundedTypeParameter() throws Exception {
+                                runTest("compiler/testData/diagnostics/tests/builderInference/singleLambda/noValidTypeInfoOrigins/noUserProvidedTypeInfo/buildeeType/BuildeeWithBoundedTypeParameter.kt");
+                            }
+
+                            @Test
+                            @TestMetadata("BuildeeWithRecursiveTypeParameter.kt")
+                            public void testBuildeeWithRecursiveTypeParameter() throws Exception {
+                                runTest("compiler/testData/diagnostics/tests/builderInference/singleLambda/noValidTypeInfoOrigins/noUserProvidedTypeInfo/buildeeType/BuildeeWithRecursiveTypeParameter.kt");
+                            }
+
+                            @Test
+                            @TestMetadata("InnerClassBuildee.kt")
+                            public void testInnerClassBuildee() throws Exception {
+                                runTest("compiler/testData/diagnostics/tests/builderInference/singleLambda/noValidTypeInfoOrigins/noUserProvidedTypeInfo/buildeeType/InnerClassBuildee.kt");
+                            }
+                        }
+
+                        @Nested
+                        @TestMetadata("compiler/testData/diagnostics/tests/builderInference/singleLambda/noValidTypeInfoOrigins/noUserProvidedTypeInfo/builderType")
+                        @TestDataPath("$PROJECT_ROOT")
+                        public class BuilderType {
+                            @Test
+                            public void testAllFilesPresentInBuilderType() throws Exception {
+                                KtTestUtil.assertAllTestsPresentByMetadataWithExcluded(this.getClass(), new File("compiler/testData/diagnostics/tests/builderInference/singleLambda/noValidTypeInfoOrigins/noUserProvidedTypeInfo/builderType"), Pattern.compile("^(.*)\\.kts?$"), Pattern.compile("^(.+)\\.(reversed|fir|ll)\\.kts?$"), true);
+                            }
+
+                            @Test
+                            @TestMetadata("BuilderWithTypeVariableReturnValue.kt")
+                            public void testBuilderWithTypeVariableReturnValue() throws Exception {
+                                runTest("compiler/testData/diagnostics/tests/builderInference/singleLambda/noValidTypeInfoOrigins/noUserProvidedTypeInfo/builderType/BuilderWithTypeVariableReturnValue.kt");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        @Nested
         @TestMetadata("compiler/testData/diagnostics/tests/callableReference")
         @TestDataPath("$PROJECT_ROOT")
         public class CallableReference {
