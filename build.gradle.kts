@@ -268,7 +268,6 @@ extra["kotlinJpsPluginMavenDependencies"] = listOf(
     ":kotlin-util-io",
     ":kotlin-util-klib",
     ":kotlin-util-klib-metadata",
-    ":kotlin-util-klib-abi",
     ":native:kotlin-native-utils",
     ":compiler:build-tools:kotlin-build-tools-api",
 )
