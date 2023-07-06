@@ -6,6 +6,7 @@
 package org.jetbrains.kotlin.codegen
 
 import org.jetbrains.kotlin.ir.backend.js.ic.DirtyFileState
+import org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.JsGenerationGranularity
 import org.jetbrains.kotlin.serialization.js.ModuleKind
 import java.io.File
 import java.util.regex.Pattern
@@ -15,7 +16,8 @@ class ProjectInfo(
     val modules: List<String>,
     val steps: List<ProjectBuildStep>,
     val muted: Boolean,
-    val moduleKind: ModuleKind
+    val moduleKind: ModuleKind,
+    val ignoredGranularities: Set<JsGenerationGranularity>
 ) {
 
     class ProjectBuildStep(
@@ -75,6 +77,8 @@ private const val LIBS_LIST = "libs"
 private const val DIRTY_JS_FILES_LIST = "dirty js files"
 private const val DIRTY_JS_MODULES_LIST = "dirty js modules"
 private const val LANGUAGE = "language"
+private const val IGNORE_PER_FILE = "IGNORE_PER_FILE"
+private const val IGNORE_PER_MODULE = "IGNORE_PER_MODULE"
 
 const val MODULE_INFO_FILE = "module.info"
 private const val DEPENDENCIES = "dependencies"
@@ -167,6 +171,7 @@ class ProjectInfoParser(infoFile: File) : InfoParser<ProjectInfo>(infoFile) {
     override fun parse(entryName: String): ProjectInfo {
         val libraries = mutableListOf<String>()
         val steps = mutableListOf<ProjectInfo.ProjectBuildStep>()
+        val ignoredGranularities = mutableSetOf<JsGenerationGranularity>()
         var muted = false
         var moduleKind = ModuleKind.ES
 
@@ -186,6 +191,8 @@ class ProjectInfoParser(infoFile: File) : InfoParser<ProjectInfo>(infoFile) {
 
             when {
                 op == MODULES_LIST -> libraries += split[1].splitAndTrim()
+                op == IGNORE_PER_FILE && split[1].trim() == "true" -> ignoredGranularities += JsGenerationGranularity.PER_FILE
+                op == IGNORE_PER_MODULE && split[1].trim() == "true" -> ignoredGranularities += JsGenerationGranularity.PER_MODULE
                 op == MODULES_KIND -> moduleKind = split[1].trim()
                     .ifEmpty { error("Module kind value should be provided if MODULE_KIND pragma was specified") }
                     .let { moduleKindMap[it] ?: error("Unknown MODULE_KIND value '$it'") }
@@ -215,7 +222,7 @@ class ProjectInfoParser(infoFile: File) : InfoParser<ProjectInfo>(infoFile) {
             false
         }
 
-        return ProjectInfo(entryName, libraries, steps, muted, moduleKind)
+        return ProjectInfo(entryName, libraries, steps, muted, moduleKind, ignoredGranularities)
     }
 }
 

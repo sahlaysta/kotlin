@@ -153,6 +153,10 @@ class JsPerFileCache(private val moduleArtifacts: List<ModuleArtifact>) : JsMult
             }
         }
 
+    override fun getMainModuleAndDependencies(cacheInfo: List<CachedFileInfo>) = null to cacheInfo
+
+    override fun fetchCompiledJsCodeForNullCacheInfo() = PerFileEntryPointCompilationOutput()
+
     override fun fetchCompiledJsCode(cacheInfo: CachedFileInfo) =
         cacheInfo.cachedFiles?.let { (jsCodeFile, sourceMapFile, tsDefinitionsFile) ->
             jsCodeFile.ifExists { this }
