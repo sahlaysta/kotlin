@@ -1,6 +1,10 @@
 // Check how declarations from the root package are rendered.
 
-public class Class(val property: String) {
+interface Interface {
+    interface NestedInterface
+}
+
+public class Class(val property: String): Interface, Interface.NestedInterface {
     fun function(): String = ""
     class NestedClass
 }

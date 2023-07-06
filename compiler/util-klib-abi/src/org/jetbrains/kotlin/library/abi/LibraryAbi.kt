@@ -40,9 +40,62 @@ interface AbiSignatures {
     operator fun get(signatureVersion: AbiSignatureVersion): String?
 }
 
+/**
+ * Simple (unqualified) name.
+ * Examples: "TopLevelClass", "topLevelFun", "List", "EMPTY".
+ */
+@ExperimentalLibraryAbiReader
+@JvmInline
+value class AbiSimpleName(val value: String) {
+    init {
+        require(value.isNotEmpty()) { "Empty simple name" }
+        require(value.none { ch -> ch == AbiDottedName.SEPARATOR || ch == AbiQualifiedName.SEPARATOR }) {
+            "Simple name contains illegal characters: $value"
+        }
+    }
+
+    override fun toString() = value
+}
+
+/**
+ * Dotted name. An equivalent of one or more [AbiSimpleName] which are concatenated with dots.
+ * Examples: "TopLevelClass", "topLevelFun", "List", "CharRange.Companion.EMPTY".
+ */
+@ExperimentalLibraryAbiReader
+@JvmInline
+value class AbiDottedName(val value: String) {
+    init {
+        require(AbiQualifiedName.SEPARATOR !in value) { "Dotted name contains illegal characters: $value" }
+    }
+
+    override fun toString() = value
+
+    companion object {
+        const val SEPARATOR = '.'
+    }
+}
+
+
+/**
+ * Fully qualified name.
+ * Examples: "/TopLevelClass", "/topLevelFun", "kotlin.collections/List", "kotlin.ranges/CharRange.Companion.EMPTY".
+ */
+@ExperimentalLibraryAbiReader
+data class AbiQualifiedName(val packageName: AbiDottedName, val relativeName: AbiDottedName) {
+    init {
+        require(relativeName.value.isNotEmpty()) { "Empty relative name" }
+    }
+
+    override fun toString() = "$packageName$SEPARATOR$relativeName"
+
+    companion object {
+        const val SEPARATOR = '/'
+    }
+}
+
 @ExperimentalLibraryAbiReader
 sealed interface AbiDeclaration {
-    val name: String
+    val name: AbiSimpleName
     val signatures: AbiSignatures
 }
 
@@ -147,11 +200,11 @@ sealed interface AbiTypeArgument {
 @ExperimentalLibraryAbiReader
 sealed interface AbiClassifier {
     interface Class : AbiClassifier {
-        val className: String
+        val className: AbiQualifiedName
     }
 
     interface TypeParameter : AbiClassifier {
-        val declaringClassName: String
+        val declaringClassName: AbiQualifiedName
         val index: Int
     }
 }
