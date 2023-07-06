@@ -36,7 +36,7 @@ are both replaced by `KmClass.visibility: Visibility` or `KmFunction.visibility:
 For migration, replace `Flag` usages with access to corresponding extension properties.
 Deprecation message for a particular `Flag` instance should help you identify a correct extension.
 
-Function above can now be rewritten in a more clear and idiomatic way:
+The function above can now be rewritten in a more clear and idiomatic way:
 
 ```kotlin
 fun nameOfPublicDataClass(kmClass: KmClass): ClassName? {
