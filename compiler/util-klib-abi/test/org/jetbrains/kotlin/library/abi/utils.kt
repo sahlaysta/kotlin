@@ -32,6 +32,7 @@ import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.serialization.js.ModuleKind
 import org.jetbrains.kotlin.test.util.KtTestUtil.getHomeDirectory
 import org.jetbrains.kotlin.test.utils.TestDisposable
+import org.jetbrains.kotlin.util.parseSpaceSeparatedArgs
 import org.jetbrains.kotlin.utils.fileUtils.withReplacedExtensionOrNull
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.TestInfo
@@ -70,6 +71,45 @@ internal fun computeTestFiles(relativePath: String, goldFileExtension: String): 
 
     return sourceFile to dumpFile
 }
+
+@ExperimentalLibraryAbiReader
+internal fun populateFiltersFromTestDirectives(sourceFile: File, settings: AbiReadingSettings) {
+    fun String.parseQualifiedName() = AbiQualifiedName(
+        packageName = AbiDottedName(substringBefore('/', missingDelimiterValue = "")),
+        relativeName = AbiDottedName(substringAfter('/'))
+    )
+
+    sourceFile.bufferedReader().lineSequence().forEach { line ->
+        if (!line.parseTestDirective(DIRECTIVE_EXCLUDED_PACKAGES, ::AbiDottedName, settings.excludedPackages::add)
+            && !line.parseTestDirective(DIRECTIVE_EXCLUDED_CLASSES, String::parseQualifiedName, settings.excludedClasses::add)
+            && !line.parseTestDirective(DIRECTIVE_NON_PUBLIC_MARKERS, String::parseQualifiedName, settings.nonPublicMarkers::add)
+        ) {
+            return
+        }
+    }
+}
+
+private inline fun <T> String.parseTestDirective(
+    directivePrefix: String,
+    parser: (String) -> T,
+    consumer: (T) -> Unit,
+): Boolean {
+    if (!startsWith(directivePrefix))
+        return false
+
+    val remainder = substring(directivePrefix.length)
+    try {
+        val items = parseSpaceSeparatedArgs(remainder)
+        items.forEach { item -> consumer(parser(item)) }
+        return true
+    } catch (e: Exception) {
+        throw fail<Nothing>("Failure during parsing test directive: $this", e)
+    }
+}
+
+private const val DIRECTIVE_EXCLUDED_PACKAGES = "// EXCLUDED_PACKAGES:"
+private const val DIRECTIVE_EXCLUDED_CLASSES = "// EXCLUDED_CLASSES:"
+private const val DIRECTIVE_NON_PUBLIC_MARKERS = "// NON_PUBLIC_MARKERS:"
 
 internal fun buildLibrary(sourceFile: File, libraryName: String, buildDir: File): File {
     val configuration = CompilerConfiguration()

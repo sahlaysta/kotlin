@@ -19,6 +19,7 @@ import org.jetbrains.kotlin.library.*
 import org.jetbrains.kotlin.library.abi.*
 import org.jetbrains.kotlin.metadata.ProtoBuf
 import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.SpecialNames
 import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.utils.compact
 import org.jetbrains.kotlin.utils.memoryOptimizedMap
@@ -41,7 +42,10 @@ import org.jetbrains.kotlin.backend.common.serialization.proto.IrSimpleTypeLegac
 import org.jetbrains.kotlin.backend.common.serialization.IrFlags as ProtoFlags
 
 @ExperimentalLibraryAbiReader
-internal class LibraryAbiReaderImpl(libraryFile: File) {
+internal class LibraryAbiReaderImpl(
+    libraryFile: File,
+    private val settings: AbiReadingSettings
+) {
     private val library = resolveSingleFileKlib(
         KFile(libraryFile.absolutePath),
         strategy = ToolingSingleFileKlibResolveStrategy
@@ -54,7 +58,7 @@ internal class LibraryAbiReaderImpl(libraryFile: File) {
             manifest = readManifest(),
             uniqueName = library.uniqueName,
             supportedSignatureVersions = supportedSignatureVersions,
-            topLevelDeclarations = LibraryDeserializer(library, supportedSignatureVersions).deserialize()
+            topLevelDeclarations = LibraryDeserializer(library, supportedSignatureVersions, settings).deserialize()
         )
     }
 
@@ -85,7 +89,11 @@ internal class LibraryAbiReaderImpl(libraryFile: File) {
 }
 
 @ExperimentalLibraryAbiReader
-private class LibraryDeserializer(private val library: KotlinLibrary, supportedSignatureVersions: Set<AbiSignatureVersion>) {
+private class LibraryDeserializer(
+    private val library: KotlinLibrary,
+    supportedSignatureVersions: Set<AbiSignatureVersion>,
+    private val settings: AbiReadingSettings
+) {
     private val interner = IrInterningService()
     private val needV1Signatures = AbiSignatureVersion.V1 in supportedSignatureVersions
     private val needV2Signatures = AbiSignatureVersion.V2 in supportedSignatureVersions
@@ -93,6 +101,7 @@ private class LibraryDeserializer(private val library: KotlinLibrary, supportedS
     private inner class FileDeserializer(fileIndex: Int) {
         private val fileReader = IrLibraryFileFromBytes(IrKlibBytesSource(library, fileIndex))
 
+        private val packageName: AbiDottedName
         private val topLevelDeclarationIds: List<Int>
         private val signatureDeserializer: IdSignatureDeserializer
         private val typeDeserializer: TypeDeserializer
@@ -101,9 +110,12 @@ private class LibraryDeserializer(private val library: KotlinLibrary, supportedS
             val proto = ProtoFile.parseFrom(library.file(fileIndex).codedInputStream, IrLibraryFileFromBytes.extensionRegistryLite)
             topLevelDeclarationIds = proto.declarationIdList
 
+            val packageFQN = fileReader.deserializeFqName(proto.fqNameList)
+            packageName = AbiDottedName(packageFQN)
+
             val fileSignature = FileSignature(
                 id = Any(), // Just an unique object.
-                fqName = FqName(fileReader.deserializeFqName(proto.fqNameList)),
+                fqName = FqName(packageFQN),
                 fileName = if (proto.hasFileEntry() && proto.fileEntry.hasName()) proto.fileEntry.name else "<unknown>"
             )
             signatureDeserializer = IdSignatureDeserializer(fileReader, fileSignature, interner)
@@ -111,38 +123,51 @@ private class LibraryDeserializer(private val library: KotlinLibrary, supportedS
         }
 
         fun deserializeTo(output: MutableList<AbiDeclaration>) {
+            if (settings.isPackageExcluded(packageName))
+                return
+
             topLevelDeclarationIds.mapNotNullTo(output) { topLevelDeclarationId ->
-                deserializeDeclaration(fileReader.declaration(topLevelDeclarationId), containingClassModality = null)
+                deserializeDeclaration(fileReader.declaration(topLevelDeclarationId), containingClass = null)
             }
         }
 
-        private fun deserializeDeclaration(proto: ProtoDeclaration, containingClassModality: AbiModality?): AbiDeclaration? =
+        private fun deserializeDeclaration(proto: ProtoDeclaration, containingClass: ContainingClass?): AbiDeclaration? =
             when (proto.declaratorCase) {
-                ProtoDeclaration.DeclaratorCase.IR_CLASS -> deserializeClass(proto.irClass, containingClassModality)
+                ProtoDeclaration.DeclaratorCase.IR_CLASS -> deserializeClass(proto.irClass, containingClass)
                 ProtoDeclaration.DeclaratorCase.IR_CONSTRUCTOR -> deserializeFunction(
                     proto.irConstructor.base,
-                    containingClassModality,
+                    containingClass?.modality,
                     isConstructor = true
                 )
-                ProtoDeclaration.DeclaratorCase.IR_FUNCTION -> deserializeFunction(proto.irFunction.base, containingClassModality)
-                ProtoDeclaration.DeclaratorCase.IR_PROPERTY -> deserializeProperty(proto.irProperty, containingClassModality)
+                ProtoDeclaration.DeclaratorCase.IR_FUNCTION -> deserializeFunction(proto.irFunction.base, containingClass?.modality)
+                ProtoDeclaration.DeclaratorCase.IR_PROPERTY -> deserializeProperty(proto.irProperty, containingClass?.modality)
                 ProtoDeclaration.DeclaratorCase.IR_ENUM_ENTRY -> deserializeEnumEntry(proto.irEnumEntry)
                 else -> null
             }
 
-        private fun deserializeClass(proto: ProtoClass, containingClassModality: AbiModality?): AbiClass? {
-            if (!getVisibilityStatus(proto.base, containingClassModality).isPubliclyVisible)
+        private fun deserializeClass(proto: ProtoClass, containingClass: ContainingClass?): AbiClass? {
+            if (!computeVisibilityStatus(proto.base, containingClass?.modality).isPubliclyVisible)
                 return null
 
             val flags = ClassFlags.decode(proto.base.flags)
-            val modality = deserializeModality(flags.modality, containingClassModality = null)
+            val modality = deserializeModality(
+                flags.modality,
+                containingClassModality = /* Open nested classes in final class remain open. */ null
+            )
+
+            val simpleName = deserializeName(proto.name)
+            val thisClass = containingClass?.nested(modality, simpleName)
+                ?: ContainingClass(modality, packageName, simpleName)
+
+            if (settings.isClassExcluded(thisClass.className))
+                return null
 
             val memberDeclarations = proto.declarationList.memoryOptimizedMapNotNull { declaration ->
-                deserializeDeclaration(declaration, containingClassModality = modality)
+                deserializeDeclaration(declaration, containingClass = thisClass)
             }
 
             return AbiClassImpl(
-                name = deserializeName(proto.name),
+                name = simpleName,
                 signatures = deserializeSignatures(proto.base),
                 modality = modality,
                 kind = when (val kind = flags.kind) {
@@ -189,7 +214,7 @@ private class LibraryDeserializer(private val library: KotlinLibrary, supportedS
             parentVisibilityStatus: VisibilityStatus? = null,
             isConstructor: Boolean = false,
         ): AbiFunction? {
-            if (!getVisibilityStatus(proto.base, containingClassModality, parentVisibilityStatus).isPubliclyVisible)
+            if (!computeVisibilityStatus(proto.base, containingClassModality, parentVisibilityStatus).isPubliclyVisible)
                 return null
 
             val flags = FunctionFlags.decode(proto.base.flags)
@@ -214,7 +239,7 @@ private class LibraryDeserializer(private val library: KotlinLibrary, supportedS
             proto: ProtoProperty,
             containingClassModality: AbiModality?
         ): AbiProperty? {
-            val visibilityStatus = getVisibilityStatus(proto.base, containingClassModality)
+            val visibilityStatus = computeVisibilityStatus(proto.base, containingClassModality)
             if (!visibilityStatus.isPubliclyVisible)
                 return null
 
@@ -253,27 +278,40 @@ private class LibraryDeserializer(private val library: KotlinLibrary, supportedS
             )
         }
 
-        private fun getVisibilityStatus(
+        private fun computeVisibilityStatus(
             proto: ProtoDeclarationBase,
             containingClassModality: AbiModality?,
             parentVisibilityStatus: VisibilityStatus? = null
-        ): VisibilityStatus = when (ProtoFlags.VISIBILITY.get(proto.flags.toInt())) {
-            ProtoBuf.Visibility.PUBLIC -> VisibilityStatus.PUBLIC
-
-            ProtoBuf.Visibility.PROTECTED -> {
-                if (containingClassModality == AbiModality.FINAL)
-                    VisibilityStatus.NON_PUBLIC
-                else
-                    VisibilityStatus.PUBLIC
+        ): VisibilityStatus {
+            val annotations: Set<AbiQualifiedName> by lazy(LazyThreadSafetyMode.NONE) {
+                proto.annotationList.mapNotNullTo(hashSetOf()) {
+                    (deserializeIdSignature(it.symbol) as? CommonSignature)?.extractQualifiedName()?.removeInitSuffix()
+                }
             }
 
-            ProtoBuf.Visibility.INTERNAL -> when {
-                parentVisibilityStatus == VisibilityStatus.INTERNAL_PUBLISHED_API -> VisibilityStatus.INTERNAL_PUBLISHED_API
-                proto.annotationList.any { deserializeIdSignature(it.symbol).isPublishedApi() } -> VisibilityStatus.INTERNAL_PUBLISHED_API
+            val visibilityStatus = when (ProtoFlags.VISIBILITY.get(proto.flags.toInt())) {
+                ProtoBuf.Visibility.PUBLIC -> VisibilityStatus.PUBLIC
+
+                ProtoBuf.Visibility.PROTECTED -> {
+                    if (containingClassModality == AbiModality.FINAL)
+                        VisibilityStatus.NON_PUBLIC
+                    else
+                        VisibilityStatus.PUBLIC
+                }
+
+                ProtoBuf.Visibility.INTERNAL -> when {
+                    parentVisibilityStatus == VisibilityStatus.INTERNAL_PUBLISHED_API -> VisibilityStatus.INTERNAL_PUBLISHED_API
+                    PUBLISHED_API_CONSTRUCTOR_QUALIFIED_NAME in annotations -> VisibilityStatus.INTERNAL_PUBLISHED_API
+                    else -> VisibilityStatus.NON_PUBLIC
+                }
+
                 else -> VisibilityStatus.NON_PUBLIC
             }
 
-            else -> VisibilityStatus.NON_PUBLIC
+            return if (visibilityStatus != VisibilityStatus.NON_PUBLIC && settings.isMarkedWithNonPublicMarker { annotations })
+                VisibilityStatus.NON_PUBLIC
+            else
+                visibilityStatus
         }
 
         private fun deserializeModality(modality: Modality, containingClassModality: AbiModality?): AbiModality = when (modality) {
@@ -310,6 +348,21 @@ private class LibraryDeserializer(private val library: KotlinLibrary, supportedS
                 )
             }
         }
+    }
+
+    private class ContainingClass private constructor(
+        val modality: AbiModality,
+        val className: AbiQualifiedName
+    ) {
+        constructor(modality: AbiModality, packageName: AbiDottedName, simpleName: AbiSimpleName) : this(
+            modality,
+            AbiQualifiedName(packageName, AbiDottedName(simpleName.value))
+        )
+
+        fun nested(modality: AbiModality, simpleName: AbiSimpleName) = ContainingClass(
+            modality,
+            AbiQualifiedName(className.packageName, AbiDottedName("${className.relativeName}${AbiDottedName.SEPARATOR}$simpleName"))
+        )
     }
 
     private class TypeDeserializer(
@@ -371,8 +424,6 @@ private class LibraryDeserializer(private val library: KotlinLibrary, supportedS
             val symbolData = BinarySymbolData.decode(symbolId)
             val signature = signatureDeserializer.deserializeIdSignature(symbolData.signatureId)
             val symbolKind = symbolData.kind
-
-            fun CommonSignature.extractQualifiedName() = AbiQualifiedName(AbiDottedName(packageFqName), AbiDottedName(declarationFqName))
 
             return when {
                 symbolKind == CLASS_SYMBOL && signature is CommonSignature -> {
@@ -445,17 +496,56 @@ private class LibraryDeserializer(private val library: KotlinLibrary, supportedS
     }
 
     companion object {
-        private const val PUBLISHED_API_PACKAGE_NAME = "kotlin"
-        private const val PUBLISHED_API_DECLARATION_NAME = "PublishedApi.<init>"
+        private val INIT_SUFFIX = "." + SpecialNames.INIT.asString()
 
-        private val KOTLIN_ANY_QUALIFIED_NAME = AbiQualifiedName(AbiDottedName("kotlin"), AbiDottedName("Any"))
-
-        private fun IdSignature.isPublishedApi(): Boolean =
-            this is CommonSignature
-                    && packageFqName == PUBLISHED_API_PACKAGE_NAME
-                    && declarationFqName == PUBLISHED_API_DECLARATION_NAME
+        private val KOTLIN_DOTTED_NAME = AbiDottedName("kotlin")
+        private val PUBLISHED_API_CONSTRUCTOR_QUALIFIED_NAME = AbiQualifiedName(KOTLIN_DOTTED_NAME, AbiDottedName("PublishedApi"))
+        private val KOTLIN_ANY_QUALIFIED_NAME = AbiQualifiedName(KOTLIN_DOTTED_NAME, AbiDottedName("Any"))
 
         private fun AbiType.isKotlinAny(): Boolean =
             this is AbiType.Simple && (classifier as? AbiClassifier.Class)?.className == KOTLIN_ANY_QUALIFIED_NAME
+
+        private fun CommonSignature.extractQualifiedName(): AbiQualifiedName =
+            AbiQualifiedName(AbiDottedName(packageFqName), AbiDottedName(declarationFqName))
+
+        private fun AbiQualifiedName.removeInitSuffix(): AbiQualifiedName =
+            AbiQualifiedName(packageName, AbiDottedName(relativeName.value.removeSuffix(INIT_SUFFIX)))
+
+        private fun AbiReadingSettings.isPackageExcluded(packageName: AbiDottedName): Boolean = when {
+            excludedPackages.isEmpty() -> false
+            packageName in excludedPackages -> true
+            else -> excludedPackages.any { excludedPackageName -> excludedPackageName isContainerOf packageName }
+        }
+
+        private fun AbiReadingSettings.isClassExcluded(className: AbiQualifiedName): Boolean = when {
+            excludedClasses.isEmpty() -> false
+            className in excludedClasses -> true
+            else -> excludedClasses.any { excludedClassName ->
+                excludedClassName.packageName == className.packageName && excludedClassName.relativeName isContainerOf className.relativeName
+            }
+        }
+
+        private inline fun AbiReadingSettings.isMarkedWithNonPublicMarker(lazyAnnotations: () -> Set<AbiQualifiedName>): Boolean {
+            if (nonPublicMarkers.isEmpty())
+                return false
+
+            val annotations = lazyAnnotations()
+            if (annotations.isEmpty())
+                return false
+
+            return nonPublicMarkers.any { nonPublicMarker -> nonPublicMarker in annotations }
+        }
+
+        private infix fun AbiDottedName.isContainerOf(member: AbiDottedName): Boolean {
+            val containerName = value
+            return when (val containerNameLength = containerName.length) {
+                0 -> true
+                else -> {
+                    val memberName = member.value
+                    val memberNameLength = memberName.length
+                    memberNameLength > containerNameLength + 1 && memberName.startsWith(containerName) && memberName[containerNameLength] == AbiDottedName.SEPARATOR
+                }
+            }
+        }
     }
 }
