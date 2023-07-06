@@ -29,7 +29,7 @@ such as `KmClass.visibility`, `KmClass.isData`, `KmFunction.isInline`, and so on
 
 For almost every deprecated `Flag` instance, there is a corresponding mutable extension property.
 There are some exceptions to this rule, notably visibility and modality.
-For them, all flags are replaced with a single extension that returns enum value.
+For them, all flags are replaced with a single extension that returns an enum value.
 For example, `Flag.IS_PUBLIC(): Boolean` and `Flag.IS_PRIVATE(): Boolean`
 are both replaced by `KmClass.visibility: Visibility` or `KmFunction.visibility: Visibility`.
 
