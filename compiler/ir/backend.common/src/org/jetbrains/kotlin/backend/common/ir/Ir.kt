@@ -231,6 +231,9 @@ abstract class Symbols(
 
     abstract val functionAdapter: IrClassSymbol
 
+    open val enumEntriesIntrinsicFromStdlib: IrSimpleFunctionSymbol? = null
+    open val enumEntriesIntrinsic: IrSimpleFunctionSymbol? = null
+
     open val unsafeCoerceIntrinsic: IrSimpleFunctionSymbol? = null
 
     open val getWithoutBoundCheckName: Name? = null

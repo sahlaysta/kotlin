@@ -348,6 +348,11 @@ internal class KonanSymbols(
     val createEnumEntries = irBuiltIns.findFunctions(Name.identifier("enumEntries"), "kotlin", "enums")
             .single { lookup.getValueParametersCount(it) == 1 && lookup.isValueParameterClass(it, 0, array) }
 
+    override val enumEntriesIntrinsicFromStdlib = irBuiltIns.findFunctions(Name.identifier("enumEntries"), "kotlin", "enums")
+            .single { lookup.getValueParametersCount(it) == 0 }
+
+    override val enumEntriesIntrinsic = internalFunction("enumEntriesIntrinsic")
+
     val enumEntriesInterface = irBuiltIns.findClass(Name.identifier("EnumEntries"), "kotlin", "enums")!!
 
     val createUninitializedInstance = internalFunction("createUninitializedInstance")

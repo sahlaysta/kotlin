@@ -23,9 +23,7 @@ import org.jetbrains.kotlin.ir.builders.irReturn
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.expressions.*
 import org.jetbrains.kotlin.ir.expressions.impl.*
-import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
-import org.jetbrains.kotlin.ir.symbols.IrSymbol
-import org.jetbrains.kotlin.ir.symbols.IrValueSymbol
+import org.jetbrains.kotlin.ir.symbols.*
 import org.jetbrains.kotlin.ir.symbols.impl.IrReturnableBlockSymbolImpl
 import org.jetbrains.kotlin.ir.types.*
 import org.jetbrains.kotlin.ir.util.*
@@ -61,7 +59,6 @@ fun IrFunction.isBuiltInSuspendCoroutineUninterceptedOrReturn(): Boolean =
 open class DefaultInlineFunctionResolver(open val context: CommonBackendContext) : InlineFunctionResolver {
     override fun getFunctionDeclaration(symbol: IrFunctionSymbol): IrFunction {
         val function = symbol.owner
-        // TODO: Remove these hacks when coroutine intrinsics are fixed.
         return when {
             function.isBuiltInSuspendCoroutineUninterceptedOrReturn() ->
                 context.ir.symbols.suspendCoroutineUninterceptedOrReturn.owner
@@ -69,8 +66,11 @@ open class DefaultInlineFunctionResolver(open val context: CommonBackendContext)
             symbol == context.ir.symbols.coroutineContextGetter ->
                 context.ir.symbols.coroutineGetContext.owner
 
-            else -> (symbol.owner as? IrSimpleFunction)?.resolveFakeOverride() ?: symbol.owner
-        }
+            symbol == context.ir.symbols.enumEntriesIntrinsicFromStdlib ->
+                context.ir.symbols.enumEntriesIntrinsic?.owner
+
+            else -> (function as? IrSimpleFunction)?.resolveFakeOverride()
+        } ?: function
     }
 
     override fun getFunctionSymbol(irFunction: IrFunction): IrFunctionSymbol {
@@ -119,6 +119,12 @@ class FunctionInlining(
 
         val actualCallee = inlineFunctionResolver.getFunctionDeclaration(callee.symbol)
         if (actualCallee.body == null) {
+            if (actualCallee != callee) {
+                when (expression) {
+                    is IrCall -> expression.symbol = actualCallee.symbol as IrSimpleFunctionSymbol
+                    is IrConstructorCall -> expression.symbol = actualCallee.symbol as IrConstructorSymbol
+                }
+            }
             return expression
         }
 
