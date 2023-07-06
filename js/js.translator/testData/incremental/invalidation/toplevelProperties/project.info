@@ -47,7 +47,7 @@ STEP 14..15:
 STEP 16..17:
     libs: lib1, lib2, main
     dirty js modules: lib1, lib2
-    dirty js files:   lib1/l1, lib2/l2, lib2/l2globalVal, lib2/l2globalVar, lib2/l2inlineGlobalVar, lib2/l2inlineExtensionProperty
+    dirty js files:   lib1/l1, lib2/l2, lib2/l2inlineExtensionProperty
 STEP 18:
     libs: lib1, lib2, main
     dirty js modules: lib1, lib2

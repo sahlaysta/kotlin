@@ -17,4 +17,4 @@ STEP 3:
     language: +EnumEntries
     libs: lib1, main
     dirty js modules: main, lib1
-    dirty js files:   lib1/l1, main/testEnumEntries, main/testEnumValues
+    dirty js files:   lib1/l1, main/testEnumEntries

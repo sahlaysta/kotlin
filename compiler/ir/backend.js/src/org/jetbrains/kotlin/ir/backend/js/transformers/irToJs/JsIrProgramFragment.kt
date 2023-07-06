@@ -151,7 +151,14 @@ private class JsIrModuleCrossModuleReferenceBuilder(
 
     fun buildExportNames(startIndex: Int = 0) {
         var index = startIndex
-        exportNames = exports.sorted().associateWith { index++.toJsIdentifier() }
+        exportNames = exports.sorted().associateWith { tag ->
+            // Bundlers should minimize the names by ourselves. Ex, webpack has `optimization.mangleExports` property
+            if (moduleKind == ModuleKind.ES) {
+                "${header.nameBindings[tag]}${tag.cityHash64HexString()}"
+            } else {
+                index++.toJsIdentifier()
+            }
+        }
     }
 
     fun buildCrossModuleRefs(): CrossModuleReferences {

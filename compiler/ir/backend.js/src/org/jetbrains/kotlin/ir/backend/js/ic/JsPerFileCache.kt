@@ -5,10 +5,12 @@
 
 package org.jetbrains.kotlin.ir.backend.js.ic
 
+import org.jetbrains.kotlin.backend.common.serialization.cityHash64
 import org.jetbrains.kotlin.backend.common.serialization.cityHash64HexString
 import org.jetbrains.kotlin.ir.backend.js.transformers.irToJs.*
 import org.jetbrains.kotlin.protobuf.CodedInputStream
 import org.jetbrains.kotlin.protobuf.CodedOutputStream
+import org.jetbrains.kotlin.utils.addToStdlib.runIf
 import java.io.File
 
 class JsPerFileCache(private val moduleArtifacts: List<ModuleArtifact>) : JsMultiArtifactCache<JsPerFileCache.CachedFileInfo>() {
@@ -25,6 +27,7 @@ class JsPerFileCache(private val moduleArtifacts: List<ModuleArtifact>) : JsMult
         val fileArtifact: SrcFileArtifact,
         val isExportFileCachedInfo: Boolean = false,
     ) : CacheInfo {
+        var dtsHash: Long? = null
         var crossFileReferencesHash: ICHash = ICHash()
         var exportFileCachedInfo: CachedFileInfo? = null
         override lateinit var jsIrHeader: JsIrModuleHeader
@@ -34,8 +37,10 @@ class JsPerFileCache(private val moduleArtifacts: List<ModuleArtifact>) : JsMult
             moduleArtifact: ModuleArtifact,
             fileArtifact: SrcFileArtifact,
             isExportFileCachedInfo: Boolean = false,
+            tsDeclarationsHash: Long? = null,
         ) : this(moduleArtifact, fileArtifact, isExportFileCachedInfo) {
             jsIrHeader = jsIrModuleHeader
+            dtsHash = tsDeclarationsHash
         }
 
         val artifactsDir: File? = moduleArtifact.artifactsDir?.let {
@@ -76,6 +81,7 @@ class JsPerFileCache(private val moduleArtifacts: List<ModuleArtifact>) : JsMult
         val moduleName = readString()
 
         it.crossFileReferencesHash = ICHash.fromProtoStream(this)
+        it.dtsHash = runIf(readBool()) { readInt64() }
 
         val (definitions, nameBindings, optionalCrossModuleImports) = fetchJsIrModuleHeaderNames()
 
@@ -120,6 +126,7 @@ class JsPerFileCache(private val moduleArtifacts: List<ModuleArtifact>) : JsMult
     private fun CodedOutputStream.commitSingleFileInfo(cachedFileInfo: CachedFileInfo) {
         writeStringNoTag(cachedFileInfo.jsIrHeader.externalModuleName)
         cachedFileInfo.crossFileReferencesHash.toProtoStream(this)
+        ifNotNull(cachedFileInfo.dtsHash, ::writeInt64NoTag)
         commitJsIrModuleHeaderNames(cachedFileInfo.jsIrHeader)
     }
 
@@ -137,9 +144,19 @@ class JsPerFileCache(private val moduleArtifacts: List<ModuleArtifact>) : JsMult
         val mainCachedFileInfo = CachedFileInfo(headers.mainHeader, this, fileArtifact)
 
         if (headers.exportHeader != null) {
-            mainCachedFileInfo.exportFileCachedInfo =
-                mainCachedFileInfo.readModuleHeaderCache { fetchFileInfoForExportedPart(mainCachedFileInfo) }
-                    ?: CachedFileInfo(headers.exportHeader, moduleArtifact, fileArtifact, isExportFileCachedInfo = true)
+            val tsDeclarationsHash = fileArtifact.loadJsIrFragments().exportFragment?.dts?.raw?.cityHash64()
+            val cachedExportFileInfo = mainCachedFileInfo.readModuleHeaderCache { fetchFileInfoForExportedPart(mainCachedFileInfo) }
+            mainCachedFileInfo.exportFileCachedInfo = if (cachedExportFileInfo?.dtsHash != tsDeclarationsHash) {
+                CachedFileInfo(
+                    headers.exportHeader,
+                    moduleArtifact,
+                    fileArtifact,
+                    tsDeclarationsHash = tsDeclarationsHash,
+                    isExportFileCachedInfo = true
+                )
+            } else {
+                cachedExportFileInfo
+            }
         }
 
         return listOfNotNull(mainCachedFileInfo.exportFileCachedInfo, mainCachedFileInfo)
@@ -158,14 +175,14 @@ class JsPerFileCache(private val moduleArtifacts: List<ModuleArtifact>) : JsMult
     override fun fetchCompiledJsCodeForNullCacheInfo() = PerFileEntryPointCompilationOutput()
 
     override fun fetchCompiledJsCode(cacheInfo: CachedFileInfo) =
-        cacheInfo.cachedFiles?.let { (jsCodeFile, sourceMapFile, tsDefinitionsFile) ->
+        cacheInfo.cachedFiles?.let { (jsCodeFile, sourceMapFile, tsDeclarationsFile) ->
             jsCodeFile.ifExists { this }
-                ?.let { CompilationOutputsCached(it, sourceMapFile?.ifExists { this }, tsDefinitionsFile?.ifExists { this }) }
+                ?.let { CompilationOutputsCached(it, sourceMapFile?.ifExists { this }, tsDeclarationsFile?.ifExists { this }) }
         }
 
     override fun commitCompiledJsCode(cacheInfo: CachedFileInfo, compilationOutputs: CompilationOutputsBuilt) =
-        cacheInfo.cachedFiles?.let { (jsCodeFile, jsMapFile, tsDefinitionsFile) ->
-            tsDefinitionsFile?.writeIfNotNull(compilationOutputs.tsDefinitions?.raw)
+        cacheInfo.cachedFiles?.let { (jsCodeFile, jsMapFile, tsDeclarationsFile) ->
+            tsDeclarationsFile?.writeIfNotNull(compilationOutputs.tsDefinitions?.raw)
             compilationOutputs.writeJsCodeIntoModuleCache(jsCodeFile, jsMapFile)
         } ?: compilationOutputs
 
