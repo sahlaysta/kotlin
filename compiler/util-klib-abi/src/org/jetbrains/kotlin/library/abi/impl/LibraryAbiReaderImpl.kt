@@ -70,6 +70,7 @@ internal class LibraryAbiReaderImpl(libraryFile: File) {
         )
     }
 
+    @OptIn(ExperimentalStdlibApi::class)
     private fun readSupportedSignatureVersions(): Set<AbiSignatureVersion> {
         fun resolveSignatureVersion(signatureVersion: String): AbiSignatureVersion =
             AbiSignatureVersion.entries.firstOrNull { it.alias == signatureVersion }
@@ -239,8 +240,8 @@ private class LibraryDeserializer(private val library: KotlinLibrary, supportedS
             )
         }
 
-        private fun deserializeName(nameId: Int): String {
-            return interner.string(fileReader.string(nameId))
+        private fun deserializeName(nameId: Int): AbiSimpleName {
+            return AbiSimpleName(interner.string(fileReader.string(nameId)))
         }
 
         private fun deserializeSignatures(proto: ProtoDeclarationBase): AbiSignatures {
@@ -371,12 +372,14 @@ private class LibraryDeserializer(private val library: KotlinLibrary, supportedS
             val signature = signatureDeserializer.deserializeIdSignature(symbolData.signatureId)
             val symbolKind = symbolData.kind
 
+            fun CommonSignature.extractQualifiedName() = AbiQualifiedName(AbiDottedName(packageFqName), AbiDottedName(declarationFqName))
+
             return when {
                 symbolKind == CLASS_SYMBOL && signature is CommonSignature -> {
                     // Publicly visible class or interface.
                     SimpleTypeImpl(
                         classifier = ClassImpl(
-                            className = with(signature) { "$packageFqName/$declarationFqName" }
+                            className = signature.extractQualifiedName()
                         ),
                         arguments = deserializeTypeArguments(typeArgumentIds),
                         nullability = nullability
@@ -393,7 +396,7 @@ private class LibraryDeserializer(private val library: KotlinLibrary, supportedS
                     // A type-parameter.
                     SimpleTypeImpl(
                         classifier = TypeParameterImpl(
-                            declaringClassName = with(signature.container as CommonSignature) { "$packageFqName/$declarationFqName" },
+                            declaringClassName = (signature.container as CommonSignature).extractQualifiedName(),
                             index = (signature.inner as LocalSignature).index()
                         ),
                         arguments = emptyList(),
@@ -445,12 +448,14 @@ private class LibraryDeserializer(private val library: KotlinLibrary, supportedS
         private const val PUBLISHED_API_PACKAGE_NAME = "kotlin"
         private const val PUBLISHED_API_DECLARATION_NAME = "PublishedApi.<init>"
 
+        private val KOTLIN_ANY_QUALIFIED_NAME = AbiQualifiedName(AbiDottedName("kotlin"), AbiDottedName("Any"))
+
         private fun IdSignature.isPublishedApi(): Boolean =
             this is CommonSignature
                     && packageFqName == PUBLISHED_API_PACKAGE_NAME
                     && declarationFqName == PUBLISHED_API_DECLARATION_NAME
 
         private fun AbiType.isKotlinAny(): Boolean =
-            this is AbiType.Simple && (classifier as? AbiClassifier.Class)?.className == "kotlin/Any"
+            this is AbiType.Simple && (classifier as? AbiClassifier.Class)?.className == KOTLIN_ANY_QUALIFIED_NAME
     }
 }

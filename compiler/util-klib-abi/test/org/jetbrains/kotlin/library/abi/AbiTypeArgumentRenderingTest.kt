@@ -21,10 +21,10 @@ class AbiTypeArgumentRenderingTest {
             mockClass(
                 name = "FinalClass",
                 mockType(
-                    "sample/OpenClass",
-                    mockType("sample/InvariantClass") to AbiVariance.INVARIANT,
-                    mockType("sample/InClass") to AbiVariance.IN_VARIANCE,
-                    mockType("sample/OutClass") to AbiVariance.OUT_VARIANCE,
+                    "sample", "OpenClass",
+                    mockType("sample", "InvariantClass") to AbiVariance.INVARIANT,
+                    mockType("sample", "InClass") to AbiVariance.IN_VARIANCE,
+                    mockType("sample", "OutClass") to AbiVariance.OUT_VARIANCE,
                     null
                 )
             )
@@ -53,7 +53,7 @@ class AbiTypeArgumentRenderingTest {
 
     private fun mockClass(name: String, vararg superTypes: AbiType): AbiClass =
         AbiClassImpl(
-            name = name,
+            name = AbiSimpleName(name),
             signatures = AbiSignaturesImpl("sample/$name|null[0]", null),
             modality = AbiModality.FINAL,
             kind = AbiClassKind.CLASS,
@@ -64,9 +64,9 @@ class AbiTypeArgumentRenderingTest {
             declarations = emptyList()
         )
 
-    private fun mockType(className: String, vararg arguments: Pair<AbiType, AbiVariance>?): AbiType =
-        SimpleTypeImpl(
-            classifier = ClassImpl(className),
+    private fun mockType(packageName: String, className: String, vararg arguments: Pair<AbiType, AbiVariance>?): AbiType {
+        return SimpleTypeImpl(
+            classifier = ClassImpl(AbiQualifiedName(AbiDottedName(packageName), AbiDottedName(className))),
             arguments = arguments.map { argument ->
                 if (argument == null)
                     StarProjectionImpl
@@ -75,4 +75,5 @@ class AbiTypeArgumentRenderingTest {
             },
             nullability = AbiTypeNullability.NOT_SPECIFIED
         )
+    }
 }

@@ -22,7 +22,7 @@ internal class AbiTopLevelDeclarationsImpl(
 
 @ExperimentalLibraryAbiReader
 internal class AbiClassImpl(
-    override val name: String,
+    override val name: AbiSimpleName,
     override val signatures: AbiSignatures,
     override val modality: AbiModality,
     override val kind: AbiClassKind,
@@ -47,13 +47,13 @@ internal class AbiClassImpl(
 
 @ExperimentalLibraryAbiReader
 internal class AbiEnumEntryImpl(
-    override val name: String,
+    override val name: AbiSimpleName,
     override val signatures: AbiSignatures
 ) : AbiEnumEntry
 
 @ExperimentalLibraryAbiReader
 internal class AbiFunctionImpl(
-    override val name: String,
+    override val name: AbiSimpleName,
     override val signatures: AbiSignatures,
     override val modality: AbiModality,
     isConstructor: Boolean,
@@ -94,7 +94,7 @@ internal value class AbiValueParameterImpl private constructor(private val flags
 
 @ExperimentalLibraryAbiReader
 internal class AbiPropertyImpl(
-    override val name: String,
+    override val name: AbiSimpleName,
     override val signatures: AbiSignatures,
     override val modality: AbiModality,
     override val kind: AbiPropertyKind,
@@ -125,10 +125,10 @@ internal class RegularProjectionImpl(
 ) : AbiTypeArgument.RegularProjection
 
 @ExperimentalLibraryAbiReader
-internal class ClassImpl(override val className: String) : AbiClassifier.Class
+internal class ClassImpl(override val className: AbiQualifiedName) : AbiClassifier.Class
 
 @ExperimentalLibraryAbiReader
 internal class TypeParameterImpl(
-    override val declaringClassName: String,
+    override val declaringClassName: AbiQualifiedName,
     override val index: Int
 ) : AbiClassifier.TypeParameter

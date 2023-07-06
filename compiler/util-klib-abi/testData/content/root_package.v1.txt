@@ -3,7 +3,7 @@
 // - Show manifest properties: false
 
 // Library unique name: <testRoot_package>
-final class /Class|null[0] {
+final class /Class|null[0] : /Interface, /Interface.NestedInterface {
     final val /Class.property|4634558160746314112[0]
         final fun /Class.property.<get-property>|4838831487146901942[0]
     constructor /Class.<init>|1280618353163213788[0]
@@ -11,6 +11,9 @@ final class /Class|null[0] {
     final class /Class.NestedClass|null[0] {
         constructor /Class.NestedClass.<init>|-5645683436151566731[0]
     }
+}
+abstract interface /Interface|null[0] {
+    abstract interface /Interface.NestedInterface|null[0]
 }
 final val /property|4634558160746314112[0]
     final fun /property.<get-property>|4838831487146901942[0]

@@ -65,13 +65,15 @@ internal class AbiRendererImpl(
             is AbiEnumEntry -> 5
         }
 
+        fun AbiDeclaration.orderByName(): String = name.value
+
         fun AbiDeclaration.orderByTheFirstSignature(): String =
             signatures[signatureVersionForOrdering] ?: settings.whenSignatureNotFound(this, signatureVersionForOrdering)
 
         declarations.sortedWith(
             compareBy(
                 if (isTopLevel) AbiDeclaration::topLevelOrderByDeclarationKind else AbiDeclaration::nestedOrderByDeclarationKind,
-                AbiDeclaration::name,
+                AbiDeclaration::orderByName,
                 AbiDeclaration::orderByTheFirstSignature
             )
         ).forEach { declaration ->
