@@ -350,12 +350,55 @@ class StubIrBuilder(private val context: StubIrContext) {
                 typealiases.toList(),
                 containers.toList()
         )
+
+        stubs.addExperimentalAnnotations()
+
         return StubIrBuilderResult(
                 stubs,
                 buildingContext.declarationMapper,
                 buildingContext.bridgeComponentsBuilder.build(),
                 buildingContext.wrapperComponentsBuilder.build()
         )
+    }
+
+    private fun StubContainer.addExperimentalAnnotations() {
+        fun MutableList<AnnotationStub>.addExperimentalIfNecessary() {
+            if (!configuration.disableExperimentalAnnotation)
+                this.add(AnnotationStub.ExperimentalInterop)
+        }
+
+        this.accept(object : StubIrVisitor<Unit, Unit> {
+            override fun visitSimpleStubContainer(simpleStubContainer: SimpleStubContainer, data: Unit) {
+                simpleStubContainer.children.forEach { it.accept(this, data) }
+                simpleStubContainer.simpleContainers.forEach { visitSimpleStubContainer(it, data) }
+            }
+
+            override fun visitClass(element: ClassStub, data: Unit) {
+                val annotations = when (element) {
+                    is ClassStub.Companion -> return
+                    is ClassStub.Enum -> element.annotations
+                    is ClassStub.Simple -> element.annotations
+                }
+                annotations.addExperimentalIfNecessary()
+                // Not visiting nested declarations intentionally.
+            }
+
+            override fun visitTypealias(element: TypealiasStub, data: Unit) {
+                element.annotations.addExperimentalIfNecessary()
+            }
+
+            override fun visitFunction(element: FunctionStub, data: Unit) {
+                element.annotations.addExperimentalIfNecessary()
+            }
+
+            override fun visitProperty(element: PropertyStub, data: Unit) {
+                element.annotations.addExperimentalIfNecessary()
+            }
+
+            override fun visitConstructor(constructorStub: ConstructorStub, data: Unit) {}
+
+            override fun visitPropertyAccessor(propertyAccessor: PropertyAccessor, data: Unit) {}
+        }, Unit)
     }
 
     private fun generateStubsForWrappedMacro(macro: WrappedMacroDef) {
