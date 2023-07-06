@@ -162,7 +162,7 @@ private:
     void parallelMark(ParallelProcessor::Worker& worker);
 
     std::optional<ParallelProcessor::Worker> createWorker();
-    void waitEveryWorkerTermination();
+
     void resetMutatorFlags();
 
     std::size_t maxParallelism_ = 1;

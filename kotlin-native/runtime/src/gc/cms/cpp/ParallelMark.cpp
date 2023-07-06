@@ -97,6 +97,11 @@ void gc::mark::ParallelMark::waitForThreadsPauseMutation() noexcept {
 
 void gc::mark::ParallelMark::endMarkingEpoch() {
     if (!compiler::gcMarkSingleThreaded()) {
+        // We must now wait for every worker to finish the Mark procedure:
+        // wake up from possible waiting, publish statistics, etc.
+        // Only then it's safe to destroy the parallelProcessor and proceed to other GC tasks such as sweep.
+        spinWait([=]() { return activeWorkersCount_.load(std::memory_order_relaxed) == 0; });
+
         std::unique_lock guard(workerCreationMutex_);
         RuntimeAssert(activeWorkersCount_ == 0, "All the workers must already finish");
         pacer_.begin(MarkPacer::Phase::kIdle);
@@ -210,10 +215,9 @@ void gc::mark::ParallelMark::tryCollectRootSet(mm::ThreadData& thread, MarkTrait
 void gc::mark::ParallelMark::parallelMark(ParallelProcessor::Worker& worker) {
     GCLogDebug(gcHandle().getEpoch(), "Mark loop has begun");
     Mark<MarkTraits>(gcHandle(), worker);
-    // We must now wait for every worker to finish the Mark procedure:
-    // wake up from possible waiting, publish statistics, etc.
-    // Only then it's safe to destroy the parallelProcessor and proceed to other GC tasks such as sweep.
-    waitEveryWorkerTermination();
+
+    std::unique_lock guard(workerCreationMutex_);
+    activeWorkersCount_.fetch_sub(1, std::memory_order_relaxed);
 }
 
 std::optional<gc::mark::ParallelMark::ParallelProcessor::Worker> gc::mark::ParallelMark::createWorker() {
@@ -225,15 +229,6 @@ std::optional<gc::mark::ParallelMark::ParallelProcessor::Worker> gc::mark::Paral
     auto num = activeWorkersCount_.fetch_add(1, std::memory_order_relaxed);
     GCLogDebug(gcHandle().getEpoch(), "Creating mark worker #%zu", num);
     return std::make_optional<ParallelProcessor::Worker>(*parallelProcessor_);
-}
-
-void gc::mark::ParallelMark::waitEveryWorkerTermination() {
-    auto curEpoch = gcHandle().getEpoch();
-    {
-        std::unique_lock guard(workerCreationMutex_);
-        activeWorkersCount_.fetch_sub(1, std::memory_order_relaxed);
-    }
-    spinWait([=]() { return curEpoch != gcHandle().getEpoch() || activeWorkersCount_.load(std::memory_order_relaxed) == 0; });
 }
 
 void gc::mark::ParallelMark::resetMutatorFlags() {
