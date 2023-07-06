@@ -17,7 +17,8 @@ class JdkApiUsageTest {
     @Test
     fun kotlinReflect() {
         testApiUsage(
-            jarArtifact("../../reflect/build/libs", "kotlin-reflect"),
+            // Do not use the final jar artifact. It's shrunk by proguard.
+            jarArtifact("../../reflect/build/libs", "kotlin-reflect", "shadow"),
             dependencies = listOf(jarArtifact("../../stdlib/jvm/build/libs", "kotlin-stdlib"))
         )
     }
@@ -72,11 +73,11 @@ class JdkApiUsageTest {
         return mergedSignaturesFile
     }
 
-    private fun jarArtifact(basePath: String, jarBaseName: String): Path {
+    private fun jarArtifact(basePath: String, jarBaseName: String, jarClassifier: String? = null): Path {
         val kotlinVersion = System.getProperty("kotlinVersion")
             .let { requireNotNull(it) { "Specify kotlinVersion with a system property" } }
 
-        val jarFullName = "$jarBaseName-$kotlinVersion.jar"
+        val jarFullName = "$jarBaseName-$kotlinVersion${jarClassifier?.let { "-$it" } ?: ""}.jar"
         val base = Path(basePath).absolute().normalize()
         val file = base.listDirectoryEntries()
             .firstOrNull { it.name == jarFullName }
