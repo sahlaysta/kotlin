@@ -95,7 +95,7 @@ instead of returning a new `KotlinClassMetadata` instance.
 Previous behavior caused confusion because it was not clear what operations are valid on a returned instance and 
 is `KotlinClassMetadata.annotationData` should be written to a classfile or something else.
 
-As a result, `KotlinClassMetadata.annotationData: Metadata` property have been made private because there is no longer need for it to be exposed.
+As a result, `KotlinClassMetadata.annotationData: Metadata` property has been made private because there is no longer need for it to be exposed.
 To migrate, simply remove `.annotationData` access from your writing logic:
 
 **Before:**
