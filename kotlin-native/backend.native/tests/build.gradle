@@ -4187,6 +4187,7 @@ Task interopTestBase(String name, boolean multiFile, boolean interop2ForMainOnly
                         }
                         srcFiles task.lib
                         baseDir  "$testOutputLocal/$name"
+                        extraOpts "-opt-in=kotlinx.cinterop.ExperimentalInterop"
                         extraOpts task.flags
                         extraOpts project.globalTestArgs.findAll { !it.contains("-Xpartial-linkage") }
                     }
@@ -4203,6 +4204,7 @@ Task interopTestBase(String name, boolean multiFile, boolean interop2ForMainOnly
                     srcFiles multiFile ? fileTree(task.source) { include '**/*.kt' } : task.getSources()
                     baseDir "$testOutputLocal/$name"
                     linkerOpts "-L$buildDir"
+                    extraOpts "-opt-in=kotlinx.cinterop.ExperimentalInterop"
                     extraOpts task.flags
                     extraOpts project.globalTestArgs
                 }

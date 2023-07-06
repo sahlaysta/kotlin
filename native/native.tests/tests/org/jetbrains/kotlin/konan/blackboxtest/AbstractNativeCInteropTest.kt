@@ -49,6 +49,9 @@ abstract class AbstractNativeCInteropTest : AbstractNativeCInteropBaseTest() {
 
     abstract val defFileName: String
 
+    open val ignoreExperimentalInterop: Boolean
+        get() = true
+
     @Synchronized
     protected fun runTest(@TestDataFile testPath: String) {
         // FIXME: check the following failures under Android with -fmodules
@@ -88,6 +91,13 @@ abstract class AbstractNativeCInteropTest : AbstractNativeCInteropBaseTest() {
             }
         } else {
             val klibContents = testCompilationResult.assertSuccess().resultingArtifact.getContents(kotlinNativeClassLoader.classLoader)
+                .let {
+                    if (ignoreExperimentalInterop) {
+                        it.replace("@ExperimentalInterop ", "")
+                    } else {
+                        it
+                    }
+                }
             val expectedContents = goldenFile.readText()
             assertEquals(StringUtilRt.convertLineSeparators(expectedContents), StringUtilRt.convertLineSeparators(klibContents)) {
                 "Test failed. CInterop compilation result was: $testCompilationResult"

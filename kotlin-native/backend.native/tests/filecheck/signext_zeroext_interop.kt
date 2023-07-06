@@ -3,7 +3,7 @@
  * Use
  * of this source code is governed by the Apache 2.0 license that can be found in the license/LICENSE.txt file.
  */
-@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
+@file:OptIn(ExperimentalForeignApi::class, ExperimentalInterop::class)
 
 import signext_zeroext_interop_input.*
 import kotlinx.cinterop.*

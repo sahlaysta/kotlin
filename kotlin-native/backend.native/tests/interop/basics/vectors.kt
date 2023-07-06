@@ -5,6 +5,7 @@ import kotlin.native.*
 import kotlin.test.*
 import cvectors.*
 
+@OptIn(ExperimentalInterop::class)
 fun main() {
     produceComplex().useContents {
         assertEquals(vec4f, vectorOf(1.0f, 1.0f, 1.0f, 1.0f))

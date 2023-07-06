@@ -1,3 +1,5 @@
+@file:OptIn(kotlinx.cinterop.ExperimentalInterop::class)
+
 import kotlinx.cinterop.*
 import objclib.*
 import kotlin.native.ref.*

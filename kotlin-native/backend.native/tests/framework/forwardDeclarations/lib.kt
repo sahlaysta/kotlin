@@ -1,3 +1,5 @@
+@file:OptIn(kotlinx.cinterop.ExperimentalInterop::class)
+
 import clib.*
 import cnames.structs.ForwardDeclaredStruct
 import objcnames.classes.ForwardDeclaredClass
