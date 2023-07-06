@@ -44,7 +44,9 @@ class FirScriptDefinitionProviderService(
     companion object {
         fun getFactory(
             definitions: List<ScriptDefinition>,
-            definitionSources: List<ScriptDefinitionsSource>
+            definitionSources: List<ScriptDefinitionsSource>,
+            definitionProvider: ScriptDefinitionProvider? = null,
+            configurationProvider: ScriptDependenciesProvider? = null
         ): Factory {
             return Factory { session ->
                 FirScriptDefinitionProviderService(
@@ -59,7 +61,10 @@ class FirScriptDefinitionProviderService(
                         // TODO: check if memory can leak in MockProject (probably not too important, since currently the providers are set externaly in important cases)
                         CliScriptDependenciesProvider(MockProject(null, Disposer.newDisposable()))
                     }
-                )
+                ).also { service ->
+                    definitionProvider?.let { service.definitionProvider = it }
+                    configurationProvider?.let { service.configurationProvider = it }
+                }
             }
         }
     }
