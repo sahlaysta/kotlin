@@ -46,7 +46,7 @@ fun nameOfPublicDataClass(kmClass: KmClass): ClassName? {
 
 ### Changes in reading and writing API
 
-After gaining some feedback from our users, we have decided to implement the following changes:
+After collecting some feedback from our users, we have decided to implement the following changes:
 
 #### `KotlinClassMetadata.read()` now has a non-nullable return type of `KotlinClassMetadata`
 
