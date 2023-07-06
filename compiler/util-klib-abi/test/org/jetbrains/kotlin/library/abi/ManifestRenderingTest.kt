@@ -37,7 +37,7 @@ class ManifestRenderingTest {
         val libraryFile = buildLibrary(sourceFile, libraryName = "sample-library", buildDir)
         patchManifest(libraryFile, customManifest)
 
-        val readManifest = LibraryAbiReader.readAbiInfo(libraryFile).manifest
+        val readManifest = LibraryAbiReader.readAbiInfo(libraryFile, AbiReadingSettings()).manifest
         assertTrue(customManifest !== readManifest)
         assertEquals(customManifest, readManifest)
     }

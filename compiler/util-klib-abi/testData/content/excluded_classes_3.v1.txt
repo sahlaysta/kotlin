@@ -1,0 +1,14 @@
+// Rendering settings:
+// - Signature versions: V1
+// - Show manifest properties: false
+
+// Library unique name: <testExcluded_classes_3>
+final class /Bar|null[0] {
+    constructor /Bar.<init>|-5645683436151566731[0]
+}
+final class /Baz|null[0] {
+    constructor /Baz.<init>|-5645683436151566731[0]
+    final class /Baz.Nested|null[0] {
+        constructor /Baz.Nested.<init>|-5645683436151566731[0]
+    }
+}

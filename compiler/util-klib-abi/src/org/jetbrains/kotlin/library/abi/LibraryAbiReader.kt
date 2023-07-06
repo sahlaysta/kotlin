@@ -13,5 +13,18 @@ object LibraryAbiReader {
     /**
      * Inspect the KLIB at [library]. The KLIB can be either in a directory (unzipped) or in a file (zipped) form.
      */
-    fun readAbiInfo(library: File): LibraryAbi = LibraryAbiReaderImpl(library).readAbi()
+    fun readAbiInfo(library: File, settings: AbiReadingSettings): LibraryAbi = LibraryAbiReaderImpl(library, settings).readAbi()
+}
+
+/**
+ * @property excludedPackages Packages that are not read from library even if they contain publicly visible ABI.
+ * @property excludedClasses Classes (and objects and interfaces too) that are not read from library even if they
+ *   contain publicly visible ABI.
+ * @property nonPublicMarkers Annotations that mark ABI as publicly invisible (internal).
+ */
+@ExperimentalLibraryAbiReader
+class AbiReadingSettings {
+    val excludedPackages: MutableSet<AbiDottedName> = hashSetOf()
+    val excludedClasses: MutableSet<AbiQualifiedName> = hashSetOf()
+    val nonPublicMarkers: MutableSet<AbiQualifiedName> = hashSetOf()
 }

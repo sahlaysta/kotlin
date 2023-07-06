@@ -25,8 +25,11 @@ abstract class AbstractLibraryAbiReaderTest {
     fun runTest(relativePath: String) {
         val (sourceFile, dumpFile) = computeTestFiles(relativePath, "v1.txt")
 
+        val settings = AbiReadingSettings()
+        populateFiltersFromTestDirectives(sourceFile, settings)
+
         val library = buildLibrary(sourceFile, libraryName = testName, buildDir)
-        val libraryAbi = LibraryAbiReader.readAbiInfo(library)
+        val libraryAbi = LibraryAbiReader.readAbiInfo(library, settings)
 
         val abiDump = libraryAbi.render(
             AbiRenderingSettings(renderedSignatureVersions = setOf(AbiSignatureVersion.V1))
