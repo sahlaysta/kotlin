@@ -93,7 +93,7 @@ The same is applicable to `KotlinModuleMetadata.toKmModule()`.
 `KotlinClassMetadata.writeClass` and other similar functions now return a `Metadata` instance directly
 instead of returning a new `KotlinClassMetadata` instance.
 Previous behavior caused confusion because it was not clear what operations are valid on a returned instance and 
-if `KotlinClassMetadata.annotationData` should be written to a classfile or something else.
+how exactly it is supposed to be used.
 
 As a result, `KotlinClassMetadata.annotationData: Metadata` property has been made private because there is no longer need for it to be exposed.
 To migrate, simply remove `.annotationData` access from your writing logic:

@@ -6,12 +6,12 @@ This release features several significant API changes. To help with migration, w
 
 - Update to Kotlin 1.9 with metadata version 1.9, support reading/writing metadata of version 2.0 which will be used in Kotlin 2.0
 - Rework flags API (see [migration from Flags API to Attributes API](Migration.md#migration-from-flags-api-to-attributes-api)).
-- Restructure KotlinClass(Module)Metadata.write/read (see [changes in reading and writing API](Migration.md#changes-in-reading-and-writing-api)).
-- Add @JvmStatic + @JvmOverloads to writing functions in KotlinClassMetadata
-- Deprecate KmModule.annotations for removal because it is always empty and should not be used.
-- Move KmModuleFragment to an internal.common package. This class is intended for internal use only. If you have use-cases for it, please report an issue to YouTrack.
-- Improve toString() for KmAnnotationArgument
-- Add missing deprecation for KmExtensionType and experimentality for KmConstantValue.
+- Restructure `KotlinClass(Module)Metadata.write/read` (see [changes in reading and writing API](Migration.md#changes-in-reading-and-writing-api)).
+- Add `@JvmStatic` + `@JvmOverloads` to writing functions in `KotlinClassMetadata`
+- Deprecate `KmModule.annotations` for removal because it is always empty and should not be used.
+- Move `KmModuleFragment` to an `kotlinx.metadata.internal.common` package. This class is intended for internal use only. If you have use-cases for it, please report an issue to YouTrack.
+- Improve `toString()` for `KmAnnotationArgument`
+- Add missing deprecation for `KmExtensionType` and experimentality for `KmConstantValue`.
 - Enhance kotlinx-metadata-jvm KDoc and set up Dokka.
 
 ## 0.6.2
