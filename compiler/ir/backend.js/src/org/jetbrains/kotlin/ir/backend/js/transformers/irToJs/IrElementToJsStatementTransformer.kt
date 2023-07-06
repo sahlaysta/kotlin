@@ -171,6 +171,7 @@ class IrElementToJsStatementTransformer : BaseIrElementToJsNodeTransformer<JsSta
             is IrDeclarationOrigin.IR_TEMPORARY_VARIABLE -> true
             is IrDeclarationOrigin.IR_TEMPORARY_VARIABLE_FOR_INLINED_PARAMETER -> true
             is IrDeclarationOrigin.IR_TEMPORARY_VARIABLE_FOR_INLINED_EXTENSION_RECEIVER -> true
+            is JsIrBuilder.SYNTHESIZED_DECLARATION -> true
             else -> false
         }
 
