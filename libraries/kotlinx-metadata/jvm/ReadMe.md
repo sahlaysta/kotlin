@@ -74,7 +74,7 @@ Please refer to [`MetadataSmokeTest.listInlineFunctions`](test/kotlinx/metadata/
 
 ## Attributes
 
-Most of the Km nodes (`KmClass`, `KmFunction`, `KmType`, and so on) have a set of extension functions that allow to get and set various attributes.
+Most of the Km nodes (`KmClass`, `KmFunction`, `KmType`, and so on) have a set of extension properties that allow to get and set various attributes.
 Most of these attributes are boolean values, but some of them, such as visibility, are represented by enumerations.
 For example, you can check function visibility and presence of `suspend` modifier with corresponding extension properties:
 
