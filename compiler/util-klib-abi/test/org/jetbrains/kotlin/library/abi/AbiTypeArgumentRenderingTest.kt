@@ -30,7 +30,7 @@ class AbiTypeArgumentRenderingTest {
             )
         )
 
-        val renderedClass = mockLibraryAbi.render(AbiRenderingSettings(setOf(AbiSignatureVersion.V1)))
+        val renderedClass = LibraryAbiRenderer.render(mockLibraryAbi, AbiRenderingSettings(setOf(AbiSignatureVersion.V1)))
             .lineSequence()
             .filter(String::isNotBlank)
             .last()

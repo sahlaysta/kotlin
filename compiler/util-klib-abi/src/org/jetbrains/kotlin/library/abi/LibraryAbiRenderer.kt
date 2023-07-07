@@ -11,15 +11,12 @@ import org.jetbrains.kotlin.library.abi.impl.AbiRendererImpl
  * The default rendering implementation.
  */
 @ExperimentalLibraryAbiReader
-fun LibraryAbi.render(settings: AbiRenderingSettings): String =
-    buildString { render(settings, this) }
+object LibraryAbiRenderer {
+    fun render(libraryAbi: LibraryAbi, settings: AbiRenderingSettings): String =
+        buildString { render(libraryAbi, this, settings) }
 
-/**
- * The default rendering implementation.
- */
-@ExperimentalLibraryAbiReader
-fun LibraryAbi.render(settings: AbiRenderingSettings, output: Appendable) {
-    AbiRendererImpl(this, settings).renderTo(output)
+    fun render(libraryAbi: LibraryAbi, output: Appendable, settings: AbiRenderingSettings): Unit =
+        AbiRendererImpl(libraryAbi, settings).renderTo(output)
 }
 
 /**
