@@ -371,4 +371,47 @@ class BuildReportsIT : KGPBaseTest() {
         }
     }
 
+    @DisplayName("build reports work with init script")
+    @GradleTestVersions(
+        minVersion = TestVersions.Gradle.MIN_SUPPORTED,
+        additionalVersions = [TestVersions.Gradle.G_7_6, TestVersions.Gradle.G_8_0],
+        maxVersion = TestVersions.Gradle.G_8_1
+    )
+    @GradleTest
+    fun testBuildReportsWithInitScript(gradleVersion: GradleVersion) {
+        project("simpleProject", gradleVersion) {
+            val initScript = projectPath.resolve("init.gradle").createFile()
+            initScript.modify {
+                """
+                    initscript {
+                        repositories {
+                            maven { url = 'https://plugins.gradle.org/m2/' }
+                        }
+
+                        dependencies {
+                            classpath 'com.gradle:gradle-enterprise-gradle-plugin:3.13.4'
+                        }
+                    }
+
+                    beforeSettings {
+                        it.pluginManager.apply(com.gradle.enterprise.gradleplugin.GradleEnterprisePlugin)
+                    }
+                """.trimIndent()
+            }
+
+            build(
+                "compileKotlin",
+                "-I", "init.gradle",
+                "-Pkotlin.build.report.output=BUILD_SCAN,FILE",
+            ) {}
+
+            build(
+                "compileKotlin",
+                "-I", "init.gradle",
+                "-Pkotlin.build.report.output=BUILD_SCAN,FILE",
+                "--scan"
+            ) {}
+        }
+    }
+
 }
