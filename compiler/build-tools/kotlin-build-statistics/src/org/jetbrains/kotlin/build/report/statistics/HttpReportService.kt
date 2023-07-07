@@ -65,7 +65,8 @@ class HttpReportService(
                 connection.connect()
                 checkResponseAndLog(connection, log)
             } catch (e: Exception) {
-                log.warn("Http report: Unexpected exception happened: '${e.message}': ${e.stackTraceToString()}")
+                log.warn("Http report: Unexpected exception happened: '${e.message}'")
+                log.debug("Http report exception: ${e.stackTraceToString()}")
                 unableToSendHttpRequest = true
                 checkResponseAndLog(connection, log)
             } finally {
