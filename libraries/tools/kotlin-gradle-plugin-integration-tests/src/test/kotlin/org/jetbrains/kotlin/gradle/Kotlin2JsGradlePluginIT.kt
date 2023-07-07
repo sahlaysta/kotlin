@@ -30,7 +30,7 @@ import kotlin.streams.toList
 import kotlin.test.*
 
 @JsGradlePluginTests
-class Kotlin2JsIrGradlePluginIT : AbstractKotlin2JsGradlePluginIT(true) {
+class Kotlin2JsIrGradlePluginIT : KGPBaseTest() {
 
     @DisplayName("TS type declarations are generated")
     @GradleTest
@@ -658,17 +658,9 @@ class Kotlin2JsIrGradlePluginIT : AbstractKotlin2JsGradlePluginIT(true) {
             }
         }
     }
-}
-
-@JsGradlePluginTests
-abstract class AbstractKotlin2JsGradlePluginIT(protected val irBackend: Boolean) : KGPBaseTest() {
 
     protected fun BuildResult.checkIrCompilationMessage() {
-        if (irBackend) {
-            assertOutputContains(USING_JS_IR_BACKEND_MESSAGE)
-        } else {
-            assertOutputDoesNotContain(USING_JS_IR_BACKEND_MESSAGE)
-        }
+        assertOutputContains(USING_JS_IR_BACKEND_MESSAGE)
     }
 
     @DisplayName("js customized output is included into jar")
@@ -702,11 +694,8 @@ abstract class AbstractKotlin2JsGradlePluginIT(protected val irBackend: Boolean)
                     ":compileKotlin2Js",
                     ":compileTestKotlin2Js"
                 )
-                if (irBackend) {
-                    assertFileInProjectExists("build/kotlin2js/main/default/manifest")
-                } else {
-                    assertFileInProjectExists("build/kotlin2js/main/module.js")
-                }
+                assertFileInProjectExists("build/kotlin2js/main/default/manifest")
+
                 assertFileInProjectExists("build/kotlin2js/test/module-tests.js")
             }
         }
@@ -726,44 +715,42 @@ abstract class AbstractKotlin2JsGradlePluginIT(protected val irBackend: Boolean)
     @GradleTest
     fun testKotlinJsSourceMap(gradleVersion: GradleVersion) {
         project("kotlin2JsProjectWithSourceMap", gradleVersion) {
-            build(if (irBackend) "compileDevelopmentExecutableKotlinJs" else "compileKotlinJs") {
-                if (irBackend) {
-                    val appSourceMap = subProject("app").projectPath
-                        .resolve("build/compileSync/js/main/developmentExecutable/kotlin/$projectName-app.js.map")
-                    assertFileContains(
-                        appSourceMap,
-                        "\"../../../../../../src/main/kotlin/main.kt\"",
-                        "\"../../../../../../../lib/src/main/kotlin/foo.kt\"",
-                        "\"sourcesContent\":[null",
-                    )
+            build("compileDevelopmentExecutableKotlinJs") {
+                val appSourceMap = subProject("app").projectPath
+                    .resolve("build/compileSync/js/main/developmentExecutable/kotlin/$projectName-app.js.map")
+                assertFileContains(
+                    appSourceMap,
+                    "\"../../../../../../src/main/kotlin/main.kt\"",
+                    "\"../../../../../../../lib/src/main/kotlin/foo.kt\"",
+                    "\"sourcesContent\":[null",
+                )
 
-                    // The default should be generating simple names.
-                    assertFileContains(appSourceMap, "somewhereOverTheRainbow")
-                    assertFileDoesNotContain(appSourceMap, "\"names\":[]")
-                    assertFileDoesNotContain(appSourceMap, "app.C.somewhereOverTheRainbow")
+                // The default should be generating simple names.
+                assertFileContains(appSourceMap, "somewhereOverTheRainbow")
+                assertFileDoesNotContain(appSourceMap, "\"names\":[]")
+                assertFileDoesNotContain(appSourceMap, "app.C.somewhereOverTheRainbow")
 
-                    val libSourceMap = subProject("app").projectPath
-                        .resolve("build/compileSync/js/main/developmentExecutable/kotlin/$projectName-lib.js.map")
-                    assertFileContains(
-                        libSourceMap,
-                        "\"../../../../../../../lib/src/main/kotlin/foo.kt\"",
-                        "\"sourcesContent\":[null",
-                    )
+                val libSourceMap = subProject("app").projectPath
+                    .resolve("build/compileSync/js/main/developmentExecutable/kotlin/$projectName-lib.js.map")
+                assertFileContains(
+                    libSourceMap,
+                    "\"../../../../../../../lib/src/main/kotlin/foo.kt\"",
+                    "\"sourcesContent\":[null",
+                )
 
-                    // The default should be generating simple names.
-                    assertFileDoesNotContain(libSourceMap, "\"names\":[]")
+                // The default should be generating simple names.
+                assertFileDoesNotContain(libSourceMap, "\"names\":[]")
 
-                    val libSourceMap2 = projectPath
-                        .resolve("build/js/packages/$projectName-app/kotlin/$projectName-lib.js.map")
-                    assertFileContains(
-                        libSourceMap2,
-                        "\"../../../../../lib/src/main/kotlin/foo.kt\"",
-                        "\"sourcesContent\":[null",
-                    )
+                val libSourceMap2 = projectPath
+                    .resolve("build/js/packages/$projectName-app/kotlin/$projectName-lib.js.map")
+                assertFileContains(
+                    libSourceMap2,
+                    "\"../../../../../lib/src/main/kotlin/foo.kt\"",
+                    "\"sourcesContent\":[null",
+                )
 
-                    // The default should be generating simple names.
-                    assertFileDoesNotContain(libSourceMap2, "\"names\":[]")
-                }
+                // The default should be generating simple names.
+                assertFileDoesNotContain(libSourceMap2, "\"names\":[]")
                 assertFileContains(
                     projectPath
                         .resolve("build/js/packages/$projectName-app/kotlin/$projectName-app.js.map"),
@@ -799,7 +786,7 @@ abstract class AbstractKotlin2JsGradlePluginIT(protected val irBackend: Boolean)
                 |
                 """.trimMargin()
             )
-            build(if (irBackend) "compileDevelopmentExecutableKotlinJs" else "compileKotlinJs") {
+            build("compileDevelopmentExecutableKotlinJs") {
                 val mapFilePath = projectPath
                     .resolve("build/js/packages/$projectName-app/kotlin/$projectName-app.js.map")
                 assertFileContains(
@@ -815,10 +802,7 @@ abstract class AbstractKotlin2JsGradlePluginIT(protected val irBackend: Boolean)
     @GradleTest
     fun testKotlinJsSourceMapCustomOutputFile(gradleVersion: GradleVersion) {
         project("kotlin2JsProjectWithSourceMap", gradleVersion) {
-            val taskSelector = if (irBackend)
-                "named<KotlinJsIrLink>(\"compileDevelopmentExecutableKotlinJs\")"
-            else
-                "withType<KotlinJsCompile>"
+            val taskSelector = "named<KotlinJsIrLink>(\"compileDevelopmentExecutableKotlinJs\")"
             buildGradleKts.appendText(
                 """
                 |project("app") {
@@ -829,17 +813,12 @@ abstract class AbstractKotlin2JsGradlePluginIT(protected val irBackend: Boolean)
                 |
                 """.trimMargin()
             )
-            build(if (irBackend) "compileDevelopmentExecutableKotlinJs" else "compileKotlinJs") {
+            build("compileDevelopmentExecutableKotlinJs") {
                 val mapFilePath = subProject("app").projectPath
                     .resolve("build/kotlin2js/app.js.map")
                 assertFileContains(mapFilePath, "\"../../src/main/kotlin/main.kt\"")
-                if (irBackend) {
-                    // The IR BE generates correct paths for dependencies
-                    assertFileContains(mapFilePath, "\"../../../lib/src/main/kotlin/foo.kt\"")
-                } else {
-                    // The legacy BE doesn't.
-                    assertFileContains(mapFilePath, "\"../../../../../lib/src/main/kotlin/foo.kt\"")
-                }
+                // The IR BE generates correct paths for dependencies
+                assertFileContains(mapFilePath, "\"../../../lib/src/main/kotlin/foo.kt\"")
             }
         }
     }
@@ -858,7 +837,7 @@ abstract class AbstractKotlin2JsGradlePluginIT(protected val irBackend: Boolean)
                 |
                 """.trimMargin()
             )
-            build(if (irBackend) "compileDevelopmentExecutableKotlinJs" else "compileKotlinJs") {
+            build("compileDevelopmentExecutableKotlinJs") {
                 val jsFilePath = projectPath.resolve("build/js/packages/$projectName-app/kotlin/$projectName-app.js")
                 assertFileExists(jsFilePath)
                 assertFileNotExists(Path("$jsFilePath.map"))
@@ -888,7 +867,7 @@ abstract class AbstractKotlin2JsGradlePluginIT(protected val irBackend: Boolean)
                 |
                 """.trimMargin()
             )
-            build(if (irBackend) "compileDevelopmentExecutableKotlinJs" else "compileKotlinJs") {
+            build("compileDevelopmentExecutableKotlinJs") {
                 val mapFilePath = projectPath.resolve("build/js/packages/$projectName-app/kotlin/$projectName-app.js.map")
                 assertFileContains(
                     mapFilePath,
@@ -921,7 +900,7 @@ abstract class AbstractKotlin2JsGradlePluginIT(protected val irBackend: Boolean)
                 |
                 """.trimMargin()
             )
-            build(if (irBackend) "compileDevelopmentExecutableKotlinJs" else "compileKotlinJs") {
+            build("compileDevelopmentExecutableKotlinJs") {
                 val mapFilePath = projectPath.resolve("build/js/packages/$projectName-app/kotlin/$projectName-app.js.map")
                 assertFileDoesNotContain(
                     mapFilePath,
@@ -1030,7 +1009,7 @@ abstract class AbstractKotlin2JsGradlePluginIT(protected val irBackend: Boolean)
             build("jsJar") {
                 val archive = projectPath
                     .resolve("build/libs")
-                    .allFilesWithExtension(if (irBackend) KLIB_TYPE else "jar")
+                    .allFilesWithExtension(KLIB_TYPE)
                     .single()
 
                 ZipFile(archive.toFile()).use { zipFile ->
@@ -1101,7 +1080,7 @@ abstract class AbstractKotlin2JsGradlePluginIT(protected val irBackend: Boolean)
             build("jsJar") {
                 val archive = Files.list(projectPath.resolve("build").resolve("libs")).use { files ->
                     files
-                        .filter { it.extension == if (irBackend) KLIB_TYPE else "jar" }
+                        .filter { it.extension == KLIB_TYPE }
                         .toList()
                         .single()
                 }
@@ -1595,10 +1574,7 @@ abstract class AbstractKotlin2JsGradlePluginIT(protected val irBackend: Boolean)
             }
         }
     }
-}
 
-@JsGradlePluginTests
-class GeneralKotlin2JsGradlePluginIT : KGPBaseTest() {
     @DisplayName("nodejs up-to-date check works")
     @GradleTest
     fun testNodeJsAndYarnDownload(gradleVersion: GradleVersion) {
