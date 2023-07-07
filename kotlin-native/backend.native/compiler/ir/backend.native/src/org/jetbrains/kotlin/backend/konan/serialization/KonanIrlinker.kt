@@ -33,7 +33,6 @@ import org.jetbrains.kotlin.backend.konan.descriptors.isFromInteropLibrary
 import org.jetbrains.kotlin.backend.konan.descriptors.isInteropLibrary
 import org.jetbrains.kotlin.backend.konan.ir.interop.IrProviderForCEnumAndCStructStubs
 import org.jetbrains.kotlin.backend.konan.ir.konanLibrary
-import org.jetbrains.kotlin.backend.konan.ir.isFromInteropLibrary
 import org.jetbrains.kotlin.backend.konan.ir.isFromInteropLibraryByDescriptor
 import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.konan.isNativeStdlib
@@ -58,7 +57,7 @@ import org.jetbrains.kotlin.library.KotlinLibrary
 import org.jetbrains.kotlin.library.metadata.DeserializedKlibModuleOrigin
 import org.jetbrains.kotlin.library.metadata.klibModuleOrigin
 import org.jetbrains.kotlin.name.ClassId
-import org.jetbrains.kotlin.name.ForwardDeclarationKind
+import org.jetbrains.kotlin.name.NativeForwardDeclarationKind
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.resolve.descriptorUtil.module
@@ -1107,7 +1106,7 @@ internal class KonanIrLinker(
 
         private fun IdSignature.isForwardDeclarationSignature(): Boolean {
             if (isPubliclyVisible) {
-                return packageFqName() in ForwardDeclarationKind.packageFqNameToKind
+                return packageFqName() in NativeForwardDeclarationKind.packageFqNameToKind
             }
 
             return false

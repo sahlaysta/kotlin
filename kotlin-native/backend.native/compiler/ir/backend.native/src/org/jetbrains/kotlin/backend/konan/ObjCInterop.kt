@@ -17,7 +17,7 @@ import org.jetbrains.kotlin.ir.descriptors.IrBasedClassConstructorDescriptor
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
 import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.ir.util.*
-import org.jetbrains.kotlin.name.ForwardDeclarationKind
+import org.jetbrains.kotlin.name.NativeForwardDeclarationKind
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.resolve.ExternalOverridabilityCondition
@@ -64,9 +64,9 @@ fun IrClass.isExternalObjCClass(): Boolean = this.isObjCClass() &&
             it.annotations.hasAnnotation(externalObjCClassFqName)
         }
 
-fun ClassDescriptor.isObjCForwardDeclaration(): Boolean = when (ForwardDeclarationKind.packageFqNameToKind[findPackage().fqName]) {
-    null, ForwardDeclarationKind.Struct -> false
-    ForwardDeclarationKind.ObjCProtocol, ForwardDeclarationKind.ObjCClass -> true
+fun ClassDescriptor.isObjCForwardDeclaration(): Boolean = when (NativeForwardDeclarationKind.packageFqNameToKind[findPackage().fqName]) {
+    null, NativeForwardDeclarationKind.Struct -> false
+    NativeForwardDeclarationKind.ObjCProtocol, NativeForwardDeclarationKind.ObjCClass -> true
 }
 
 fun ClassDescriptor.isObjCMetaClass(): Boolean = this.getAllSuperClassifiers().any {

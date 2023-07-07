@@ -18,7 +18,7 @@ import org.jetbrains.kotlin.incremental.components.LookupTracker
 import org.jetbrains.kotlin.library.KotlinLibrary
 import org.jetbrains.kotlin.library.metadata.*
 import org.jetbrains.kotlin.library.unresolvedDependencies
-import org.jetbrains.kotlin.name.ForwardDeclarationKind
+import org.jetbrains.kotlin.name.NativeForwardDeclarationKind
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.name.parentOrNull
 import org.jetbrains.kotlin.platform.jvm.isJvm
@@ -194,7 +194,7 @@ class KlibMetadataModuleDescriptorFactoryImpl(
         storageManager: StorageManager,
         module: ModuleDescriptorImpl
     ): PackageFragmentProviderImpl {
-        fun createPackage(kind: ForwardDeclarationKind) =
+        fun createPackage(kind: NativeForwardDeclarationKind) =
             ForwardDeclarationsPackageFragmentDescriptor(
                 storageManager,
                 module,
@@ -205,7 +205,7 @@ class KlibMetadataModuleDescriptorFactoryImpl(
             )
 
         val packageFragmentProvider = PackageFragmentProviderImpl(
-            ForwardDeclarationKind.entries.map { createPackage(it) }
+            NativeForwardDeclarationKind.entries.map { createPackage(it) }
         )
         return packageFragmentProvider
     }

@@ -111,7 +111,7 @@ internal fun PhaseContext.fir2Ir(
         }
         // This packages exists in all platform libraries, but can contain only synthetic declarations.
         // These declarations are not really located in klib, so we don't need to depend on klib to use them.
-        removeAll(ForwardDeclarationKind.entries.map { it.packageFqName })
+        removeAll(NativeForwardDeclarationKind.entries.map { it.packageFqName })
     }.toList()
 
 

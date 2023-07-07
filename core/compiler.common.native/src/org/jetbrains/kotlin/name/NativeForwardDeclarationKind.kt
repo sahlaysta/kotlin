@@ -17,7 +17,7 @@ import org.jetbrains.kotlin.descriptors.ClassKind
  *
  * Also, fqName and classId of super classes are stored as optimization to avoid allocations and string processing on usage.
  */
-enum class ForwardDeclarationKind(val packageFqName: FqName, val superClassName: Name, val matchSuperClassName: Name, val classKind: ClassKind) {
+enum class NativeForwardDeclarationKind(val packageFqName: FqName, val superClassName: Name, val matchSuperClassName: Name, val classKind: ClassKind) {
     Struct(
         NativeStandardInteropNames.ForwardDeclarations.cNamesStructsPackage,
         NativeStandardInteropNames.COpaque,
@@ -44,6 +44,6 @@ enum class ForwardDeclarationKind(val packageFqName: FqName, val superClassName:
     val matchSuperClassId = ClassId.topLevel(matchSuperClassFqName)
 
     companion object {
-        val packageFqNameToKind: Map<FqName, ForwardDeclarationKind> = ForwardDeclarationKind.entries.associateBy { it.packageFqName }
+        val packageFqNameToKind: Map<FqName, NativeForwardDeclarationKind> = NativeForwardDeclarationKind.entries.associateBy { it.packageFqName }
     }
 }

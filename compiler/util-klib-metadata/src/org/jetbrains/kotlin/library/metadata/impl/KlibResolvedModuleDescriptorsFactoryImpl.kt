@@ -119,7 +119,7 @@ class KlibResolvedModuleDescriptorsFactoryImpl(
 
         val module = createDescriptorOptionalBuiltsIns(FORWARD_DECLARATIONS_MODULE_NAME, storageManager, builtIns, SyntheticModulesOrigin)
 
-        fun createPackage(forwardDeclarationKind: ForwardDeclarationKind) =
+        fun createPackage(forwardDeclarationKind: NativeForwardDeclarationKind) =
             ForwardDeclarationsPackageFragmentDescriptor(
                 storageManager,
                 module,
@@ -130,7 +130,7 @@ class KlibResolvedModuleDescriptorsFactoryImpl(
             )
 
         val packageFragmentProvider = PackageFragmentProviderImpl(
-            ForwardDeclarationKind.entries.map { createPackage(it) }
+            NativeForwardDeclarationKind.entries.map { createPackage(it) }
         )
 
         module.initialize(packageFragmentProvider)

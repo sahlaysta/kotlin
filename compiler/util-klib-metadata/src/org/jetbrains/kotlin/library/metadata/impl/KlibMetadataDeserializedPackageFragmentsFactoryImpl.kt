@@ -8,7 +8,7 @@ import org.jetbrains.kotlin.library.exportForwardDeclarations
 import org.jetbrains.kotlin.library.isInterop
 import org.jetbrains.kotlin.library.metadata.*
 import org.jetbrains.kotlin.library.packageFqName
-import org.jetbrains.kotlin.name.ForwardDeclarationKind
+import org.jetbrains.kotlin.name.NativeForwardDeclarationKind
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameSafe
@@ -170,11 +170,11 @@ class ClassifierAliasingPackageFragmentDescriptor(
  * we need to check declaration type before returning the result of lookup.
  * See KT-49034.
  */
-enum class ExportedForwardDeclarationChecker(val declKind: ForwardDeclarationKind) {
+enum class ExportedForwardDeclarationChecker(val declKind: NativeForwardDeclarationKind) {
 
-    Struct(ForwardDeclarationKind.Struct),
-    ObjCClass(ForwardDeclarationKind.ObjCClass),
-    ObjCProtocol(ForwardDeclarationKind.ObjCProtocol)
+    Struct(NativeForwardDeclarationKind.Struct),
+    ObjCClass(NativeForwardDeclarationKind.ObjCClass),
+    ObjCProtocol(NativeForwardDeclarationKind.ObjCProtocol)
     ;
 
     fun check(classifierDescriptor: ClassifierDescriptor): Boolean = classifierDescriptor is ClassDescriptor &&
