@@ -94,7 +94,7 @@ abstract class SymbolLightClassForClassLike<SType : KtClassOrObjectSymbol> prote
     }
 
     override fun hasTypeParameters(): Boolean =
-        hasTypeParameters(ktModule, classOrObjectDeclaration, classOrObjectSymbolPointer, containingClass)
+        hasTypeParameters(ktModule, classOrObjectDeclaration, classOrObjectSymbolPointer)
 
     override fun getTypeParameterList(): PsiTypeParameterList? = _typeParameterList
 

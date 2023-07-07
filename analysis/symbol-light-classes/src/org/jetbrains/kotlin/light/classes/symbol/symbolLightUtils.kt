@@ -32,11 +32,10 @@ import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.descriptors.Visibility
 import org.jetbrains.kotlin.light.classes.symbol.annotations.*
 import org.jetbrains.kotlin.light.classes.symbol.classes.SymbolLightClassBase
+import org.jetbrains.kotlin.light.classes.symbol.classes.SymbolLightClassForInterface
 import org.jetbrains.kotlin.light.classes.symbol.classes.SymbolLightClassForInterfaceDefaultImpls
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.SpecialNames
-import org.jetbrains.kotlin.psi.KtCallableDeclaration
-import org.jetbrains.kotlin.psi.KtNamedFunction
 import org.jetbrains.kotlin.psi.KtTypeParameterListOwner
 import java.util.*
 
@@ -287,11 +286,15 @@ internal fun hasTypeParameters(
     ktModule: KtModule,
     declaration: KtTypeParameterListOwner?,
     declarationPointer: KtSymbolPointer<KtSymbolWithTypeParameters>,
-    containingClass: PsiClass?,
-): Boolean =
-    (declaration?.typeParameters?.isNotEmpty() ?: declarationPointer.withSymbol(ktModule) { it.typeParameters.isNotEmpty() })
-            || ((declaration is KtCallableDeclaration)
-            && (containingClass as? SymbolLightClassForInterfaceDefaultImpls)?.containingClass?.hasTypeParameters() == true)
+): Boolean = declaration?.typeParameters?.isNotEmpty() ?: declarationPointer.withSymbol(ktModule) {
+    it.typeParameters.isNotEmpty()
+}
+
+internal val SymbolLightClassBase.interfaceIfDefaultImpls: SymbolLightClassForInterface?
+    get() = (this as? SymbolLightClassForInterfaceDefaultImpls)?.containingClass
+
+internal val SymbolLightClassBase.isDefaultImplsForInterfaceWithTypeParameters: Boolean
+    get() = interfaceIfDefaultImpls?.hasTypeParameters() ?: false
 
 internal fun KtSymbolPointer<*>.isValid(ktModule: KtModule): Boolean = analyzeForLightClasses(ktModule) {
     restoreSymbol() != null

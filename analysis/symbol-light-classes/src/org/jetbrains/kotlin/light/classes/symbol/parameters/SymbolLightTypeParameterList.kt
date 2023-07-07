@@ -13,8 +13,8 @@ import org.jetbrains.kotlin.analysis.api.symbols.pointers.KtSymbolPointer
 import org.jetbrains.kotlin.analysis.project.structure.KtModule
 import org.jetbrains.kotlin.asJava.classes.lazyPub
 import org.jetbrains.kotlin.idea.KotlinLanguage
+import org.jetbrains.kotlin.light.classes.symbol.*
 import org.jetbrains.kotlin.light.classes.symbol.basicIsEquivalentTo
-import org.jetbrains.kotlin.light.classes.symbol.classes.SymbolLightClassForInterfaceDefaultImpls
 import org.jetbrains.kotlin.light.classes.symbol.compareSymbolPointers
 import org.jetbrains.kotlin.light.classes.symbol.methods.SymbolLightMethodBase
 import org.jetbrains.kotlin.light.classes.symbol.toArrayIfNotEmptyOrDefault
@@ -45,15 +45,11 @@ internal class SymbolLightTypeParameterList(
     private val _typeParameters: Collection<PsiTypeParameter> by lazyPub {
         symbolWithTypeParameterPointer.withSymbol(ktModule) {
             val parentInterface =
-                ((owner as? SymbolLightMethodBase)?.containingClass as? SymbolLightClassForInterfaceDefaultImpls)?.containingClass
+                (owner as? SymbolLightMethodBase)?.containingClass?.interfaceIfDefaultImpls
 
-            val fromInterface: List<PsiTypeParameter> =
-                parentInterface
-                    ?.typeParameters
-                    ?.filterIsInstance<SymbolLightTypeParameter>()
-                    ?.map { it.copyTo(this@SymbolLightTypeParameterList) }
-                    ?.toList()
-                    ?: emptyList()
+            val fromInterface = parentInterface?.typeParameters?.mapNotNull {
+                (it as? SymbolLightTypeParameter)?.copyTo(this@SymbolLightTypeParameterList)
+            }.orEmpty()
 
             fromInterface + it.typeParameters.mapIndexed { index, parameter ->
                 SymbolLightTypeParameter(

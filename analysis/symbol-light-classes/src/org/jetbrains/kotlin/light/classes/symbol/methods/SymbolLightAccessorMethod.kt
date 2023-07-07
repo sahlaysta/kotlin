@@ -123,7 +123,8 @@ internal class SymbolLightAccessorMethod private constructor(
     }
 
     override fun hasTypeParameters(): Boolean =
-        hasTypeParameters(ktModule, containingPropertyDeclaration, containingPropertySymbolPointer, containingClass)
+        hasTypeParameters(ktModule, containingPropertyDeclaration, containingPropertySymbolPointer)
+                || containingClass.isDefaultImplsForInterfaceWithTypeParameters
 
     override fun getTypeParameterList(): PsiTypeParameterList? = _typeParameterList
     override fun getTypeParameters(): Array<PsiTypeParameter> = _typeParameterList?.typeParameters ?: PsiTypeParameter.EMPTY_ARRAY
