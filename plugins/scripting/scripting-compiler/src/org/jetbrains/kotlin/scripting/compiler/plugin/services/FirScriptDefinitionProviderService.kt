@@ -48,24 +48,21 @@ class FirScriptDefinitionProviderService(
             definitionProvider: ScriptDefinitionProvider? = null,
             configurationProvider: ScriptDependenciesProvider? = null
         ): Factory {
-            return Factory { session ->
-                FirScriptDefinitionProviderService(
-                    session,
-                    makeDefaultDefinitionProvider = {
-                        CliScriptDefinitionProvider().also {
-                            it.setScriptDefinitionsSources(definitionSources)
-                            it.setScriptDefinitions(definitions)
-                        }
-                    },
-                    makeDefaultConfigurationProvider = {
-                        // TODO: check if memory can leak in MockProject (probably not too important, since currently the providers are set externaly in important cases)
-                        CliScriptDependenciesProvider(MockProject(null, Disposer.newDisposable()))
+            val makeDefinitionsProvider = definitionProvider?.let { { it } }
+                ?: {
+                    CliScriptDefinitionProvider().also {
+                        it.setScriptDefinitionsSources(definitionSources)
+                        it.setScriptDefinitions(definitions)
                     }
-                ).also { service ->
-                    definitionProvider?.let { service.definitionProvider = it }
-                    configurationProvider?.let { service.configurationProvider = it }
                 }
-            }
+
+            val makeConfigurationProvider = configurationProvider?.let { { it } }
+                ?: {
+                    // TODO: check if memory can leak in MockProject (probably not too important, since currently the providers are set externaly in important cases)
+                    CliScriptDependenciesProvider(MockProject(null, Disposer.newDisposable()))
+                }
+
+            return Factory { session -> FirScriptDefinitionProviderService(session, makeDefinitionsProvider, makeConfigurationProvider) }
         }
     }
 }
