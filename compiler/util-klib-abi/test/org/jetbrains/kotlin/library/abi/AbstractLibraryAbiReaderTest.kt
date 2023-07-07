@@ -31,7 +31,8 @@ abstract class AbstractLibraryAbiReaderTest {
         val library = buildLibrary(sourceFile, libraryName = testName, buildDir)
         val libraryAbi = LibraryAbiReader.readAbiInfo(library, settings)
 
-        val abiDump = libraryAbi.render(
+        val abiDump = LibraryAbiRenderer.render(
+            libraryAbi,
             AbiRenderingSettings(renderedSignatureVersions = setOf(AbiSignatureVersion.V1))
         )
 
